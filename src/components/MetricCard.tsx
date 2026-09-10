@@ -14,7 +14,7 @@ export function MetricCard({ eyebrow, value, helper, icon: Icon, tone = 'aqua', 
     <article className={`metric-card metric-${tone}`}>
       <div className="metric-topline">
         <span className="metric-eyebrow">{eyebrow}</span>
-        <span className="metric-icon"><Icon size={17} strokeWidth={2} /></span>
+        <span className="metric-icon" aria-hidden="true"><Icon size={17} strokeWidth={2} /></span>
       </div>
       <div className="metric-value">{value}</div>
       <div className="metric-bottomline">

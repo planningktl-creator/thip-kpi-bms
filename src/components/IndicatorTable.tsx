@@ -15,14 +15,15 @@ export function IndicatorTable({ indicators, onOpen, monthIndex }: Props) {
   return (
     <div className="indicator-table-wrap">
       <table className="indicator-table">
+        <caption className="sr-only">รายการสัญญาณตัวชี้วัดตามเดือนที่เลือก</caption>
         <thead>
           <tr>
-            <th>ตัวชี้วัด</th>
-            <th>ผลงานล่าสุด</th>
-            <th>เป้าหมาย</th>
-            <th>เทียบเดือนก่อน</th>
-            <th>สถานะ</th>
-            <th aria-label="เปิดรายละเอียด" />
+            <th scope="col">ตัวชี้วัด</th>
+            <th scope="col">ผลงานล่าสุด</th>
+            <th scope="col">เป้าหมาย</th>
+            <th scope="col">เทียบเดือนก่อน</th>
+            <th scope="col">สถานะ</th>
+            <th scope="col" aria-label="เปิดรายละเอียด" />
           </tr>
         </thead>
         <tbody>
@@ -32,10 +33,10 @@ export function IndicatorTable({ indicators, onOpen, monthIndex }: Props) {
             const delta = latest.value !== null && previous.value !== null ? latest.value - previous.value : null;
             const improvement = delta === null ? null : indicator.direction === 'lower-is-better' ? delta < 0 : delta > 0;
             return (
-              <tr key={indicator.code} onClick={() => onOpen(indicator.code)} tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') onOpen(indicator.code); }}>
+              <tr key={indicator.code} aria-label={`เปิดรายละเอียด ${indicator.code} ${indicator.titleTh}`} onClick={() => onOpen(indicator.code)} tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpen(indicator.code); } }}>
                 <td>
                   <div className="indicator-name-cell">
-                    <span className="table-group-letter" style={{ backgroundColor: groupMeta[indicator.group].color }}>{indicator.group}</span>
+                    <span className="table-group-letter" aria-hidden="true" style={{ backgroundColor: groupMeta[indicator.group].color }}>{indicator.group}</span>
                     <div>
                       <strong>{indicator.code} <span className="row-category">· {groupMeta[indicator.group].shortLabel}</span></strong>
                       <span>{indicator.titleTh}</span>
@@ -51,7 +52,7 @@ export function IndicatorTable({ indicators, onOpen, monthIndex }: Props) {
                   </div>
                 </td>
                 <td><StatusPill status={latest.status} compact /></td>
-                <td><button className="table-arrow" aria-label={`เปิด ${indicator.code}`}><ChevronRight size={17} /></button></td>
+                <td><button className="table-arrow" type="button" aria-label={`เปิด ${indicator.code}`}><ChevronRight size={17} /></button></td>
               </tr>
             );
           })}

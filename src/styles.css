@@ -31,6 +31,10 @@ button, input, select { font: inherit; }
 button { border: 0; cursor: pointer; }
 button:focus-visible, input:focus-visible, select:focus-visible, tr:focus-visible { outline: 3px solid rgba(45, 201, 197, 0.46); outline-offset: 2px; }
 a { color: inherit; }
+.sr-only { width: 1px; height: 1px; position: absolute; overflow: hidden; padding: 0; margin: -1px; border: 0; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+.skip-link { position: fixed; top: -48px; left: 14px; z-index: 100; padding: 9px 12px; color: #f4ffff; border-radius: 0 0 8px 8px; background: var(--navy); font-size: 11px; transition: top .2s ease; }
+.skip-link:focus { top: 0; outline: 3px solid rgba(45, 201, 197, .55); outline-offset: 0; }
+.app-main:focus { outline: none; }
 
 .app-shell { display: flex; min-height: 100vh; }
 .app-main { flex: 1; min-width: 0; padding: 34px 42px 22px; overflow: hidden; }
@@ -73,6 +77,9 @@ a { color: inherit; }
 .connection-error .connection-led, .connection-led-error { background: var(--coral); box-shadow: 0 0 0 3px rgba(239, 123, 104, .16); }
 .sidebar-settings { width: 100%; display: flex; align-items: center; gap: 10px; padding: 11px 12px; color: #718b9b; background: transparent; border-radius: 9px; font-size: 11px; text-align: left; }
 .sidebar-settings:hover { color: #d8eeee; background: rgba(255,255,255,.045); }
+.sidebar-settings-disabled { color: #718b9b; cursor: default; }
+.sidebar-settings-disabled:hover { color: #718b9b; background: transparent; }
+.sidebar-settings-disabled .settings-trailing { color: #547183; font-size: 8px; }
 .settings-trailing { margin-left: auto; color: #547183; }
 .sidebar-backdrop { display: none; }
 

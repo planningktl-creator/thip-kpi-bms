@@ -33,7 +33,7 @@ export function TrendChart({ indicator, mode = 'bar', compact = false }: Props) 
   const hasData = indicator.monthly.some((month) => month.value !== null);
 
   return (
-    <div className={`trend-chart ${compact ? 'trend-chart-compact' : ''} trend-chart-${mode}`} data-testid={`monthly-${mode}-chart`}>
+    <div className={`trend-chart ${compact ? 'trend-chart-compact' : ''} trend-chart-${mode}`} role="img" aria-label={`กราฟ${mode === 'bar' ? 'แท่ง' : 'แนวโน้ม'}รายเดือนของ ${indicator.code} ${indicator.titleTh}`} data-testid={`monthly-${mode}-chart`}>
       {!hasData && <div className="chart-empty-state"><strong>ยังไม่มีข้อมูลรายเดือน</strong><span>กราฟจะแสดงเมื่อผูก source view ของโรงพยาบาล</span></div>}
       <ResponsiveContainer width="100%" height={height}>
         {mode === 'bar' ? (

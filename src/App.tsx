@@ -70,6 +70,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
+      <a className="skip-link" href="#main-content">ข้ามไปยังเนื้อหาหลัก</a>
       <Sidebar
         view={view}
         activeGroup={activeGroup}
@@ -80,18 +81,18 @@ export default function App() {
         onClose={() => setSidebarOpen(false)}
       />
 
-      <main className="app-main">
+      <main id="main-content" className="app-main" tabIndex={-1} aria-label="เนื้อหา THIP KPI">
         <div className="mobile-topbar">
-          <button className="icon-button mobile-menu-button" onClick={() => setSidebarOpen(true)} aria-label="เปิดเมนู"><Menu size={20} /></button>
+          <button className="icon-button mobile-menu-button" type="button" onClick={() => setSidebarOpen(true)} aria-label="เปิดเมนู"><Menu size={20} /></button>
           <div className="mobile-brand"><span className="mobile-brand-dot" /> THIP <em>KPI</em></div>
           <span className="mobile-status"><span className={`connection-led connection-led-${connection.status}`} /></span>
         </div>
 
         {connection.status === 'connected' && (
-          <div className="connection-banner connection-banner-success"><RefreshCw size={15} /><span>{connection.message}</span><strong>{connection.hospitalCode || 'BMS'}</strong></div>
+          <div className="connection-banner connection-banner-success" role="status" aria-live="polite"><RefreshCw size={15} /><span>{connection.message}</span><strong>{connection.hospitalCode || 'BMS'}</strong></div>
         )}
         {connection.status === 'error' && (
-          <div className="connection-banner connection-banner-error"><WifiOff size={15} /><span>{connection.message}</span><strong>กลับไปใช้ demo</strong></div>
+          <div className="connection-banner connection-banner-error" role="alert"><WifiOff size={15} /><span>{connection.message}</span><strong>กลับไปใช้ demo</strong></div>
         )}
 
         {view === 'detail' && selectedIndicator ? (
@@ -119,6 +120,7 @@ export default function App() {
             fiscalYear={fiscalYear}
             onFiscalYearChange={setFiscalYear}
             onOpenIndicator={openIndicator}
+            onOpenCatalog={() => navigate('catalog', null)}
             connection={connection}
           />
         )}

@@ -16,6 +16,10 @@ def main() -> None:
         desktop.on("console", lambda message: console_errors.append(message.text) if message.type == "error" else None)
         desktop.goto("http://127.0.0.1:5173", wait_until="networkidle")
         desktop.screenshot(path=str(ARTIFACTS / "dashboard-desktop.png"), full_page=True)
+        assert desktop.get_by_role("link", name="ข้ามไปยังเนื้อหาหลัก").count() == 1
+        assert desktop.get_by_label("ค้นหารหัสหรือชื่อตัวชี้วัด").count() == 1
+        assert desktop.get_by_label("เลือกเดือนงบประมาณ").count() == 1
+        assert desktop.get_by_label("เลือกปีงบประมาณ").count() == 1
         assert desktop.get_by_text("ภาพรวมคุณภาพ", exact=True).count() >= 1
         assert desktop.get_by_text("สัญญาณที่ควรดูเดือนนี้", exact=True).count() == 1
         assert desktop.locator(".indicator-table tbody tr").count() == 12
@@ -35,6 +39,11 @@ def main() -> None:
         desktop.get_by_role("tab", name="กราฟแท่ง").click()
         assert desktop.locator("[data-testid='monthly-bar-chart']").count() == 1
 
+        overview = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1)
+        overview.goto("http://127.0.0.1:5173", wait_until="networkidle")
+        overview.get_by_role("button", name="ดูทั้งหมด").click()
+        overview.wait_for_selector(".catalog-page")
+
         annual = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1)
         annual.goto("http://127.0.0.1:5173/?view=detail&indicator=HE0101", wait_until="networkidle")
         assert annual.get_by_text("เป้าหมายทั้งปี", exact=True).count() >= 1
@@ -47,7 +56,8 @@ def main() -> None:
         assert catalog.locator(".catalog-table tbody tr").count() == 232
         pending_row = catalog.locator(".catalog-table tbody tr", has=catalog.locator(".catalog-state-pending")).first
         assert pending_row.count() == 1
-        pending_row.click()
+        pending_row.focus()
+        pending_row.press("Enter")
         catalog.wait_for_selector(".monthly-detail-panel")
         catalog.screenshot(path=str(ARTIFACTS / "catalog-pending-detail-desktop.png"), full_page=True)
         assert catalog.locator(".monthly-table tbody tr").count() == 12

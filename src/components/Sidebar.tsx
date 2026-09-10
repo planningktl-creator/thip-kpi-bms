@@ -8,8 +8,6 @@ import {
   LayoutDashboard,
   Settings2,
   ShieldCheck,
-  SlidersHorizontal,
-  Stethoscope,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { BmsConnection, IndicatorGroup } from '@/types/thip';
@@ -50,7 +48,7 @@ export function Sidebar({
 }: Props) {
   return (
     <>
-      <div className={`sidebar-backdrop ${isOpen ? 'is-visible' : ''}`} onClick={onClose} />
+      <div className={`sidebar-backdrop ${isOpen ? 'is-visible' : ''}`} onClick={onClose} aria-hidden="true" />
       <aside className={`app-sidebar ${isOpen ? 'is-open' : ''}`} aria-label="เมนูหลัก">
         <div className="brand-lockup">
           <div className="brand-mark" aria-hidden="true">
@@ -61,21 +59,23 @@ export function Sidebar({
             <div className="brand-caption">QUALITY INTELLIGENCE</div>
           </div>
           <div className="sidebar-close-wrap">
-            <button className="icon-button sidebar-close" onClick={onClose} aria-label="ปิดเมนู">
+            <button className="icon-button sidebar-close" type="button" onClick={onClose} aria-label="ปิดเมนู">
               ×
             </button>
           </div>
         </div>
 
         <div className="sidebar-section-label">Workspace</div>
-        <nav className="sidebar-nav">
+        <nav className="sidebar-nav" aria-label="เมนูพื้นที่ทำงาน">
           {navItems.map((item, index) => {
             const Icon = item.icon;
             const active = view === item.view;
             return (
               <button
                 key={item.label}
+                type="button"
                 className={`sidebar-nav-item ${active ? 'is-active' : ''}`}
+                aria-current={active ? 'page' : undefined}
                 onClick={() => {
                   if (index === 0) onGroupChange('all');
                   onNavigate(item.view);
@@ -94,8 +94,9 @@ export function Sidebar({
         </nav>
 
         <div className="sidebar-section-label group-label">THIP groups</div>
-        <div className="group-nav">
+        <div className="group-nav" role="navigation" aria-label="กลุ่มตัวชี้วัด THIP">
           <button
+            type="button"
             className={`group-nav-item ${activeGroup === 'all' ? 'is-active' : ''}`}
             onClick={() => { onGroupChange('all'); onNavigate('dashboard'); onClose(); }}
           >
@@ -106,6 +107,7 @@ export function Sidebar({
           {(Object.keys(groupMeta) as IndicatorGroup[]).map((group) => (
             <button
               key={group}
+              type="button"
               className={`group-nav-item ${activeGroup === group ? 'is-active' : ''}`}
               onClick={() => { onGroupChange(group); onNavigate('dashboard'); onClose(); }}
             >
@@ -118,7 +120,7 @@ export function Sidebar({
 
         <div className="sidebar-bottom">
           <div className="sidebar-section-label">Data layer</div>
-          <div className={`connection-card connection-${connection.status}`}>
+          <div className={`connection-card connection-${connection.status}`} role="status" aria-label={connection.status === 'connected' ? `เชื่อมต่อ BMS แล้ว ${connection.hospitalCode || ''}` : 'โหมดข้อมูลตัวอย่าง'}>
             <div className="connection-icon">
               {connection.status === 'connected' ? <ShieldCheck size={16} /> : <Database size={16} />}
             </div>
@@ -128,11 +130,11 @@ export function Sidebar({
             </div>
             <span className="connection-led" aria-hidden="true" />
           </div>
-          <button className="sidebar-settings" type="button">
+          <div className="sidebar-settings sidebar-settings-disabled" aria-label="ตั้งค่าการแสดงผล — เร็ว ๆ นี้">
             <Settings2 size={16} />
             <span>ตั้งค่าการแสดงผล</span>
-            <SlidersHorizontal size={15} className="settings-trailing" />
-          </button>
+            <small className="settings-trailing">เร็ว ๆ นี้</small>
+          </div>
         </div>
       </aside>
     </>

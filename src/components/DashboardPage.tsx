@@ -39,6 +39,7 @@ type Props = {
   fiscalYear: FiscalYear;
   onFiscalYearChange: (fiscalYear: FiscalYear) => void;
   onOpenIndicator: (code: string) => void;
+  onOpenCatalog: () => void;
   connection: BmsConnection;
 };
 
@@ -54,6 +55,7 @@ export function DashboardPage({
   fiscalYear,
   onFiscalYearChange,
   onOpenIndicator,
+  onOpenCatalog,
   connection,
 }: Props) {
   const fiscalMonths = getFiscalMonthPeriods(fiscalYear);
@@ -75,14 +77,14 @@ export function DashboardPage({
           <p className="page-subtitle">อ่านสัญญาณคุณภาพจากตัวตั้งและตัวหารของตัวชี้วัด ก่อนลงรายละเอียดที่ต้องขยับ</p>
         </div>
         <div className="page-actions">
-          <label className="fiscal-year-control"><span>ปีงบประมาณ</span><select value={fiscalYear} onChange={(event) => onFiscalYearChange(Number(event.target.value))}><option value={fiscalYear}>{formatFiscalYear(fiscalYear)}</option></select><ChevronDown size={14} /></label>
+          <label className="fiscal-year-control"><span>ปีงบประมาณ</span><select aria-label="เลือกปีงบประมาณ" value={fiscalYear} onChange={(event) => onFiscalYearChange(Number(event.target.value))}><option value={fiscalYear}>{formatFiscalYear(fiscalYear)}</option></select><ChevronDown size={14} aria-hidden="true" /></label>
           <div className={`connection-chip connection-chip-${connection.status}`}><span className="connection-led" />{connection.status === 'connected' ? 'BMS connected' : 'Demo data'}</div>
-          <button className="secondary-button" type="button"><Clock3 size={16} /> อัปเดตล่าสุด 08:45 · {selectedMonth.label}</button>
+          <span className="secondary-button dashboard-refresh-note" role="status"><Clock3 size={16} /> อัปเดตล่าสุด 08:45 · {selectedMonth.label}</span>
         </div>
       </div>
 
       <section className="pulse-hero">
-        <div className="pulse-orb" aria-label={`คะแนนสัญญาณคุณภาพ ${pulseScore} คะแนน`}>
+        <div className="pulse-orb" role="img" aria-label={`คะแนนสัญญาณคุณภาพ ${pulseScore} คะแนน`}>
           <div className="pulse-orb-ring ring-one" />
           <div className="pulse-orb-ring ring-two" />
           <div className="pulse-orb-core"><strong>{pulseScore}</strong><span>/ 100</span></div>
@@ -120,7 +122,7 @@ export function DashboardPage({
         </article>
 
         <article className="panel group-panel">
-          <div className="panel-heading"><div><span className="panel-eyebrow">GROUP SIGNALS</span><h3>แผนที่ 5 กลุ่ม THIP</h3></div><button className="panel-more" type="button">ดูทั้งหมด <ArrowUpRight size={15} /></button></div>
+          <div className="panel-heading"><div><span className="panel-eyebrow">GROUP SIGNALS</span><h3>แผนที่ 5 กลุ่ม THIP</h3></div><button className="panel-more" type="button" onClick={onOpenCatalog}>ดูทั้งหมด <ArrowUpRight size={15} /></button></div>
           <div className="group-signal-list">
             {(Object.keys(groupMeta) as IndicatorGroup[]).map((group) => {
               const groupIndicators = allIndicators.filter((item) => item.group === group);
@@ -148,13 +150,13 @@ export function DashboardPage({
         <div className="panel-heading table-heading">
           <div><span className="panel-eyebrow">MONTHLY WORKLIST</span><h3>สัญญาณที่ควรดูเดือนนี้</h3><p>กดแถวเพื่อเปิดตัวตั้ง ตัวหาร และรายละเอียดทั้ง 12 เดือน</p></div>
           <div className="table-actions">
-            <label className="search-field"><Search size={16} /><input value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="ค้นหารหัสหรือชื่อตัวชี้วัด" /></label>
-            <label className="select-field"><CalendarIcon /><select value={monthIndex} onChange={(event) => onMonthChange(Number(event.target.value))}>{fiscalMonths.map((month, index) => <option key={month.periodStart} value={index}>{month.label}</option>)}</select><ChevronDown size={15} /></label>
+            <label className="search-field"><Search size={16} aria-hidden="true" /><span className="sr-only">ค้นหารหัสหรือชื่อตัวชี้วัด</span><input aria-label="ค้นหารหัสหรือชื่อตัวชี้วัด" value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="ค้นหารหัสหรือชื่อตัวชี้วัด" /></label>
+            <label className="select-field"><CalendarIcon /><span className="sr-only">เลือกเดือนงบประมาณ</span><select aria-label="เลือกเดือนงบประมาณ" value={monthIndex} onChange={(event) => onMonthChange(Number(event.target.value))}>{fiscalMonths.map((month, index) => <option key={month.periodStart} value={index}>{month.label}</option>)}</select><ChevronDown size={15} aria-hidden="true" /></label>
             <button className="filter-button" type="button" onClick={() => onGroupChange(activeGroup === 'all' ? 'D' : 'all')}><Filter size={15} /> {activeGroup === 'all' ? 'กรองกลุ่ม' : groupMeta[activeGroup].shortLabel}</button>
           </div>
         </div>
         <IndicatorTable indicators={indicators} onOpen={onOpenIndicator} monthIndex={monthIndex} />
-        <div className="table-footer"><span>แสดง {indicators.length} จาก {allIndicators.length} ตัวชี้วัดที่มีใน workspace</span><button type="button" onClick={() => onGroupChange('all')}>ล้างตัวกรอง <span>↗</span></button></div>
+        <div className="table-footer"><span>แสดง {indicators.length} จาก {allIndicators.length} ตัวชี้วัดที่มีใน workspace</span><button type="button" onClick={() => { onGroupChange('all'); onSearchChange(''); }}>ล้างตัวกรอง <span>↗</span></button></div>
       </section>
     </div>
   );
@@ -167,7 +169,7 @@ function QualityPulseChart({ indicators, fiscalYear }: { indicators: Indicator[]
     return { label: period.monthLabel, fullLabel: period.label, score, target: 85 };
   });
   return (
-    <div className="quality-chart">
+    <div className="quality-chart" role="img" aria-label={`กราฟคะแนนสัญญาณคุณภาพ 12 เดือนของ ${formatFiscalYear(fiscalYear)}`}>
       <ResponsiveContainer width="100%" height={255}>
         <AreaChart data={data} margin={{ top: 16, right: 12, left: -22, bottom: 0 }}>
           <defs><linearGradient id="quality-pulse-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#2dc9c5" stopOpacity={0.28} /><stop offset="100%" stopColor="#2dc9c5" stopOpacity={0.02} /></linearGradient></defs>

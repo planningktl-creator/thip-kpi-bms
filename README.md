@@ -8,6 +8,7 @@ THIP KPI quality intelligence dashboard for a BMS Marketplace frontend. The firs
 - Indicator library containing all 232 THIP 2025 dictionary entries, with wired/demo and pending-source states.
 - Indicator detail view with 12 fiscal months, a monthly bar chart, line-trend toggle, annual rollup, numerator/denominator, target, status, definition, and source tables.
 - Fiscal-year presentation that keeps ISO dates at the data boundary and renders Thai Buddhist Era dates/years in the frontend and CSV export.
+- Keyboard-friendly navigation with skip link, labeled filters, table semantics, visible focus, reduced-motion support, and direct drill-through from group signals to the full catalogue.
 - Demo data that is clearly labelled and safe to use without patient data.
 - BMS session launch parsing and an in-memory `SELECT VERSION()` handshake through the registered query layer.
 - Domain boundaries for session/transport, query registry, HOSxP adapter, indicator definitions, and UI.
