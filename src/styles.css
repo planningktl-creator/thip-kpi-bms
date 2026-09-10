@@ -87,6 +87,7 @@ a { color: inherit; }
 .mobile-topbar { display: none; }
 .connection-banner { width: 100%; max-width: 1440px; min-height: 36px; display: flex; align-items: center; gap: 9px; margin: -13px auto 18px; padding: 8px 13px; border: 1px solid; border-radius: 10px; font-size: 11px; }
 .connection-banner-success { color: #287d7a; border-color: rgba(45, 201, 197, .3); background: rgba(45, 201, 197, .08); }
+.connection-banner-warning { color: #9a7423; border-color: rgba(244, 185, 66, .38); background: rgba(244, 185, 66, .1); }
 .connection-banner-error { color: #a55346; border-color: rgba(239, 123, 104, .28); background: rgba(239, 123, 104, .08); }
 .connection-banner strong { margin-left: auto; font: 600 10px 'Space Grotesk', sans-serif; }
 .page-header { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; }

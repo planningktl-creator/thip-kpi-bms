@@ -1,4 +1,4 @@
-export type BmsRequestPhase = 'session' | 'api';
+export type BmsRequestPhase = 'session' | 'api' | 'data';
 export type BmsRequestFailure = 'network' | 'http' | 'response' | 'message';
 
 export class BmsRequestError extends Error {
@@ -24,6 +24,19 @@ export function getBmsConnectionErrorMessage(error: unknown): string {
       return `อ่าน BMS session ไม่สำเร็จ (HTTP ${error.status})`;
     }
     return 'อ่าน BMS session ไม่ได้ · ตรวจสอบ PasteJSON และ CORS';
+  }
+
+  if (error.phase === 'data') {
+    if (error.failure === 'http' && error.status === 502) {
+      return 'อ่านข้อมูล THIP KPI ไม่ได้ (HTTP 502) · ตรวจสอบ tunnel และ upstream /api/sql';
+    }
+    if (error.failure === 'message') {
+      return 'ยังอ่านข้อมูล THIP KPI ไม่ได้ · ตรวจสอบ source view และสิทธิ์ read-only';
+    }
+    if (error.failure === 'response') {
+      return 'ข้อมูล THIP KPI จาก BMS มีรูปแบบไม่ถูกต้อง · ตรวจสอบ source view';
+    }
+    return 'อ่านข้อมูล THIP KPI ไม่ได้ · ตรวจสอบ source view, CORS และ tunnel';
   }
 
   if (error.failure === 'http' && error.status === 502) {

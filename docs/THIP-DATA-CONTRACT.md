@@ -71,3 +71,19 @@ Before replacing demo data, confirm:
 6. PHI masking and export limits.
 
 The UI should receive a normalized domain object, not raw HOSxP rows.
+
+## Normalized source view contract
+
+Set `VITE_BMS_KPI_SOURCE_VIEW` to a registered read-only table or view when the hospital has a normalized result source. It must expose one row per `indicator_code x fiscal_year x fiscal_month` and at least these columns:
+
+```text
+indicator_code, period_start, fiscal_year, fiscal_month,
+numerator, denominator, value, target, target_scope, percentile,
+indicator_group, unit, direction, category, title, title_th,
+definition, formula, numerator_label, denominator_label,
+source_tables, frequency, reference
+```
+
+`period_start` is the ISO first day of the month. `numerator` and `denominator` remain source facts; `value` is optional when the frontend can derive it from the unit. The app rejects duplicate indicator/month rows and unknown indicator codes rather than silently aggregating them.
+
+When the source-view variable is empty, the app uses the initial HOSxP foundation query for `DH0101`, `DN0101`, and `DR0101`. That query is limited to the definitions confirmed in the supplied THIP dictionary and is not a substitute for the remaining hospital-specific KPI rules.

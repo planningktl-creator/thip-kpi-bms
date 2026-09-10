@@ -9,6 +9,8 @@ export type IndicatorDirection =
 
 export type IndicatorStatus = 'on-track' | 'watch' | 'action' | 'no-data';
 
+export type IndicatorDataSource = 'demo' | 'bms' | 'no-data';
+
 /**
  * The app keeps the Gregorian end year as the stable ISO-side fiscal-year key.
  * For example, fiscalYear 2026 is displayed as ปีงบประมาณ 2569.
@@ -42,6 +44,7 @@ export type AnnualResult = {
 
 export type Indicator = {
   code: string;
+  dataSource?: IndicatorDataSource;
   fiscalYear: FiscalYear;
   group: IndicatorGroup;
   category: string;

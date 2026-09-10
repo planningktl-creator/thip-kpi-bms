@@ -39,7 +39,7 @@ export function DetailView({ indicator, onBack }: Props) {
     <div className="page-stack detail-page">
       <div className="detail-toolbar">
         <button className="back-button" type="button" onClick={onBack}><ArrowLeft size={17} /> กลับไปภาพรวม</button>
-        <div className="detail-toolbar-actions"><span className="demo-label"><Info size={14} /> {hasMonthlyData ? 'demo contract' : 'ยังไม่ผูก source view'}</span><button className="secondary-button" type="button" onClick={() => exportIndicatorCsv(indicator)}><Download size={16} /> ส่งออก CSV</button></div>
+        <div className="detail-toolbar-actions"><span className="demo-label"><Info size={14} /> {indicator.dataSource === 'bms' ? 'BMS live data' : hasMonthlyData ? 'demo contract' : 'ยังไม่ผูก source view'}</span><button className="secondary-button" type="button" onClick={() => exportIndicatorCsv(indicator)}><Download size={16} /> ส่งออก CSV</button></div>
       </div>
 
       <section className="detail-title-block">
@@ -90,7 +90,7 @@ export function DetailView({ indicator, onBack }: Props) {
       </section>
 
       <section className="panel monthly-detail-panel">
-        <div className="panel-heading"><div><span className="panel-eyebrow">12-MONTH DETAIL</span><h3>ตัวตั้ง ตัวหาร และสถานะของทุกเดือน</h3><p>{hasMonthlyData ? 'ตัวเลขในตารางเป็นข้อมูล demo เพื่อแสดง contract ของหน้ารายละเอียด' : 'ยังไม่มีผลลัพธ์รายเดือนของโรงพยาบาล จึงแสดงค่าว่างแทนการคาดเดา'}</p></div><span className="reference-note">{indicator.reference}</span></div>
+        <div className="panel-heading"><div><span className="panel-eyebrow">12-MONTH DETAIL</span><h3>ตัวตั้ง ตัวหาร และสถานะของทุกเดือน</h3><p>{indicator.dataSource === 'bms' ? 'ตัวเลขในตารางอ่านจาก BMS แบบ read-only และจัดกลุ่มตามเดือนงบประมาณ' : hasMonthlyData ? 'ตัวเลขในตารางเป็นข้อมูล demo เพื่อแสดง contract ของหน้ารายละเอียด' : 'ยังไม่มีผลลัพธ์รายเดือนของโรงพยาบาล จึงแสดงค่าว่างแทนการคาดเดา'}</p></div><span className="reference-note">{indicator.reference}</span></div>
         <div className="monthly-table-wrap">
           <table className="monthly-table">
             <thead><tr><th>เดือนงบประมาณ</th><th>ตัวตั้ง (a)</th><th>ตัวหาร (b)</th><th>ผลลัพธ์</th><th>{targetLabel}</th><th>Percentile</th><th>สถานะ</th></tr></thead>

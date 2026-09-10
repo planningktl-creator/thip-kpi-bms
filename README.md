@@ -1,6 +1,6 @@
 # THIP KPI BMS
 
-THIP KPI quality intelligence dashboard for a BMS Marketplace frontend. The first slice is a polished, responsive dashboard and monthly detail view backed by a demo data contract. It is designed to switch to a registered BMS read-only query once the hospital-specific THIP numerator/denominator rules are confirmed.
+THIP KPI quality intelligence dashboard for a BMS Marketplace frontend. It provides a polished, responsive dashboard and monthly detail view with a safe demo fallback and a direct BMS read-only data path. The initial live slice covers three evidence-backed mortality indicators; a registered normalized source view can supply the complete hospital KPI set.
 
 ## What is included
 
@@ -36,7 +36,7 @@ The intended BMS Marketplace deployment follows the same container contract as `
 Build and run locally with Docker Compose:
 
 ```bash
-docker compose build --build-arg BMS_ALLOWED_ORIGINS="https://hosxp.net https://10929-f446.tunnel.hosxp.net" --build-arg VITE_BMS_APP_IDENTIFIER="THIP.KPI.BMS"
+docker compose build --build-arg BMS_ALLOWED_ORIGINS="https://hosxp.net https://10929-f446.tunnel.hosxp.net" --build-arg VITE_BMS_APP_IDENTIFIER="THIP.KPI.BMS" --build-arg VITE_BMS_KPI_SOURCE_VIEW=""
 docker compose up -d
 ```
 
@@ -54,6 +54,8 @@ python scripts/bms-connectivity-smoke.py
 
 The smoke verifies PasteJSON, CORS preflight, authenticated `SELECT VERSION()`, the app identifier, and CORS headers on the actual API response.
 
+When `VITE_BMS_KPI_SOURCE_VIEW` is empty, the app runs the evidence-backed HOSxP foundation query for `DH0101`, `DN0101`, and `DR0101`. To expose more indicators, register a normalized read-only source view and build with `VITE_BMS_KPI_SOURCE_VIEW` set to its table/view name. The view contract is documented in `docs/THIP-DATA-CONTRACT.md`.
+
 The repository intentionally keeps the GitHub mirror remote separate from the BMS deployment remote. The BMS remote and application identifier must be supplied by the platform owner before production registration.
 
 ## Build and test
@@ -65,8 +67,8 @@ pnpm test
 
 ## Data boundary
 
-`HOSxP Structure.xlsx` is used as a schema inventory. `THIP KPI.pdf` is the 2025 KPI dictionary and defines the five THIP groups (D, C, S, H, A), monthly reporting expectation, and numerator/denominator model. The supplied files do not contain hospital KPI observations, so the UI does not invent live results. Hospital-specific KPI SQL must be added to `src/services/queryRegistry.ts` only after the source table/view, grain, code list, and data-quality rules are confirmed on anonymized staging data.
+`HOSxP Structure.xlsx` is used as a schema inventory. `THIP KPI.pdf` is the 2025 KPI dictionary and defines the five THIP groups (D, C, S, H, A), monthly reporting expectation, and numerator/denominator model. The first live foundation query uses the PDF definitions for `DH0101` (PDF page 39), `DN0101` (page 67), and `DR0101` (page 79), together with the HOSxP `ipt`, `an_stat`, `iptdiag`, and `death` tables. The query preserves raw numerator/denominator counts and returns one row per indicator/month. Hospital-specific source views and further KPI SQL must still be validated on anonymized staging data before being enabled.
 
-The 232-entry indicator library is intentionally complete at the catalogue/definition level. The first 12 indicators have demo monthly rows to exercise the dashboard and detail interaction; other indicators open the same 12-month detail contract with an explicit `no-data` state until their hospital source view is mapped.
+The 232-entry indicator library is intentionally complete at the catalogue/definition level. Three mortality indicators can now be replaced by BMS results when the session/API is healthy. The remaining foundation slice keeps its demo rows until its hospital source rules are mapped; a normalized source view can replace all catalogue entries at once.
 
 The app follows the BMS baseline: HOSxP is read-only, SQL is allow-listed, parameters are typed, and no PHI is committed to the repository.

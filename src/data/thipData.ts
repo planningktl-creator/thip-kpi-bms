@@ -379,6 +379,7 @@ export const demoIndicators: Indicator[] = seeds.map((seed) => {
   const monthly = makeMonthly(seed.values, seed.denominators, seed.unit, seed.target, targetScope, seed.direction);
   return {
     code: seed.code,
+    dataSource: 'demo',
     fiscalYear: DEMO_FISCAL_YEAR,
     group: seed.group,
     category: seed.category,

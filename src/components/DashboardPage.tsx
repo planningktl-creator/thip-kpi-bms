@@ -41,6 +41,7 @@ type Props = {
   onOpenIndicator: (code: string) => void;
   onOpenCatalog: () => void;
   connection: BmsConnection;
+  dataSource: 'demo' | 'loading' | 'live' | 'partial' | 'unavailable';
 };
 
 export function DashboardPage({
@@ -57,6 +58,7 @@ export function DashboardPage({
   onOpenIndicator,
   onOpenCatalog,
   connection,
+  dataSource,
 }: Props) {
   const fiscalMonths = getFiscalMonthPeriods(fiscalYear);
   const selectedMonth = fiscalMonths[monthIndex] ?? fiscalMonths[11]!;
@@ -78,7 +80,7 @@ export function DashboardPage({
         </div>
         <div className="page-actions">
           <label className="fiscal-year-control"><span>ปีงบประมาณ</span><select aria-label="เลือกปีงบประมาณ" value={fiscalYear} onChange={(event) => onFiscalYearChange(Number(event.target.value))}><option value={fiscalYear}>{formatFiscalYear(fiscalYear)}</option></select><ChevronDown size={14} aria-hidden="true" /></label>
-          <div className={`connection-chip connection-chip-${connection.status}`}><span className="connection-led" />{connection.status === 'connected' ? 'BMS connected' : 'Demo data'}</div>
+          <div className={`connection-chip connection-chip-${connection.status}`}><span className="connection-led" />{dataSource === 'live' ? 'BMS live data' : dataSource === 'partial' ? 'BMS + demo' : dataSource === 'loading' ? 'Loading KPI' : dataSource === 'unavailable' ? 'Demo fallback' : connection.status === 'connected' ? 'BMS connected' : 'Demo data'}</div>
           <span className="secondary-button dashboard-refresh-note" role="status"><Clock3 size={16} /> อัปเดตล่าสุด 08:45 · {selectedMonth.label}</span>
         </div>
       </div>
@@ -142,7 +144,7 @@ export function DashboardPage({
               );
             })}
           </div>
-          <div className="group-panel-note"><ShieldNote /> ขณะนี้แสดงผลจาก demo contract · live mapping จะยึด source view ที่ยืนยันกับโรงพยาบาล</div>
+          <div className="group-panel-note"><ShieldNote /> {dataSource === 'live' ? 'แสดงผลจากข้อมูล BMS จริงตาม source view ที่ลงทะเบียนแล้ว' : dataSource === 'partial' ? 'บางรายการเป็นข้อมูล BMS จริง ส่วนรายการที่ยังไม่มี query ใช้ demo contract' : dataSource === 'loading' ? 'กำลังอ่านผลลัพธ์รายเดือนจาก BMS' : 'แสดงผลจาก demo contract · live mapping จะยึด source view ที่ยืนยันกับโรงพยาบาล'}</div>
         </article>
       </section>
 

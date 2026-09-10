@@ -6,6 +6,7 @@ services:
         BMS_ALLOWED_ORIGINS: "${BMS_ALLOWED_ORIGINS:-https://hosxp.net https://10929-f446.tunnel.hosxp.net}"
         VITE_BASE_PATH: "/"
         VITE_BMS_APP_IDENTIFIER: "${VITE_BMS_APP_IDENTIFIER:-THIP.KPI.BMS}"
+        VITE_BMS_KPI_SOURCE_VIEW: "${VITE_BMS_KPI_SOURCE_VIEW:-}"
     container_name: thip-kpi-bms
     ports:
       - "3082:8080"

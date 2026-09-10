@@ -1190,6 +1190,7 @@ export function createNoDataIndicator(entry: ThipCatalogueEntry): Indicator {
 
   return {
     code: entry.code,
+    dataSource: 'no-data',
     fiscalYear: DEMO_FISCAL_YEAR,
     group: entry.group,
     category: groupMeta[entry.group].label,

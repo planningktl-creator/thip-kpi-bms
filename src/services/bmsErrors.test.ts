@@ -18,4 +18,10 @@ describe('BMS connection error messages', () => {
     expect(getBmsConnectionErrorMessage(error)).toContain('BMS session');
     expect(getBmsConnectionErrorMessage(error)).not.toContain('BMS API');
   });
+
+  it('identifies a failed KPI data query separately from the handshake', () => {
+    const error = new BmsRequestError('data', 'http', 'bad gateway', 502);
+    expect(getBmsConnectionErrorMessage(error)).toContain('ข้อมูล THIP KPI');
+    expect(getBmsConnectionErrorMessage(error)).toContain('upstream /api/sql');
+  });
 });

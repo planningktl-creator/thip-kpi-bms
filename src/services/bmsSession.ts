@@ -80,7 +80,7 @@ export async function connectBmsSession(): Promise<{
       userName: info?.name,
     };
     const probe = await executeRegisteredQuery(queryRegistry.versionProbe, runtime, undefined, marketplaceToken ?? undefined);
-    const version = String(probe.data?.[0]?.version ?? '');
+    const version = String((probe.data?.[0] ?? probe.result?.[0])?.version ?? '');
     const databaseType = /postgres/i.test(version) || /postgres/i.test(info?.bms_database_type ?? '')
       ? 'PostgreSQL'
       : info?.bms_database_type || 'ไม่ทราบชนิดฐานข้อมูล';
@@ -94,7 +94,7 @@ export async function connectBmsSession(): Promise<{
         apiUrl,
         databaseType,
         message: databaseType === 'PostgreSQL'
-          ? 'เชื่อมต่อ BMS สำเร็จ · ข้อมูล KPI ยังแสดง demo จนกว่าจะยืนยัน source view ของโรงพยาบาล'
+          ? 'เชื่อมต่อ BMS สำเร็จ · ตรวจสอบสิทธิ์ query แบบ read-only แล้ว'
           : 'เชื่อมต่อแล้ว แต่ต้องใช้ PostgreSQL สำหรับ query foundation นี้',
       },
     };

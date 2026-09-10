@@ -21,4 +21,6 @@ These notes record the source boundary for the first implementation slice.
 
 ## Current product decision
 
-The UI ships with a clearly labelled demo data contract. The live BMS handshake is implemented, but the app deliberately does not pretend that a generic HOSxP schema is a complete THIP calculation engine. The next data task is to confirm the hospital-specific THIP source view or submission table and then add one registered query per use case.
+The UI ships with a clearly labelled demo fallback and a live foundation query. The first query implements `DH0101`, `DN0101`, and `DR0101` from the PDF definitions using `ipt`, `an_stat`, `iptdiag`, and `death`, returning one row per indicator and fiscal month. The app keeps the other indicators on the demo contract until their hospital-specific numerator/denominator rules are confirmed.
+
+For a complete hospital implementation, register a normalized read-only source view and set `VITE_BMS_KPI_SOURCE_VIEW`. The view contract is recorded in `docs/THIP-DATA-CONTRACT.md`; it allows the same frontend to replace all catalogue entries without exposing raw patient rows.

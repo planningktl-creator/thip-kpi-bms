@@ -5,6 +5,9 @@ describe('BMS query registry', () => {
   it('accepts the registered read-only probes', () => {
     expect(() => assertRegisteredReadOnlyQuery(queryRegistry.versionProbe)).not.toThrow();
     expect(() => assertRegisteredReadOnlyQuery(queryRegistry.ipdMonthlyFoundation)).not.toThrow();
+    expect(() => assertRegisteredReadOnlyQuery(queryRegistry.thipMortalityFoundation)).not.toThrow();
+    expect(queryRegistry.thipMortalityFoundation.sql).toContain('has_acs_sdx');
+    expect(queryRegistry.thipMortalityFoundation.sql).toContain('died_from_acs');
   });
 
   it('rejects write statements even if someone adds one to a query object', () => {

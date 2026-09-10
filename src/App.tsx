@@ -6,9 +6,13 @@ import { DetailView } from '@/components/DetailView';
 import { CatalogPage } from '@/components/CatalogPage';
 import { DEMO_FISCAL_YEAR, demoIndicators, groupMeta } from '@/data/thipData';
 import { createNoDataIndicator, thipCatalogue, thipCatalogueByCode } from '@/data/thipCatalogue';
-import { connectBmsSession } from '@/services/bmsSession';
+import { connectBmsSession, type BmsRuntimeConfig } from '@/services/bmsSession';
+import { foundationIndicatorCodes, loadBmsIndicators } from '@/services/bmsData';
+import { getBmsConnectionErrorMessage } from '@/services/bmsErrors';
 import type { BmsConnection, IndicatorGroup } from '@/types/thip';
 import { formatFiscalYear } from '@/utils/fiscal';
+
+type DataSourceState = 'demo' | 'loading' | 'live' | 'partial' | 'unavailable';
 
 function getInitialRoute(): { view: View; code: string | null } {
   const params = new URLSearchParams(window.location.search);
@@ -27,27 +31,70 @@ export default function App() {
   const [fiscalYear, setFiscalYear] = useState(DEMO_FISCAL_YEAR);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [connection, setConnection] = useState<BmsConnection>({ status: 'demo', message: 'ยังไม่ได้เปิดจาก BMS launcher' });
+  const [runtime, setRuntime] = useState<BmsRuntimeConfig | null>(null);
+  const [indicators, setIndicators] = useState(demoIndicators);
+  const [dataSource, setDataSource] = useState<DataSourceState>('demo');
+  const [dataMessage, setDataMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     void connectBmsSession().then((result) => {
-      if (!cancelled) setConnection(result.connection);
+      if (cancelled) return;
+      setConnection(result.connection);
+      const connectedRuntime = result.connection.status === 'connected' ? result.runtime ?? null : null;
+      setRuntime(connectedRuntime);
+      if (!connectedRuntime) setDataSource('demo');
     });
     return () => { cancelled = true; };
   }, []);
 
+  useEffect(() => {
+    if (!runtime) return;
+    let cancelled = false;
+    setDataSource('loading');
+    setDataMessage(null);
+    void loadBmsIndicators(runtime, fiscalYear).then((result) => {
+      if (cancelled) return;
+      if (!result.rowCount) {
+        setIndicators(demoIndicators);
+        setDataSource('unavailable');
+        setDataMessage('BMS query สำเร็จ แต่ยังไม่พบผลลัพธ์ในช่วงปีงบประมาณที่เลือก');
+        return;
+      }
+      setIndicators(result.indicators);
+      setDataSource(result.sourceView || result.liveCodes.length === foundationIndicatorCodes.length ? 'live' : 'partial');
+      setDataMessage(result.sourceView
+        ? `อ่านข้อมูลจาก source view ${result.sourceView} แล้ว`
+        : `อ่านข้อมูลจริง ${result.liveCodes.length} ตัวชี้วัดจาก HOSxP แล้ว`);
+    }).catch((error: unknown) => {
+      if (cancelled) return;
+      setIndicators(demoIndicators);
+      setDataSource('unavailable');
+      setDataMessage(getBmsConnectionErrorMessage(error));
+    });
+    return () => { cancelled = true; };
+  }, [runtime, fiscalYear]);
+
   const filteredIndicators = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
-    return demoIndicators.filter((indicator) => {
+    return indicators.filter((indicator) => {
       const matchesGroup = activeGroup === 'all' || indicator.group === activeGroup;
       const matchesSearch = !normalizedSearch || [indicator.code, indicator.title, indicator.titleTh, indicator.category].some((text) => text.toLowerCase().includes(normalizedSearch));
       return matchesGroup && matchesSearch;
     });
-  }, [activeGroup, search]);
+  }, [activeGroup, indicators, search]);
 
   const selectedIndicator = selectedCode
-    ? demoIndicators.find((indicator) => indicator.code === selectedCode) ?? (thipCatalogueByCode.get(selectedCode) ? createNoDataIndicator(thipCatalogueByCode.get(selectedCode)!) : null)
+    ? indicators.find((indicator) => indicator.code === selectedCode) ?? (thipCatalogueByCode.get(selectedCode) ? createNoDataIndicator(thipCatalogueByCode.get(selectedCode)!) : null)
     : null;
+
+  const dataLabel = dataSource === 'live'
+    ? 'Live data'
+    : dataSource === 'partial'
+      ? 'Live + demo'
+      : dataSource === 'loading'
+        ? 'กำลังอ่านข้อมูล'
+        : 'Demo data';
 
   function navigate(nextView: View, code: string | null = selectedCode) {
     setView(nextView);
@@ -89,7 +136,7 @@ export default function App() {
         </div>
 
         {connection.status === 'connected' && (
-          <div className="connection-banner connection-banner-success" role="status" aria-live="polite"><RefreshCw size={15} /><span>{connection.message}</span><strong>{connection.hospitalCode || 'BMS'}</strong></div>
+          <div className={`connection-banner ${dataSource === 'unavailable' ? 'connection-banner-warning' : 'connection-banner-success'}`} role="status" aria-live="polite"><RefreshCw size={15} /><span>{dataSource === 'unavailable' ? dataMessage : connection.message}</span><strong>{dataSource === 'unavailable' ? 'ใช้ demo' : dataLabel}</strong></div>
         )}
         {connection.status === 'error' && (
           <div className="connection-banner connection-banner-error" role="alert"><WifiOff size={15} /><span>{connection.message}</span><strong>กลับไปใช้ demo</strong></div>
@@ -100,7 +147,7 @@ export default function App() {
         ) : view === 'catalog' ? (
           <CatalogPage
             entries={thipCatalogue}
-            wiredCodes={new Set(demoIndicators.map((indicator) => indicator.code))}
+            wiredCodes={new Set(indicators.filter((indicator) => indicator.dataSource !== 'no-data').map((indicator) => indicator.code))}
             activeGroup={activeGroup}
             search={search}
             onSearchChange={setSearch}
@@ -110,7 +157,7 @@ export default function App() {
         ) : (
           <DashboardPage
             indicators={filteredIndicators}
-            allIndicators={demoIndicators}
+            allIndicators={indicators}
             activeGroup={activeGroup}
             onGroupChange={(group) => { setActiveGroup(group); setSearch(''); }}
             search={search}
@@ -122,6 +169,7 @@ export default function App() {
             onOpenIndicator={openIndicator}
             onOpenCatalog={() => navigate('catalog', null)}
             connection={connection}
+            dataSource={dataSource}
           />
         )}
 
