@@ -15,7 +15,7 @@ import type { LucideIcon } from 'lucide-react';
 import type { BmsConnection, IndicatorGroup } from '@/types/thip';
 import { groupMeta } from '@/data/thipData';
 
-type View = 'dashboard' | 'detail';
+export type View = 'dashboard' | 'catalog' | 'detail';
 
 type Props = {
   view: View;
@@ -36,7 +36,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { label: 'ภาพรวมคุณภาพ', hint: 'Quality overview', icon: LayoutDashboard, view: 'dashboard' },
-  { label: 'ตัวชี้วัดรายเดือน', hint: 'Monthly indicators', icon: CalendarDays, view: 'dashboard' },
+  { label: 'คลังตัวชี้วัด', hint: 'Indicator library', icon: CalendarDays, view: 'catalog' },
 ];
 
 export function Sidebar({
@@ -71,13 +71,13 @@ export function Sidebar({
         <nav className="sidebar-nav">
           {navItems.map((item, index) => {
             const Icon = item.icon;
-            const active = view === item.view && (index === 0 || activeGroup === 'all');
+            const active = view === item.view;
             return (
               <button
                 key={item.label}
                 className={`sidebar-nav-item ${active ? 'is-active' : ''}`}
                 onClick={() => {
-                  onGroupChange('all');
+                  if (index === 0) onGroupChange('all');
                   onNavigate(item.view);
                   onClose();
                 }}

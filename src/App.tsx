@@ -1,18 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Menu, RefreshCw, WifiOff } from 'lucide-react';
-import { Sidebar } from '@/components/Sidebar';
+import { Sidebar, type View } from '@/components/Sidebar';
 import { DashboardPage } from '@/components/DashboardPage';
 import { DetailView } from '@/components/DetailView';
+import { CatalogPage } from '@/components/CatalogPage';
 import { demoIndicators, groupMeta } from '@/data/thipData';
+import { createNoDataIndicator, thipCatalogue, thipCatalogueByCode } from '@/data/thipCatalogue';
 import { connectBmsSession } from '@/services/bmsSession';
 import type { BmsConnection, IndicatorGroup } from '@/types/thip';
-
-type View = 'dashboard' | 'detail';
 
 function getInitialRoute(): { view: View; code: string | null } {
   const params = new URLSearchParams(window.location.search);
   const code = params.get('indicator');
-  return { view: code ? 'detail' : 'dashboard', code };
+  const view = params.get('view') === 'catalog' ? 'catalog' : code ? 'detail' : 'dashboard';
+  return { view, code };
 }
 
 export default function App() {
@@ -42,7 +43,9 @@ export default function App() {
     });
   }, [activeGroup, search]);
 
-  const selectedIndicator = demoIndicators.find((indicator) => indicator.code === selectedCode) ?? null;
+  const selectedIndicator = selectedCode
+    ? demoIndicators.find((indicator) => indicator.code === selectedCode) ?? (thipCatalogueByCode.get(selectedCode) ? createNoDataIndicator(thipCatalogueByCode.get(selectedCode)!) : null)
+    : null;
 
   function navigate(nextView: View, code: string | null = selectedCode) {
     setView(nextView);
@@ -91,6 +94,16 @@ export default function App() {
 
         {view === 'detail' && selectedIndicator ? (
           <DetailView indicator={selectedIndicator} onBack={() => navigate('dashboard', null)} />
+        ) : view === 'catalog' ? (
+          <CatalogPage
+            entries={thipCatalogue}
+            wiredCodes={new Set(demoIndicators.map((indicator) => indicator.code))}
+            activeGroup={activeGroup}
+            search={search}
+            onSearchChange={setSearch}
+            onGroupChange={setActiveGroup}
+            onOpen={openIndicator}
+          />
         ) : (
           <DashboardPage
             indicators={filteredIndicators}

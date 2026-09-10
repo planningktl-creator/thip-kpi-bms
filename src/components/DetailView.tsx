@@ -30,12 +30,13 @@ export function DetailView({ indicator, onBack }: Props) {
     ? indicator.direction === 'lower-is-better' ? latest.value < previous.value : latest.value > previous.value
     : null;
   const dataMonths = indicator.monthly.filter((month) => month.value !== null).length;
+  const hasMonthlyData = dataMonths > 0;
 
   return (
     <div className="page-stack detail-page">
       <div className="detail-toolbar">
         <button className="back-button" type="button" onClick={onBack}><ArrowLeft size={17} /> กลับไปภาพรวม</button>
-        <div className="detail-toolbar-actions"><span className="demo-label"><Info size={14} /> demo contract</span><button className="secondary-button" type="button" onClick={() => exportIndicatorCsv(indicator)}><Download size={16} /> ส่งออก CSV</button></div>
+        <div className="detail-toolbar-actions"><span className="demo-label"><Info size={14} /> {hasMonthlyData ? 'demo contract' : 'ยังไม่ผูก source view'}</span><button className="secondary-button" type="button" onClick={() => exportIndicatorCsv(indicator)}><Download size={16} /> ส่งออก CSV</button></div>
       </div>
 
       <section className="detail-title-block">
@@ -65,12 +66,12 @@ export function DetailView({ indicator, onBack }: Props) {
           <div className="definition-block"><span className="definition-label">สูตรคำนวณ</span><strong>{indicator.formula}</strong></div>
           <div className="definition-split"><div><span className="definition-label">ตัวตั้ง (a)</span><p>{indicator.numeratorLabel}</p></div><div><span className="definition-label">ตัวหาร (b)</span><p>{indicator.denominatorLabel}</p></div></div>
           <div className="definition-block"><span className="definition-label">นิยาม / ขอบเขต</span><p>{indicator.definition}</p></div>
-          <div className="definition-meta"><span><Database size={14} /> {indicator.sourceTables.join(' · ')}</span><span><CalendarRange size={14} /> {indicator.frequency}</span></div>
+          <div className="definition-meta"><span><Database size={14} /> {indicator.sourceTables.length ? indicator.sourceTables.join(' · ') : 'รอผูก source view'}</span><span><CalendarRange size={14} /> {indicator.frequency}</span></div>
         </article>
       </section>
 
       <section className="panel monthly-detail-panel">
-        <div className="panel-heading"><div><span className="panel-eyebrow">12-MONTH DETAIL</span><h3>ตัวตั้ง ตัวหาร และสถานะของทุกเดือน</h3><p>ตัวเลขในตารางเป็นข้อมูล demo เพื่อแสดง contract ของหน้ารายละเอียด</p></div><span className="reference-note">{indicator.reference}</span></div>
+        <div className="panel-heading"><div><span className="panel-eyebrow">12-MONTH DETAIL</span><h3>ตัวตั้ง ตัวหาร และสถานะของทุกเดือน</h3><p>{hasMonthlyData ? 'ตัวเลขในตารางเป็นข้อมูล demo เพื่อแสดง contract ของหน้ารายละเอียด' : 'ยังไม่มีผลลัพธ์รายเดือนของโรงพยาบาล จึงแสดงค่าว่างแทนการคาดเดา'}</p></div><span className="reference-note">{indicator.reference}</span></div>
         <div className="monthly-table-wrap">
           <table className="monthly-table">
             <thead><tr><th>เดือนงบประมาณ</th><th>ตัวตั้ง (a)</th><th>ตัวหาร (b)</th><th>ผลลัพธ์</th><th>เป้าหมาย</th><th>Percentile</th><th>สถานะ</th></tr></thead>

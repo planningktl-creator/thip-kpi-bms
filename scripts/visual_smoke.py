@@ -27,6 +27,18 @@ def main() -> None:
         assert desktop.locator(".monthly-table tbody tr").count() == 12
         assert desktop.get_by_text("DH0101", exact=True).count() >= 1
 
+        catalog = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1)
+        catalog.goto("http://127.0.0.1:5173/?view=catalog", wait_until="networkidle")
+        catalog.screenshot(path=str(ARTIFACTS / "catalog-desktop.png"), full_page=True)
+        assert catalog.locator(".catalog-page").count() == 1
+        assert catalog.locator(".catalog-table tbody tr").count() == 232
+        pending_row = catalog.locator(".catalog-table tbody tr", has=catalog.locator(".catalog-state-pending")).first
+        assert pending_row.count() == 1
+        pending_row.click()
+        catalog.wait_for_selector(".monthly-detail-panel")
+        assert catalog.locator(".monthly-table tbody tr").count() == 12
+        assert catalog.locator(".status-muted").count() >= 1
+
         mobile = browser.new_page(viewport={"width": 390, "height": 844}, device_scale_factor=1)
         mobile.goto("http://127.0.0.1:5173", wait_until="networkidle")
         mobile.screenshot(path=str(ARTIFACTS / "dashboard-mobile.png"), full_page=True)

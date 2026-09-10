@@ -32,6 +32,10 @@ type MonthlyResult = {
 };
 ```
 
+## Source catalogue
+
+`src/data/thipCatalogue.ts` contains the 232 indicator definitions extracted from the THIP KPI Dictionary 2025. A catalogue entry is enough to navigate to a detail route, but it is not evidence that the hospital has a queryable result. Until an entry is mapped to a registered read-only source view, `createNoDataIndicator()` returns twelve monthly rows with null numerator, denominator, value, target, and percentile fields.
+
 ## Live query requirements
 
 Before replacing demo data, confirm:
