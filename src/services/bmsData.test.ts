@@ -45,4 +45,34 @@ describe('BMS KPI data adapter', () => {
       vi.unstubAllGlobals();
     }
   });
+
+  it('accepts the BMS result response envelope', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: vi.fn().mockResolvedValue(JSON.stringify({
+        result: [{
+          indicator_code: 'DH0101',
+          period_start: '2025-10-01',
+          fiscal_year: 2026,
+          fiscal_month: 1,
+          numerator: 1,
+          denominator: 4,
+          value: 25,
+        }],
+      })),
+    }));
+
+    try {
+      const result = await loadBmsIndicators({
+        apiUrl: 'https://bms.test',
+        bearerToken: 'test-token',
+        appIdentifier: 'THIP.KPI.BMS',
+      }, 2026);
+      expect(result.liveCodes).toEqual(['DH0101']);
+      expect(result.indicators.find((indicator) => indicator.code === 'DH0101')).toMatchObject({ dataSource: 'bms' });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });
