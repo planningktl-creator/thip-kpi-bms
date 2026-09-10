@@ -23,11 +23,26 @@ pnpm dev
 
 Open the local Vite URL. Without a BMS launcher URL, the app stays in demo mode. A BMS launch URL may include `bms-session-id` and an optional `marketplace-token`; the app never writes either value to localStorage or logs them.
 
-## Public deployment
+## Public preview
 
-The demo frontend is deployed with GitHub Pages:
+The demo frontend is also published as a public GitHub Pages preview:
 
 https://planningktl-creator.github.io/thip-kpi-bms/
+
+## BMS deployment
+
+The intended BMS Marketplace deployment follows the same container contract as `IPTImprove`: a multi-stage Docker build, an unprivileged Nginx runtime on container port `8080`, SPA fallback, immutable asset caching, security headers, CSP, and a `/healthz` endpoint.
+
+Build and run locally with Docker Compose:
+
+```bash
+docker compose build --build-arg BMS_ALLOWED_ORIGINS="https://hosxp.net https://your-bms-host.example"
+docker compose up -d
+```
+
+The local container is available at `http://127.0.0.1:3082/`. Replace the origins with the approved BMS/HOSxP origins for staging or production; the value is validated as a space-separated list of `http(s)` origins and is used only to render the Nginx CSP.
+
+The repository intentionally keeps the GitHub mirror remote separate from the BMS deployment remote. The BMS remote and application identifier must be supplied by the platform owner before production registration.
 
 ## Build and test
 

@@ -1,0 +1,14 @@
+node_modules
+dist
+.vite
+coverage
+tmp
+.git
+.github
+.gitignore
+*.tsbuildinfo
+*.log
+.hermes
+.vscode
+docs
+tests

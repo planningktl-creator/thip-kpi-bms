@@ -1,0 +1,38 @@
+name: THIP KPI web CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 25
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: pnpm run build
+      - run: docker build --build-arg BMS_ALLOWED_ORIGINS="https://hosxp.net" --tag thip-kpi-bms:ci .
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: python -m pip install playwright
+      - run: python -m playwright install --with-deps chromium
+      - run: pnpm dev -- --host 127.0.0.1 --port 5173 > /tmp/thip-kpi-bms-preview.log 2>&1 &
+      - run: python scripts/visual_smoke.py

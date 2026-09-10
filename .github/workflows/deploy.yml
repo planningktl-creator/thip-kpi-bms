@@ -37,6 +37,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build
+        env:
+          VITE_BASE_PATH: /thip-kpi-bms/
         run: pnpm run build
 
       - name: Configure Pages
