@@ -23,6 +23,12 @@ pnpm dev
 
 Open the local Vite URL. Without a BMS launcher URL, the app stays in demo mode. A BMS launch URL may include `bms-session-id` and an optional `marketplace-token`; the app never writes either value to localStorage or logs them.
 
+## Public deployment
+
+The demo frontend is deployed with GitHub Pages:
+
+https://planningktl-creator.github.io/thip-kpi-bms/
+
 ## Build and test
 
 ```bash
