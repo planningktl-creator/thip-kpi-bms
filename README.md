@@ -36,11 +36,23 @@ The intended BMS Marketplace deployment follows the same container contract as `
 Build and run locally with Docker Compose:
 
 ```bash
-docker compose build --build-arg BMS_ALLOWED_ORIGINS="https://hosxp.net https://your-bms-host.example"
+docker compose build --build-arg BMS_ALLOWED_ORIGINS="https://hosxp.net https://10929-f446.tunnel.hosxp.net" --build-arg VITE_BMS_APP_IDENTIFIER="THIP.KPI.BMS"
 docker compose up -d
 ```
 
-The local container is available at `http://127.0.0.1:3082/`. Replace the origins with the approved BMS/HOSxP origins for staging or production; the value is validated as a space-separated list of `http(s)` origins and is used only to render the Nginx CSP.
+The local container is available at `http://127.0.0.1:3082/`. Replace the origins with the approved BMS/HOSxP origins for staging or production; the value is validated as a space-separated list of `http(s)` origins and is used only to render the Nginx CSP. `VITE_BMS_APP_IDENTIFIER` must match the identifier registered by the BMS platform.
+
+Before testing a live session, the BMS API must allow the deployed app origin `https://thip-kpi-10929.kube.bmscloud.in.th` on `OPTIONS` and `POST /api/sql` for `Authorization` and `Content-Type`. The tunnel must return a healthy response rather than `502 Bad Gateway`.
+
+Run the read-only connectivity smoke with a fresh session ID supplied through the environment; the script never prints the session token or query result:
+
+```powershell
+$env:THIP_BMS_SESSION_ID = '<fresh-session-id>'
+$env:THIP_APP_ORIGIN = 'https://thip-kpi-10929.kube.bmscloud.in.th'
+python scripts/bms-connectivity-smoke.py
+```
+
+The smoke verifies PasteJSON, CORS preflight, authenticated `SELECT VERSION()`, the app identifier, and CORS headers on the actual API response.
 
 The repository intentionally keeps the GitHub mirror remote separate from the BMS deployment remote. The BMS remote and application identifier must be supplied by the platform owner before production registration.
 

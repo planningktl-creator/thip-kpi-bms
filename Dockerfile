@@ -2,10 +2,12 @@ FROM node:25.8.0-alpine AS build
 
 WORKDIR /app
 
-ARG BMS_ALLOWED_ORIGINS="https://hosxp.net"
+ARG BMS_ALLOWED_ORIGINS="https://hosxp.net https://10929-f446.tunnel.hosxp.net"
 ENV THIP_BMS_ALLOWED_ORIGINS="${BMS_ALLOWED_ORIGINS}"
 ARG VITE_BASE_PATH="/"
 ENV VITE_BASE_PATH="${VITE_BASE_PATH}"
+ARG VITE_BMS_APP_IDENTIFIER="THIP.KPI.BMS"
+ENV VITE_BMS_APP_IDENTIFIER="${VITE_BMS_APP_IDENTIFIER}"
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN npm install --global pnpm@11.19.0 \

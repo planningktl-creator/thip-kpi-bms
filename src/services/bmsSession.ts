@@ -1,4 +1,5 @@
 import { executeRegisteredQuery, queryRegistry } from '@/services/queryRegistry';
+import { BmsRequestError, getBmsConnectionErrorMessage } from '@/services/bmsErrors';
 import type { BmsConnection } from '@/types/thip';
 
 const appIdentifier = import.meta.env.VITE_BMS_APP_IDENTIFIER || 'THIP.KPI.BMS';
@@ -38,9 +39,20 @@ export function getLaunchContext(): {
 }
 
 async function retrieveSession(sessionId: string): Promise<RawSession> {
-  const response = await fetch(`${pasteJsonUrl}?Action=GET&code=${encodeURIComponent(sessionId)}`);
-  if (!response.ok) throw new Error(`ไม่สามารถอ่าน BMS session ได้ (HTTP ${response.status})`);
-  return (await response.json()) as RawSession;
+  let response: Response;
+  try {
+    response = await fetch(`${pasteJsonUrl}?Action=GET&code=${encodeURIComponent(sessionId)}`);
+  } catch (error) {
+    throw new BmsRequestError('session', 'network', 'PasteJSON request failed', undefined, { cause: error });
+  }
+  if (!response.ok) {
+    throw new BmsRequestError('session', 'http', `PasteJSON returned HTTP ${response.status}`, response.status);
+  }
+  try {
+    return (await response.json()) as RawSession;
+  } catch (error) {
+    throw new BmsRequestError('session', 'response', 'PasteJSON returned invalid JSON', response.status, { cause: error });
+  }
 }
 
 export async function connectBmsSession(): Promise<{
@@ -90,7 +102,7 @@ export async function connectBmsSession(): Promise<{
     return {
       connection: {
         status: 'error',
-        message: error instanceof Error ? error.message : 'เชื่อมต่อ BMS ไม่สำเร็จ',
+        message: getBmsConnectionErrorMessage(error),
       },
     };
   }

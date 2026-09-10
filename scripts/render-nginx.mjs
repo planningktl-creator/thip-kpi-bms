@@ -7,7 +7,7 @@ if (!templatePath || !outputPath) {
   throw new Error('Usage: node scripts/render-nginx.mjs <template> <output>');
 }
 
-const allowedOrigins = env.THIP_BMS_ALLOWED_ORIGINS?.trim() || 'https://hosxp.net';
+const allowedOrigins = env.THIP_BMS_ALLOWED_ORIGINS?.trim() || 'https://hosxp.net https://10929-f446.tunnel.hosxp.net';
 const isOrigin = (value) => {
   try {
     const origin = new URL(value);

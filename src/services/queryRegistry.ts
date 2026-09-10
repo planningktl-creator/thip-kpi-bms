@@ -1,3 +1,5 @@
+import { BmsRequestError } from '@/services/bmsErrors';
+
 export type BmsParamType = 'string' | 'integer' | 'float' | 'date' | 'time' | 'datetime' | 'text';
 
 export type BmsParam = {
@@ -67,18 +69,35 @@ export async function executeRegisteredQuery(
   if (params && Object.keys(params).length > 0) body.params = params;
   if (marketplaceToken) body['marketplace-token'] = marketplaceToken;
 
-  const response = await fetch(`${config.apiUrl.replace(/\/$/, '')}/api/sql`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${config.bearerToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${config.apiUrl.replace(/\/$/, '')}/api/sql`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${config.bearerToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+  } catch (error) {
+    throw new BmsRequestError('api', 'network', 'BMS API request failed', undefined, { cause: error });
+  }
 
-  const payload = (await response.json()) as BmsSqlResponse;
-  if (!response.ok || (payload.MessageCode !== undefined && payload.MessageCode >= 400)) {
-    throw new Error(payload.Message || `BMS SQL request failed (${response.status}).`);
+  const responseText = await response.text();
+  if (!response.ok) {
+    throw new BmsRequestError('api', 'http', `BMS API returned HTTP ${response.status}`, response.status);
+  }
+
+  let payload: BmsSqlResponse = {};
+  if (responseText.trim()) {
+    try {
+      payload = JSON.parse(responseText) as BmsSqlResponse;
+    } catch (error) {
+      throw new BmsRequestError('api', 'response', 'BMS API returned invalid JSON', response.status, { cause: error });
+    }
+  }
+  if (payload.MessageCode !== undefined && payload.MessageCode >= 400) {
+    throw new BmsRequestError('api', 'message', payload.Message || 'BMS API rejected the query', response.status);
   }
   return payload;
 }
