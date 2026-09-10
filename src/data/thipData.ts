@@ -374,33 +374,4 @@ const seeds: Seed[] = [
   },
 ];
 
-export const demoIndicators: Indicator[] = seeds.map((seed) => {
-  const targetScope = seed.targetScope ?? 'monthly';
-  const monthly = makeMonthly(seed.values, seed.denominators, seed.unit, seed.target, targetScope, seed.direction);
-  return {
-    code: seed.code,
-    dataSource: 'demo',
-    fiscalYear: DEMO_FISCAL_YEAR,
-    group: seed.group,
-    category: seed.category,
-    title: seed.title,
-    titleTh: seed.titleTh,
-    unit: seed.unit,
-    direction: seed.direction,
-    target: seed.target,
-    targetScope,
-    definition: seed.definition,
-    formula: seed.formula,
-    numeratorLabel: seed.numeratorLabel,
-    denominatorLabel: seed.denominatorLabel,
-    sourceTables: seed.sourceTables,
-    frequency: seed.frequency,
-    reference: seed.reference,
-    monthly,
-    annual: makeAnnual(monthly, DEMO_FISCAL_YEAR, seed.unit, seed.target, seed.direction),
-  };
-});
-
 export const sourceDictionaryCount = 232;
-
-export const allDemoMonthlyResults = demoIndicators.flatMap((indicator) => indicator.monthly);

@@ -1,5 +1,5 @@
 import { createNoDataIndicator, thipCatalogueByCode } from '@/data/thipCatalogue';
-import { demoIndicators } from '@/data/thipData';
+import { createLiveIndicator, type LiveDefinition } from '@/data/liveDefinitions';
 import { BmsRequestError } from '@/services/bmsErrors';
 import {
   executeRegisteredQuery,
@@ -21,7 +21,112 @@ import type {
 } from '@/types/thip';
 import { getFiscalMonthPeriods } from '@/utils/fiscal';
 
-export const foundationIndicatorCodes = ['DH0101', 'DN0101', 'DR0101'] as const;
+export const foundationIndicatorCodes = ['DH0101', 'DN0101', 'DR0101', 'CE0101', 'CI0101', 'DH0102'] as const;
+
+const liveSeeds: Record<string, Omit<LiveDefinition, 'code'>> = {
+  DH0101: {
+    group: 'D',
+    category: 'Cardiovascular disease · Acute coronary syndrome',
+    title: 'Acute coronary syndrome: Percent of mortality',
+    titleTh: 'ร้อยละการเสียชีวิตของผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน',
+    unit: 'percent',
+    direction: 'lower-is-better',
+    target: 3.5,
+    targetScope: 'monthly',
+    definition: 'ผู้ป่วยในอายุ 18 ปีขึ้นไปที่มี Principal diagnosis เป็น Acute coronary syndrome และเสียชีวิตจากทุกสาเหตุ',
+    formula: '(จำนวนผู้ป่วย ACS ที่เสียชีวิต ÷ จำนวนผู้ป่วย ACS ที่จำหน่ายทุกสถานะ) × 100',
+    numeratorLabel: 'จำหน่ายด้วยการเสียชีวิต',
+    denominatorLabel: 'ผู้ป่วย ACS ที่จำหน่ายทั้งหมด',
+    sourceTables: ['ipt', 'iptdiag', 'an_stat'],
+    frequency: 'ทุกเดือน',
+    reference: 'THIP KPI Dictionary 2025 · หน้า 39',
+  },
+  DN0101: {
+    group: 'D',
+    category: 'Neurovascular disease · Stroke',
+    title: 'Stroke: Percent of mortality',
+    titleTh: 'ร้อยละการเสียชีวิตของผู้ป่วย Stroke',
+    unit: 'percent',
+    direction: 'lower-is-better',
+    target: 5,
+    targetScope: 'monthly',
+    definition: 'ผู้ป่วยในที่มี Principal diagnosis หรือโรคร่วมตามกลุ่มรหัส Stroke และจำหน่ายด้วยการเสียชีวิต',
+    formula: '(จำนวนผู้ป่วย Stroke ที่เสียชีวิต ÷ จำนวนผู้ป่วย Stroke ที่จำหน่ายทั้งหมด) × 100',
+    numeratorLabel: 'ผู้ป่วย Stroke ที่เสียชีวิต',
+    denominatorLabel: 'ผู้ป่วย Stroke ที่จำหน่ายทั้งหมด',
+    sourceTables: ['ipt', 'iptdiag', 'an_stat'],
+    frequency: 'ทุกเดือน',
+    reference: 'THIP KPI Dictionary 2025 · หน้า 67',
+  },
+  DR0101: {
+    group: 'D',
+    category: 'Respiratory disease · Pneumonia',
+    title: 'Pneumonia: Percent of mortality',
+    titleTh: 'ร้อยละการเสียชีวิตของผู้ป่วยปอดบวม',
+    unit: 'percent',
+    direction: 'lower-is-better',
+    target: 8,
+    targetScope: 'monthly',
+    definition: 'ผู้ป่วยในที่เข้าเกณฑ์ Pneumonia ตามนิยามและจำหน่ายด้วยการเสียชีวิต',
+    formula: '(จำนวนผู้ป่วย Pneumonia ที่เสียชีวิต ÷ จำนวนผู้ป่วย Pneumonia ที่จำหน่ายทั้งหมด) × 100',
+    numeratorLabel: 'ผู้ป่วย Pneumonia ที่เสียชีวิต',
+    denominatorLabel: 'ผู้ป่วย Pneumonia ที่จำหน่ายทั้งหมด',
+    sourceTables: ['ipt', 'iptdiag', 'an_stat'],
+    frequency: 'ทุกเดือน',
+    reference: 'THIP KPI Dictionary 2025 · หน้า 79',
+  },
+  CE0101: {
+    group: 'C',
+    category: 'Sepsis care process',
+    title: 'Sepsis: Percent of broad-spectrum antibiotic receiving within 3 hours',
+    titleTh: 'ร้อยละผู้ป่วย Sepsis ที่ได้รับยาปฏิชีวนะ broad-spectrum ภายใน 3 ชั่วโมง',
+    unit: 'percent',
+    direction: 'higher-is-better',
+    target: 80,
+    targetScope: 'monthly',
+    definition: 'ผู้ป่วยในที่มี Principal diagnosis หรือโรคร่วมเป็น Sepsis และได้รับยาปฏิชีวนะ broad-spectrum ภายใน 3 ชั่วโมง',
+    formula: '(จำนวนผู้ป่วย Sepsis ที่ได้รับยาปฏิชีวนะ broad-spectrum ภายใน 3 ชั่วโมง ÷ จำนวนผู้ป่วย Sepsis ทั้งหมด) × 100',
+    numeratorLabel: 'ได้รับ broad-spectrum antibiotic ภายใน 3 ชั่วโมง',
+    denominatorLabel: 'ผู้ป่วย Sepsis ที่จำหน่ายทั้งหมด',
+    sourceTables: ['ipt', 'iptdiag', 'an_stat', 'opitemrece', 'drugitems'],
+    frequency: 'ทุกเดือน',
+    reference: 'THIP KPI Dictionary 2025 · หน้า 65',
+  },
+  CI0101: {
+    group: 'C',
+    category: 'Sepsis care process',
+    title: 'Sepsis: Percent of mortality',
+    titleTh: 'ร้อยละการเสียชีวิตของผู้ป่วย Sepsis',
+    unit: 'percent',
+    direction: 'lower-is-better',
+    target: 15,
+    targetScope: 'monthly',
+    definition: 'ผู้ป่วยในที่มี Principal diagnosis หรือโรคร่วมเป็น Sepsis และจำหน่ายด้วยการเสียชีวิต',
+    formula: '(จำนวนผู้ป่วย Sepsis ที่เสียชีวิต ÷ จำนวนผู้ป่วย Sepsis ที่จำหน่ายทั้งหมด) × 100',
+    numeratorLabel: 'ผู้ป่วย Sepsis ที่เสียชีวิต',
+    denominatorLabel: 'ผู้ป่วย Sepsis ที่จำหน่ายทั้งหมด',
+    sourceTables: ['ipt', 'iptdiag', 'an_stat'],
+    frequency: 'ทุกเดือน',
+    reference: 'THIP KPI Dictionary 2025 · หน้า 105',
+  },
+  DH0102: {
+    group: 'D',
+    category: 'Cardiovascular disease · Acute coronary syndrome',
+    title: 'Acute coronary syndrome: Aspirin within 24 hours',
+    titleTh: 'ร้อยละผู้ป่วย ACS ที่ได้รับ Aspirin ภายใน 24 ชั่วโมง',
+    unit: 'percent',
+    direction: 'higher-is-better',
+    target: 90,
+    targetScope: 'monthly',
+    definition: 'ผู้ป่วยในอายุ 18 ปีขึ้นไปที่มี Principal diagnosis เป็น Acute coronary syndrome และได้รับ Aspirin ภายใน 24 ชั่วโมง',
+    formula: '(จำนวนผู้ป่วย ACS ที่ได้รับ Aspirin ภายใน 24 ชั่วโมง ÷ จำนวนผู้ป่วย ACS ที่จำหน่ายทั้งหมด) × 100',
+    numeratorLabel: 'ได้รับ Aspirin ภายใน 24 ชั่วโมง',
+    denominatorLabel: 'ผู้ป่วย ACS ที่จำหน่ายทั้งหมด',
+    sourceTables: ['ipt', 'iptdiag', 'an_stat', 'opitemrece', 'drugitems'],
+    frequency: 'ทุกเดือน',
+    reference: 'THIP KPI Dictionary 2025 · หน้า 42',
+  },
+};
 
 export type RawKpiRow = Record<string, unknown>;
 
@@ -30,6 +135,8 @@ export type BmsDataLoadResult = {
   rowCount: number;
   sourceView: string | null;
   liveCodes: string[];
+  /** ISO timestamp captured when the BMS response was accepted. */
+  refreshedAt: string;
 };
 
 const identifierPart = /^[A-Za-z_][A-Za-z0-9_]*$/;
@@ -187,11 +294,11 @@ function makeAnnual(
   };
 }
 
-function getBaseIndicator(code: string): Indicator | null {
-  const demo = demoIndicators.find((indicator) => indicator.code === code);
-  if (demo) return demo;
+function getBaseIndicator(code: string, fiscalYear: FiscalYear): Indicator | null {
+  const liveSeed = liveSeeds[code];
+  if (liveSeed) return createLiveIndicator({ code, ...liveSeed }, fiscalYear);
   const catalogueEntry = thipCatalogueByCode.get(code);
-  return catalogueEntry ? createNoDataIndicator(catalogueEntry) : null;
+  return catalogueEntry ? createNoDataIndicator(catalogueEntry, fiscalYear) : null;
 }
 
 export function buildIndicatorFromRows(
@@ -199,7 +306,7 @@ export function buildIndicatorFromRows(
   rows: RawKpiRow[],
   fiscalYear: FiscalYear,
 ): Indicator | null {
-  const base = getBaseIndicator(code);
+  const base = getBaseIndicator(code, fiscalYear);
   if (!base) return null;
   const periods = getFiscalMonthPeriods(fiscalYear);
   const firstRow = rows[0];
@@ -308,12 +415,13 @@ function assertNoUnknownCodes(rows: RawKpiRow[]): void {
 export async function loadBmsIndicators(
   runtime: { apiUrl: string; bearerToken: string; appIdentifier: string; marketplaceToken?: string },
   fiscalYear: FiscalYear,
+  options?: { signal?: AbortSignal; timeoutMs?: number },
 ): Promise<BmsDataLoadResult> {
   const sourceView = configuredSourceView();
-  const query = sourceView ? buildSourceViewQuery(sourceView) : queryRegistry.thipMortalityFoundation;
+  const query = sourceView ? buildSourceViewQuery(sourceView) : queryRegistry.thipIpdFoundation;
   let response: BmsSqlResponse;
   try {
-    response = await executeRegisteredQuery(query, runtime, paramsForFiscalYear(fiscalYear, Boolean(sourceView)), runtime.marketplaceToken);
+    response = await executeRegisteredQuery(query, runtime, paramsForFiscalYear(fiscalYear, Boolean(sourceView)), runtime.marketplaceToken, { signal: options?.signal, timeoutMs: options?.timeoutMs });
   } catch (error) {
     throw asDataError(error);
   }
@@ -328,7 +436,7 @@ export async function loadBmsIndicators(
     const indicators = Array.from(codes)
       .map((code) => buildIndicatorFromRows(code, rows.filter((row) => asString(getValue(row, 'indicator_code')) === code), fiscalYear))
       .filter((indicator): indicator is Indicator => Boolean(indicator));
-    return { indicators, rowCount: rows.length, sourceView, liveCodes: rows.map((row) => asString(getValue(row, 'indicator_code'))).filter((code): code is string => Boolean(code)) };
+    return { indicators, rowCount: rows.length, sourceView, liveCodes: rows.map((row) => asString(getValue(row, 'indicator_code'))).filter((code): code is string => Boolean(code)), refreshedAt: new Date().toISOString() };
   }
 
   const byCode = new Map<string, RawKpiRow[]>();
@@ -337,14 +445,14 @@ export async function loadBmsIndicators(
     if (!code) continue;
     byCode.set(code, [...(byCode.get(code) ?? []), row]);
   }
-  const liveIndicators = new Map<string, Indicator | null>(
-    foundationIndicatorCodes.map((code) => [code, buildIndicatorFromRows(code, byCode.get(code) ?? [], fiscalYear)]),
-  );
-  const indicators = demoIndicators.map((indicator) => liveIndicators.get(indicator.code) ?? indicator);
+  const indicators = foundationIndicatorCodes
+    .map((code) => buildIndicatorFromRows(code, byCode.get(code) ?? [], fiscalYear))
+    .filter((indicator): indicator is Indicator => Boolean(indicator));
   return {
     indicators,
     rowCount: rows.length,
     sourceView: null,
     liveCodes: foundationIndicatorCodes.filter((code) => byCode.has(code)),
+    refreshedAt: new Date().toISOString(),
   };
 }

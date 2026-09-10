@@ -24,4 +24,16 @@ describe('BMS connection error messages', () => {
     expect(getBmsConnectionErrorMessage(error)).toContain('ข้อมูล THIP KPI');
     expect(getBmsConnectionErrorMessage(error)).toContain('upstream /api/sql');
   });
+
+  it('explains an expired BMS session with a 401-specific message', () => {
+    const error = new BmsRequestError('data', 'http', 'unauthorized', 401);
+    expect(getBmsConnectionErrorMessage(error)).toContain('401');
+    expect(getBmsConnectionErrorMessage(error)).toContain('BMS launcher');
+  });
+
+  it('explains a timed-out query differently from a network failure', () => {
+    const error = new BmsRequestError('api', 'timeout', 'request timed out');
+    expect(getBmsConnectionErrorMessage(error)).toContain('หมดเวลา');
+    expect(getBmsConnectionErrorMessage(error)).not.toContain('CORS');
+  });
 });

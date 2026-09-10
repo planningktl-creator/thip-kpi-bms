@@ -9,7 +9,7 @@ THIP KPI quality intelligence dashboard for a BMS Marketplace frontend. It provi
 - Indicator detail view with 12 fiscal months, a monthly bar chart, line-trend toggle, annual rollup, numerator/denominator, target, status, definition, and source tables.
 - Fiscal-year presentation that keeps ISO dates at the data boundary and renders Thai Buddhist Era dates/years in the frontend and CSV export.
 - Keyboard-friendly navigation with skip link, labeled filters, table semantics, visible focus, reduced-motion support, and direct drill-through from group signals to the full catalogue.
-- Demo data that is clearly labelled and safe to use without patient data.
+- Demo data that is clearly labelled and safe to use without patient data. The dashboard starts with the full 232-entry catalogue in a no-data state and replaces wired indicators with live BMS results when the session is healthy.
 - BMS session launch parsing and an in-memory `SELECT VERSION()` handshake through the registered query layer.
 - Domain boundaries for session/transport, query registry, HOSxP adapter, indicator definitions, and UI.
 - Export of the selected indicator's monthly result to CSV.
@@ -54,7 +54,7 @@ python scripts/bms-connectivity-smoke.py
 
 The smoke verifies PasteJSON, CORS preflight, authenticated `SELECT VERSION()`, the app identifier, and CORS headers on the actual API response.
 
-When `VITE_BMS_KPI_SOURCE_VIEW` is empty, the app runs the evidence-backed HOSxP foundation query for `DH0101`, `DN0101`, and `DR0101`. To expose more indicators, register a normalized read-only source view and build with `VITE_BMS_KPI_SOURCE_VIEW` set to its table/view name. The view contract is documented in `docs/THIP-DATA-CONTRACT.md`.
+When `VITE_BMS_KPI_SOURCE_VIEW` is empty, the app runs the evidence-backed HOSxP foundation query for `DH0101`, `DN0101`, `DR0101`, `CE0101`, `CI0101`, and `DH0102`. To expose more indicators, register a normalized read-only source view and build with `VITE_BMS_KPI_SOURCE_VIEW` set to its table/view name. The view contract is documented in `docs/THIP-DATA-CONTRACT.md`.
 
 The repository intentionally keeps the GitHub mirror remote separate from the BMS deployment remote. The BMS remote and application identifier must be supplied by the platform owner before production registration.
 
@@ -69,8 +69,8 @@ The Playwright visual smoke also runs a token-free mocked BMS session through Pa
 
 ## Data boundary
 
-`HOSxP Structure.xlsx` is used as a schema inventory. `THIP KPI.pdf` is the 2025 KPI dictionary and defines the five THIP groups (D, C, S, H, A), monthly reporting expectation, and numerator/denominator model. The first live foundation query uses the PDF definitions for `DH0101` (PDF page 39), `DN0101` (page 67), and `DR0101` (page 79), together with the HOSxP `ipt`, `an_stat`, `iptdiag`, and `death` tables. The query preserves raw numerator/denominator counts and returns one row per indicator/month. Hospital-specific source views and further KPI SQL must still be validated on anonymized staging data before being enabled.
+`HOSxP Structure.xlsx` is used as a schema inventory. `THIP KPI.pdf` is the 2025 KPI dictionary and defines the five THIP groups (D, C, S, H, A), monthly reporting expectation, and numerator/denominator model. The first live foundation query uses the PDF definitions for `DH0101` (PDF page 39), `DH0102` (page 42), `DN0101` (page 67), `DR0101` (page 79), `CE0101` (page 65), and `CI0101` (page 105), together with the HOSxP `ipt`, `an_stat`, `iptdiag`, `death`, `opitemrece`, and `drugitems` tables. The query preserves raw numerator/denominator counts and returns one row per indicator/month. Hospital-specific source views and further KPI SQL must still be validated on anonymized staging data before being enabled.
 
-The 232-entry indicator library is intentionally complete at the catalogue/definition level. Three mortality indicators can now be replaced by BMS results when the session/API is healthy. The remaining foundation slice keeps its demo rows until its hospital source rules are mapped; a normalized source view can replace all catalogue entries at once.
+The 232-entry indicator library is intentionally complete at the catalogue/definition level. Six IPD indicators can now be replaced by BMS results when the session/API is healthy. The remaining catalogue entries keep their no-data state until their hospital source rules are mapped; a normalized source view can replace all catalogue entries at once.
 
 The app follows the BMS baseline: HOSxP is read-only, SQL is allow-listed, parameters are typed, and no PHI is committed to the repository.

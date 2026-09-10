@@ -86,4 +86,4 @@ source_tables, frequency, reference
 
 `period_start` is the ISO first day of the month. `numerator` and `denominator` remain source facts; `value` is optional when the frontend can derive it from the unit. The app rejects duplicate indicator/month rows and unknown indicator codes rather than silently aggregating them.
 
-When the source-view variable is empty, the app uses the initial HOSxP foundation query for `DH0101`, `DN0101`, and `DR0101`. That query is limited to the definitions confirmed in the supplied THIP dictionary and is not a substitute for the remaining hospital-specific KPI rules.
+When the source-view variable is empty, the app uses the initial HOSxP foundation query for `DH0101`, `DN0101`, `DR0101`, `CE0101`, `CI0101`, and `DH0102`. That query is limited to the definitions confirmed in the supplied THIP dictionary and is not a substitute for the remaining hospital-specific KPI rules.

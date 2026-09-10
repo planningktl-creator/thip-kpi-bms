@@ -4,12 +4,12 @@ import { Sidebar, type View } from '@/components/Sidebar';
 import { DashboardPage } from '@/components/DashboardPage';
 import { DetailView } from '@/components/DetailView';
 import { CatalogPage } from '@/components/CatalogPage';
-import { DEMO_FISCAL_YEAR, demoIndicators, groupMeta } from '@/data/thipData';
+import { DEMO_FISCAL_YEAR, groupMeta } from '@/data/thipData';
 import { createNoDataIndicator, thipCatalogue, thipCatalogueByCode } from '@/data/thipCatalogue';
 import { connectBmsSession, type BmsRuntimeConfig } from '@/services/bmsSession';
 import { foundationIndicatorCodes, loadBmsIndicators } from '@/services/bmsData';
 import { getBmsConnectionErrorMessage } from '@/services/bmsErrors';
-import type { BmsConnection, IndicatorGroup } from '@/types/thip';
+import type { BmsConnection, FiscalYear, Indicator, IndicatorGroup, RefreshedAt } from '@/types/thip';
 import { formatFiscalYear } from '@/utils/fiscal';
 
 type DataSourceState = 'demo' | 'loading' | 'live' | 'partial' | 'unavailable';
@@ -22,7 +22,7 @@ function getInitialRoute(): { view: View; code: string | null } {
 }
 
 export default function App() {
-  const initialRoute = getInitialRoute();
+  const [initialRoute] = useState(getInitialRoute);
   const [view, setView] = useState<View>(initialRoute.view);
   const [selectedCode, setSelectedCode] = useState<string | null>(initialRoute.code);
   const [activeGroup, setActiveGroup] = useState<IndicatorGroup | 'all'>('all');
@@ -33,9 +33,15 @@ export default function App() {
   const [connection, setConnection] = useState<BmsConnection>({ status: 'demo', message: 'ยังไม่ได้เปิดจาก BMS launcher' });
   const [connectionAttempt, setConnectionAttempt] = useState(0);
   const [runtime, setRuntime] = useState<BmsRuntimeConfig | null>(null);
-  const [indicators, setIndicators] = useState(demoIndicators);
+  const [indicators, setIndicators] = useState<Indicator[]>([]);
   const [dataSource, setDataSource] = useState<DataSourceState>('demo');
   const [dataMessage, setDataMessage] = useState<string | null>(null);
+  const [refreshedAt, setRefreshedAt] = useState<RefreshedAt | null>(null);
+
+  const defaultIndicators = useMemo(
+    () => thipCatalogue.map((entry) => createNoDataIndicator(entry, fiscalYear)),
+    [fiscalYear],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -57,20 +63,23 @@ export default function App() {
     void loadBmsIndicators(runtime, fiscalYear).then((result) => {
       if (cancelled) return;
       if (!result.rowCount) {
-        setIndicators(demoIndicators);
+        setIndicators(defaultIndicators);
         setDataSource('unavailable');
+        setRefreshedAt(null);
         setDataMessage('BMS query สำเร็จ แต่ยังไม่พบผลลัพธ์ในช่วงปีงบประมาณที่เลือก');
         return;
       }
       setIndicators(result.indicators);
+      setRefreshedAt(result.refreshedAt);
       setDataSource(result.sourceView || result.liveCodes.length === foundationIndicatorCodes.length ? 'live' : 'partial');
       setDataMessage(result.sourceView
         ? `อ่านข้อมูลจาก source view ${result.sourceView} แล้ว`
         : `อ่านข้อมูลจริง ${result.liveCodes.length} ตัวชี้วัดจาก HOSxP แล้ว`);
     }).catch((error: unknown) => {
       if (cancelled) return;
-      setIndicators(demoIndicators);
+      setIndicators(defaultIndicators);
       setDataSource('unavailable');
+      setRefreshedAt(null);
       setDataMessage(getBmsConnectionErrorMessage(error));
     });
     return () => { cancelled = true; };
@@ -86,21 +95,21 @@ export default function App() {
   }, [activeGroup, indicators, search]);
 
   const selectedIndicator = selectedCode
-    ? indicators.find((indicator) => indicator.code === selectedCode) ?? (thipCatalogueByCode.get(selectedCode) ? createNoDataIndicator(thipCatalogueByCode.get(selectedCode)!) : null)
+    ? indicators.find((indicator) => indicator.code === selectedCode) ?? (thipCatalogueByCode.get(selectedCode) ? createNoDataIndicator(thipCatalogueByCode.get(selectedCode)!, fiscalYear) : null)
     : null;
 
   const dataLabel = dataSource === 'live'
     ? 'Live data'
     : dataSource === 'partial'
-      ? 'Live + demo'
+      ? 'Live + pending'
       : dataSource === 'loading'
         ? 'กำลังอ่านข้อมูล'
-        : 'Demo data';
+        : 'No data source';
 
   function retryBms() {
     setConnection({ status: 'connecting', message: 'กำลังเชื่อมต่อ BMS ใหม่...' });
     setRuntime(null);
-    setIndicators(demoIndicators);
+    setIndicators(defaultIndicators);
     setDataSource('loading');
     setDataMessage(null);
     setConnectionAttempt((attempt) => attempt + 1);
@@ -117,9 +126,21 @@ export default function App() {
       params.delete('view');
       params.delete('indicator');
     }
-    window.history.replaceState({}, '', `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`);
+    // pushState keeps the browser Back button working between views; the
+    // popstate listener below restores the matching view state.
+    window.history.pushState({}, '', `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+
+  useEffect(() => {
+    function onPopState() {
+      const route = getInitialRoute();
+      setView(route.view);
+      setSelectedCode(route.code);
+    }
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
 
   function openIndicator(code: string) {
     navigate('detail', code);
@@ -180,6 +201,7 @@ export default function App() {
             onOpenCatalog={() => navigate('catalog', null)}
             connection={connection}
             dataSource={dataSource}
+            refreshedAt={refreshedAt}
           />
         )}
 

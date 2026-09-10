@@ -1,5 +1,6 @@
-import { DEMO_FISCAL_YEAR, fiscalMonthPeriods, groupMeta } from '@/data/thipData';
-import type { Indicator, IndicatorGroup, MonthlyResult } from '@/types/thip';
+import { DEMO_FISCAL_YEAR, groupMeta } from '@/data/thipData';
+import type { FiscalYear, Indicator, IndicatorGroup, MonthlyResult } from '@/types/thip';
+import { getFiscalMonthPeriods } from '@/utils/fiscal';
 
 export type ThipCatalogueEntry = {
   code: string;
@@ -38,7 +39,7 @@ export const thipCatalogue: readonly ThipCatalogueEntry[] = [
   {
     "code": "CA0101",
     "group": "C",
-    "title": "physical status I, II ÖŠĂîñŠćêĆé Anesthesia: Intra-operative cardiac arrest ASA physical status I, II"
+    "title": "Anesthesia: Intra-operative cardiac arrest ASA physical status I, II"
   },
   {
     "code": "CA0102",
@@ -143,7 +144,7 @@ export const thipCatalogue: readonly ThipCatalogueEntry[] = [
   {
     "code": "CM0117",
     "group": "C",
-    "title": "øšĂ÷úąÖćøêĉéđßČĚĂĒñúñŠćêĆéAbdominal hysterectomy Maternal: Percent of abdominal hysterectomy associated infection"
+    "title": "Maternal: Percent of abdominal hysterectomy associated infection"
   },
   {
     "code": "CM0118",
@@ -153,7 +154,7 @@ export const thipCatalogue: readonly ThipCatalogueEntry[] = [
   {
     "code": "CM0119",
     "group": "C",
-    "title": "êĆüĀćøPdx = O80-O84 ĀøČĂ Sdx = O80-O84 Benchmark (ĒĀúŠÜĂšćÜĂĉÜ/ ðŘ) øć÷ÜćîêĆüßĊĚüĆéïøĉÖćøÿč×õćó ×ĂÜÿðÿß. (NHSO health service indicator)"
+    "title": "Maternal: Percent of cesarean section with Pdx = O80-O84 and Sdx = O80-O84 (NHSO health service indicator)"
   },
   {
     "code": "CM0201",
@@ -243,7 +244,7 @@ export const thipCatalogue: readonly ThipCatalogueEntry[] = [
   {
     "code": "DC0108.1",
     "group": "D",
-    "title": "DM: Percent of good controlled of blood sugar in adult aged œ 60 years old"
+    "title": "DM: Percent of good controlled of blood sugar in adult aged ≥ 60 years old"
   },
   {
     "code": "DC0108.2",
@@ -263,7 +264,7 @@ export const thipCatalogue: readonly ThipCatalogueEntry[] = [
   {
     "code": "DC0201.2",
     "group": "D",
-    "title": "HT: Percent of good controlled of blood pressure of patient aged œ 65 years old"
+    "title": "HT: Percent of good controlled of blood pressure of patient aged ≥ 65 years old"
   },
   {
     "code": "DC0301",
@@ -293,7 +294,7 @@ export const thipCatalogue: readonly ThipCatalogueEntry[] = [
   {
     "code": "DC0309",
     "group": "D",
-    "title": "(Tuberculosis preventive therapy: TPT) ĕéšøĆï÷ćTPT HIV: Percent of newly diagnosed people living with HIV were receiving tuberculosis preventive therapy"
+    "title": "HIV: Percent of newly diagnosed people living with HIV were receiving tuberculosis preventive therapy (TPT)"
   },
   {
     "code": "DC0401",
@@ -333,12 +334,12 @@ export const thipCatalogue: readonly ThipCatalogueEntry[] = [
   {
     "code": "DE0501",
     "group": "D",
-    "title": "ĂĆêøćÖćøðúĎÖëŠć÷êĉé(Engraftment) ×ĂÜñĎšðśü÷Stem cell Stem Cell Transplantation: Engraftment rate within 45 days"
+    "title": "Stem Cell Transplantation: Engraftment rate within 45 days"
   },
   {
     "code": "DE0801",
     "group": "D",
-    "title": "øšĂ÷úą×ĂÜñĎšðśü÷ Transfusion Dependent Thalassemia (TDT) ìĊęĂć÷č TDT in Pediatrics Patient: Percent of received iron chelator in patient with iron overload (serum ferrous > 1000 ug/L)"
+    "title": "TDT in Pediatrics Patient: Percent of received iron chelator in patient with iron overload (serum ferrous > 1000 ug/L)"
   },
   {
     "code": "DE1201",
@@ -383,12 +384,12 @@ export const thipCatalogue: readonly ThipCatalogueEntry[] = [
   {
     "code": "DE1401",
     "group": "D",
-    "title": "øšĂ÷úąñĎšðśü÷ Upper GI Hemorrhage (UGIH) ĕéšøĆïÖćøÿŠĂÜÖúšĂÜõć÷Ĕî 24 Upper Gastrointestinal Hemorrhage (UGIH): Percent of patients who had underwent EGD within 24 hours"
+    "title": "Upper Gastrointestinal Hemorrhage (UGIH): Percent of patients who had underwent EGD within 24 hours"
   },
   {
     "code": "DE1402",
     "group": "D",
-    "title": "øšĂ÷úąñĎšðśü÷Upper GI Hemorrhage (UGIH) ÖúčŠöHigh Risk ĕéšøĆïÖćøÿŠĂÜ"
+    "title": "Upper Gastrointestinal Hemorrhage (UGIH): Percent of high risk patients who had underwent EGD within 24 hours"
   },
   {
     "code": "DE1403",
@@ -418,7 +419,7 @@ export const thipCatalogue: readonly ThipCatalogueEntry[] = [
   {
     "code": "DG0102",
     "group": "D",
-    "title": "øą÷ąđüúćüĆîîĂîđÞúĊę÷ñĎšðśü÷Upper GI Hemorrhage (UGIH) Upper Gastrointestinal Hemorrhage (UGIH): Average length of stay"
+    "title": "Upper Gastrointestinal Hemorrhage (UGIH): Average length of stay"
   },
   {
     "code": "DG0201",
@@ -438,12 +439,12 @@ export const thipCatalogue: readonly ThipCatalogueEntry[] = [
   {
     "code": "DH0101.1",
     "group": "D",
-    "title": "segment ÷Ö×ċĚî (STEMI) Acute coronary syndrome (STEMI): Percent of mortality"
+    "title": "Acute coronary syndrome (STEMI): Percent of mortality"
   },
   {
     "code": "DH0101.2",
     "group": "D",
-    "title": "segment ĕöŠ÷Ö×ċĚî (NSTE-ACS) Acute coronary syndrome (NSTE-ACSI): Percent of mortality"
+    "title": "Acute coronary syndrome (NSTE-ACS): Percent of mortality"
   },
   {
     "code": "DH0102",
@@ -458,7 +459,7 @@ export const thipCatalogue: readonly ThipCatalogueEntry[] = [
   {
     "code": "DH0104",
     "group": "D",
-    "title": "inhibitors ĀøČĂARB Acute coronary syndrome: Percent of ACE inhibitors or ARB received for patient who have LVSD"
+    "title": "Acute coronary syndrome: Percent of ACE inhibitors or ARB received for patient who have LVSD"
   },
   {
     "code": "DH0105",
@@ -503,22 +504,22 @@ export const thipCatalogue: readonly ThipCatalogueEntry[] = [
   {
     "code": "DH0113",
     "group": "D",
-    "title": "(STEMI) ìĊęĕéšøĆïFibrinolytic agent õć÷Ĕî 30 îćìĊđöČęĂöćëċÜēøÜó÷ćïćú Acute coronary syndrome: Percent of time to Fibrinolytic administration agents within 30 minutes of arrival"
+    "title": "Acute coronary syndrome: Percent of time to Fibrinolytic administration agents within 30 minutes of arrival"
   },
   {
     "code": "DH0201",
     "group": "D",
-    "title": "øšĂ÷úąÖćøđÿĊ÷ßĊüĉê×ĂÜñĎšðśü÷ìĊęìĈCoronary Artery Bypass Graft (CABG) Coronary Artery Bypass Graft (CABG): Percent of mortality"
+    "title": "Coronary Artery Bypass Graft (CABG): Percent of mortality"
   },
   {
     "code": "DH0202",
     "group": "D",
-    "title": "øšĂ÷úąÖćøĕéšøĆï÷ćðäĉßĊüîąĒïïðŜĂÜÖĆîĔîÖćøñŠćêĆéCoronary Artery Bypass Graft Coronary Artery Bypass Graft (CABG): Percent of patient who received antibiotic prophylaxis"
+    "title": "Coronary Artery Bypass Graft (CABG): Percent of patient who received antibiotic prophylaxis"
   },
   {
     "code": "DH0203",
     "group": "D",
-    "title": "øšĂ÷úąÖćøêĉéđßČĚĂĒñúñŠćêĆéCoronary Artery Bypass Graft (CABG) Coronary Artery Bypass Graft (CABG): Percent of surgical site Infection"
+    "title": "Coronary Artery Bypass Graft (CABG): Percent of surgical site Infection"
   },
   {
     "code": "DH0204",
@@ -538,27 +539,27 @@ export const thipCatalogue: readonly ThipCatalogueEntry[] = [
   {
     "code": "DH0401",
     "group": "D",
-    "title": "øšĂ÷úą×ĂÜñĎšðśü÷ Atrial fibrillation ĕéšøĆï÷ć Warfarin öĊøąéĆïINR êćö Atrial fibrillation: Percent of patient received Warfarin within target"
+    "title": "Atrial fibrillation: Percent of patient received Warfarin within target"
   },
   {
     "code": "DH0402",
     "group": "D",
-    "title": "øšĂ÷úą×ĂÜÖćøđÖĉé Adverse event (major bleeding) ×ĂÜñĎšðśü÷ Atrial fibrillation ìĊęĕéšøĆï÷ć Warfarin Atrial Fibrillation: Percent of major bleeding (intracranial hemorrhage"
+    "title": "Atrial Fibrillation: Percent of major bleeding (intracranial hemorrhage)"
   },
   {
     "code": "DM0101",
     "group": "D",
-    "title": "øšĂ÷úąđéĘÖóĆçîćÖćøúŠćßšćøĂïéšćî(Global development delay: GDD) GDD: Percent of children with global development delay that improved after intervented"
+    "title": "GDD: Percent of children with global development delay that improved after intervented"
   },
   {
     "code": "DM0102",
     "group": "D",
-    "title": "øšĂ÷úąđéĘÖóĆçîćÖćøúŠćßšćøĂïéšćî(Global development delay: GDD) GDD: Percent of children with Global development delay that improved after intervented with TEDA4I"
+    "title": "GDD: Percent of children with Global development delay that improved after intervented with TEDA4I"
   },
   {
     "code": "DM0103",
     "group": "D",
-    "title": "øšĂ÷úąđéĘÖóĆçîćÖćøúŠćßšćøĂïéšćî(Global development delay: GDD)"
+    "title": "GDD: Percent of children with global development delay that improved after intervented"
   },
   {
     "code": "DM0201",
@@ -608,7 +609,7 @@ export const thipCatalogue: readonly ThipCatalogueEntry[] = [
   {
     "code": "DN0103",
     "group": "D",
-    "title": "(Antiplatelet) ĀøČĂ÷ćêšćîõćüąĒ×ĘÜêĆü×ĂÜđúČĂé (Anticoagulant) ×èą Ischemic stroke: Percent of Antiplatelet or Anticoagulant therapy prescribed at discharge"
+    "title": "Ischemic stroke: Percent of Antiplatelet or Anticoagulant therapy prescribed at discharge"
   },
   {
     "code": "DN0104",
@@ -638,7 +639,7 @@ export const thipCatalogue: readonly ThipCatalogueEntry[] = [
   {
     "code": "DN0110",
     "group": "D",
-    "title": "øšĂ÷úąñĎšðśü÷Ischemic Stroke ìĊęĕéšøĆïThrombolytic Agents õć÷Ĕî 60 Ischemic Stroke: Percent of time to Thrombolytic administration agents within 60 minutes of arrival"
+    "title": "Ischemic Stroke: Percent of time to Thrombolytic administration agents within 60 minutes of arrival"
   },
   {
     "code": "DN0301",
@@ -658,7 +659,7 @@ export const thipCatalogue: readonly ThipCatalogueEntry[] = [
   {
     "code": "DO0202",
     "group": "D",
-    "title": "øšĂ÷úą×ĂÜñĎšðśü÷ñŠćêĆéđðúĊę÷î×šĂÿąēóÖ ĕéšøĆïProphylactic antibiotic Hip arthroplasty: Percent of patients who received antibiotic prophylaxis in Hip arthroplasty"
+    "title": "Hip arthroplasty: Percent of patients who received antibiotic prophylaxis in Hip arthroplasty"
   },
   {
     "code": "DO0204",
@@ -673,7 +674,7 @@ export const thipCatalogue: readonly ThipCatalogueEntry[] = [
   {
     "code": "DO0302",
     "group": "D",
-    "title": "øšĂ÷úą×ĂÜñĎšðśü÷ñŠćêĆéđðúĊę÷î×šĂđ×Šćĕ éšøĆïProphylactic Antibiotic Knee Arthroplasty: Percent of patients who received antibiotic prophylaxis"
+    "title": "Knee Arthroplasty: Percent of patients who received antibiotic prophylaxis"
   },
   {
     "code": "DO0303",
@@ -708,7 +709,7 @@ export const thipCatalogue: readonly ThipCatalogueEntry[] = [
   {
     "code": "DR0201",
     "group": "D",
-    "title": "ßČęĂêĆüßĊĚüĆé (õćþćĂĆÜÖùþ) TB: Percent of mortality during 12 months Benchmark (ĒĀúŠÜĂšćÜĂĉÜ/ ðŘ) * ìĊęöć/ Reference ÿðÿß."
+    "title": "TB: Percent of mortality during 12 months"
   },
   {
     "code": "DR0202",
@@ -818,7 +819,7 @@ export const thipCatalogue: readonly ThipCatalogueEntry[] = [
   {
     "code": "HH0101.1",
     "group": "H",
-    "title": "ตภัณฑยาสูบทั้งชนิดมีควัน (Smoking tobacco Benchmark (แหลงอางอิง/ป)* ที่มา/ Reference"
+    "title": "Tobacco Use: Percent of smoking tobacco products used by service recipients"
   },
   {
     "code": "HH0101.2",
@@ -978,7 +979,7 @@ export const thipCatalogue: readonly ThipCatalogueEntry[] = [
   {
     "code": "SH0106",
     "group": "S",
-    "title": "ĂĆêøćÖćøúćĂĂÖ ×ĂÜïčÙúćÖøÿć÷Allied Health HRM: Turnover rate of allied health personnel"
+    "title": "HRM: Turnover rate of allied health personnel"
   },
   {
     "code": "SH0107",
@@ -998,7 +999,7 @@ export const thipCatalogue: readonly ThipCatalogueEntry[] = [
   {
     "code": "SH0203",
     "group": "S",
-    "title": "Allied Health (øąéĆï 4-5) HRD: Percent of allied health personel satisfaction (level 4-5)"
+    "title": "HRD: Percent of allied health personel satisfaction (level 4-5)"
   },
   {
     "code": "SH0204",
@@ -1033,12 +1034,12 @@ export const thipCatalogue: readonly ThipCatalogueEntry[] = [
   {
     "code": "SH0210",
     "group": "S",
-    "title": "Allied Health (ÙŠćđÞúĊę÷) HRD: Percent of allied health personnel satisfaction (average)"
+    "title": "HRD: Percent of allied health personnel satisfaction (average)"
   },
   {
     "code": "SH0211",
     "group": "S",
-    "title": "Allied health (øąéĆï 1-2) HRD: Percent of allied health personnel satisfaction (level 1-2)"
+    "title": "HRD: Percent of allied health personnel satisfaction (level 1-2)"
   },
   {
     "code": "SH0212",
@@ -1174,8 +1175,9 @@ export const thipCatalogue: readonly ThipCatalogueEntry[] = [
 
 export const thipCatalogueByCode = new Map(thipCatalogue.map((entry) => [entry.code, entry]));
 
-export function createNoDataIndicator(entry: ThipCatalogueEntry): Indicator {
-  const monthly: MonthlyResult[] = fiscalMonthPeriods.map((period) => ({
+export function createNoDataIndicator(entry: ThipCatalogueEntry, fiscalYear: FiscalYear = DEMO_FISCAL_YEAR): Indicator {
+  const periods = getFiscalMonthPeriods(fiscalYear);
+  const monthly: MonthlyResult[] = periods.map((period) => ({
     periodStart: period.periodStart,
     fiscalYear: period.fiscalYear,
     fiscalMonth: period.fiscalMonth,
@@ -1191,7 +1193,7 @@ export function createNoDataIndicator(entry: ThipCatalogueEntry): Indicator {
   return {
     code: entry.code,
     dataSource: 'no-data',
-    fiscalYear: DEMO_FISCAL_YEAR,
+    fiscalYear,
     group: entry.group,
     category: groupMeta[entry.group].label,
     title: entry.title,
@@ -1208,7 +1210,7 @@ export function createNoDataIndicator(entry: ThipCatalogueEntry): Indicator {
     frequency: 'ทุกเดือน',
     reference: 'THIP KPI Dictionary 2025',
     annual: {
-      fiscalYear: DEMO_FISCAL_YEAR,
+      fiscalYear,
       numerator: null,
       denominator: null,
       value: null,

@@ -88,3 +88,6 @@ export type BmsConnection = {
   databaseType?: string;
   message?: string;
 };
+
+/** ISO timestamp of the last successful data refresh, e.g. 2026-09-10T08:45:00Z. */
+export type RefreshedAt = string;

@@ -22,6 +22,18 @@ export function formatIndicatorValue(indicator: Indicator, value: number | null)
   return formatNumber(value);
 }
 
+export function formatPercent(value: number | null): string {
+  if (value === null) return 'ไม่มีข้อมูล';
+  return `${formatNumber(value, 1)}%`;
+}
+
+export function formatRefreshTime(iso: string | null): string {
+  if (!iso) return '—';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '—';
+  return new Intl.DateTimeFormat('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false }).format(date);
+}
+
 export function formatCompact(value: number): string {
   return new Intl.NumberFormat('th-TH', {
     notation: 'compact',

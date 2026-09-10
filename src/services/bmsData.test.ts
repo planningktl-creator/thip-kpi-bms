@@ -46,6 +46,73 @@ describe('BMS KPI data adapter', () => {
     }
   });
 
+  it('surfaces a 401 as a data-phase http failure for session-expiry messaging', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+      text: vi.fn().mockResolvedValue(''),
+    }));
+
+    try {
+      await expect(loadBmsIndicators({
+        apiUrl: 'https://bms.test',
+        bearerToken: 'expired-token',
+        appIdentifier: 'THIP.KPI.BMS',
+      }, 2026)).rejects.toMatchObject({ phase: 'data', failure: 'http', status: 401 });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('maps a hung BMS API request to a timeout failure', async () => {
+    vi.stubGlobal('fetch', vi.fn((_url: string, init?: RequestInit) => new Promise<Response>((_resolve, reject) => {
+      init?.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
+    })));
+
+    const abort = new AbortController();
+    setTimeout(() => abort.abort(), 50);
+
+    try {
+      await expect(loadBmsIndicators({
+        apiUrl: 'https://bms.test',
+        bearerToken: 'test-token',
+        appIdentifier: 'THIP.KPI.BMS',
+        marketplaceToken: undefined,
+      }, 2026, { signal: abort.signal })).rejects.toMatchObject({ phase: 'data', failure: 'timeout' });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('stamps the load result with a refresh timestamp', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: vi.fn().mockResolvedValue(JSON.stringify({
+        data: [{
+          indicator_code: 'DH0101',
+          period_start: '2025-10-01',
+          fiscal_year: 2026,
+          fiscal_month: 1,
+          numerator: 1,
+          denominator: 4,
+          value: 25,
+        }],
+      })),
+    }));
+
+    try {
+      const result = await loadBmsIndicators({
+        apiUrl: 'https://bms.test',
+        bearerToken: 'test-token',
+        appIdentifier: 'THIP.KPI.BMS',
+      }, 2026);
+      expect(Number.isNaN(Date.parse(result.refreshedAt))).toBe(false);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('accepts the BMS result response envelope', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,

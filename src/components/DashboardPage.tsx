@@ -19,10 +19,10 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import type { BmsConnection, FiscalYear, Indicator, IndicatorGroup } from '@/types/thip';
+import type { BmsConnection, FiscalYear, Indicator, IndicatorGroup, RefreshedAt } from '@/types/thip';
 import { groupMeta, sourceDictionaryCount } from '@/data/thipData';
 import { formatFiscalYear, formatFiscalYearShort, getFiscalMonthPeriods } from '@/utils/fiscal';
-import { formatIndicatorValue } from '@/utils/format';
+import { formatIndicatorValue, formatPercent, formatRefreshTime } from '@/utils/format';
 import { MetricCard } from '@/components/MetricCard';
 import { IndicatorTable } from '@/components/IndicatorTable';
 import { StatusPill } from '@/components/StatusPill';
@@ -42,7 +42,13 @@ type Props = {
   onOpenCatalog: () => void;
   connection: BmsConnection;
   dataSource: 'demo' | 'loading' | 'live' | 'partial' | 'unavailable';
+  refreshedAt: RefreshedAt | null;
 };
+
+/** Fiscal years offered in the selector: the current year plus the two before it. */
+function selectableFiscalYears(current: FiscalYear): FiscalYear[] {
+  return [current, current - 1, current - 2];
+}
 
 export function DashboardPage({
   indicators,
@@ -59,6 +65,7 @@ export function DashboardPage({
   onOpenCatalog,
   connection,
   dataSource,
+  refreshedAt,
 }: Props) {
   const fiscalMonths = getFiscalMonthPeriods(fiscalYear);
   const selectedMonth = fiscalMonths[monthIndex] ?? fiscalMonths[11]!;
@@ -79,9 +86,9 @@ export function DashboardPage({
           <p className="page-subtitle">อ่านสัญญาณคุณภาพจากตัวตั้งและตัวหารของตัวชี้วัด ก่อนลงรายละเอียดที่ต้องขยับ</p>
         </div>
         <div className="page-actions">
-          <label className="fiscal-year-control"><span>ปีงบประมาณ</span><select aria-label="เลือกปีงบประมาณ" value={fiscalYear} onChange={(event) => onFiscalYearChange(Number(event.target.value))}><option value={fiscalYear}>{formatFiscalYear(fiscalYear)}</option></select><ChevronDown size={14} aria-hidden="true" /></label>
+          <label className="fiscal-year-control"><span>ปีงบประมาณ</span><select aria-label="เลือกปีงบประมาณ" value={fiscalYear} onChange={(event) => onFiscalYearChange(Number(event.target.value))}>{selectableFiscalYears(fiscalYear).map((year) => <option key={year} value={year}>{formatFiscalYear(year)}</option>)}</select><ChevronDown size={14} aria-hidden="true" /></label>
           <div className={`connection-chip connection-chip-${connection.status}`}><span className="connection-led" />{dataSource === 'live' ? 'BMS live data' : dataSource === 'partial' ? 'BMS + demo' : dataSource === 'loading' ? 'Loading KPI' : dataSource === 'unavailable' ? 'Demo fallback' : connection.status === 'connected' ? 'BMS connected' : 'Demo data'}</div>
-          <span className="secondary-button dashboard-refresh-note" role="status"><Clock3 size={16} /> อัปเดตล่าสุด 08:45 · {selectedMonth.label}</span>
+          <span className="secondary-button dashboard-refresh-note" role="status"><Clock3 size={16} /> {refreshedAt ? `อัปเดตล่าสุด ${formatRefreshTime(refreshedAt)}` : 'ยังไม่มีการอ่านข้อมูลจริง'} · {selectedMonth.label}</span>
         </div>
       </div>
 
@@ -99,7 +106,7 @@ export function DashboardPage({
         </div>
         <div className="hero-aside">
           <div className="hero-aside-label">ความใกล้เป้าหมายเฉลี่ย</div>
-          <div className="hero-aside-value">{formatIndicatorValue({ unit: 'percent' } as Indicator, averageCurrent)}</div>
+          <div className="hero-aside-value">{formatPercent(averageCurrent)}</div>
           <div className="hero-aside-caption">คะแนนเทียบเป้าหมายของตัวชี้วัดที่มีข้อมูลในเดือน{selectedMonth.label}</div>
           <div className="hero-aside-line"><span style={{ width: `${Math.min(100, pulseScore)}%` }} /></div>
           <div className="hero-aside-foot"><span>Data completeness</span><strong>{Math.round((currentValues.length / Math.max(indicators.length, 1)) * 100)}%</strong></div>

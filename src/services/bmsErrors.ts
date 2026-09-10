@@ -1,5 +1,5 @@
 export type BmsRequestPhase = 'session' | 'api' | 'data';
-export type BmsRequestFailure = 'network' | 'http' | 'response' | 'message';
+export type BmsRequestFailure = 'network' | 'http' | 'response' | 'message' | 'timeout';
 
 export class BmsRequestError extends Error {
   constructor(
@@ -20,6 +20,9 @@ export function getBmsConnectionErrorMessage(error: unknown): string {
   }
 
   if (error.phase === 'session') {
+    if (error.failure === 'timeout') {
+      return 'หมดเวลาอ่าน BMS session · ตรวจสอบเครือข่ายแล้วลองใหม่';
+    }
     if (error.failure === 'http' && error.status) {
       return `อ่าน BMS session ไม่สำเร็จ (HTTP ${error.status})`;
     }
@@ -27,6 +30,12 @@ export function getBmsConnectionErrorMessage(error: unknown): string {
   }
 
   if (error.phase === 'data') {
+    if (error.failure === 'timeout') {
+      return 'หมดเวลาอ่านข้อมูล THIP KPI · ตรวจสอบ tunnel แล้วลองอีกครั้ง';
+    }
+    if (error.failure === 'http' && error.status === 401) {
+      return 'BMS ปฏิเสธสิทธิ์การอ่านข้อมูล (HTTP 401) · session อาจหมดอายุ โปรดเปิดแอปใหม่จาก BMS launcher';
+    }
     if (error.failure === 'http' && error.status && error.status >= 500) {
       return `อ่านข้อมูล THIP KPI ไม่ได้ (HTTP ${error.status}) · ตรวจสอบ tunnel และ upstream /api/sql`;
     }
@@ -39,6 +48,12 @@ export function getBmsConnectionErrorMessage(error: unknown): string {
     return 'อ่านข้อมูล THIP KPI ไม่ได้ · ตรวจสอบ source view, CORS และ tunnel';
   }
 
+  if (error.failure === 'timeout') {
+    return 'หมดเวลาเชื่อมต่อ BMS API · ตรวจสอบ tunnel แล้วลองอีกครั้ง';
+  }
+  if (error.failure === 'http' && error.status === 401) {
+    return 'BMS session หมดอายุหรือไม่ได้รับอนุญาต (HTTP 401) · โปรดเปิดแอปใหม่จาก BMS launcher';
+  }
   if (error.failure === 'http' && error.status && error.status >= 500) {
     return `BMS API ไม่พร้อม (HTTP ${error.status}) · ตรวจสอบ tunnel และ upstream /api/sql`;
   }

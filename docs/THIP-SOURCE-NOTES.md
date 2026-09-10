@@ -16,11 +16,11 @@ These notes record the source boundary for the first implementation slice.
 
 - Source: `C:/Users/KTLho/Desktop/HOSxP Structure.xlsx`.
 - The workbook is a schema inventory, not a result dataset.
-- Relevant columns observed for the BMS read-only foundation include `ipt.an`, `ipt.regdate`, `ipt.dchdate`, `ipt.ward`, `ipt.drg`, `ipt.rw`, `ipt.adjrw`, `an_stat.item_money`, `iptdiag.icd10`, `iptoprt.icd9`, `iptbedmove.movedate`, and `ward.name`.
+- Relevant columns observed for the BMS read-only foundation include `ipt.an`, `ipt.regdate`, `ipt.dchdate`, `ipt.ward`, `ipt.drg`, `ipt.rw`, `ipt.adjrw`, `an_stat.item_money`, `iptdiag.icd10`, `iptoprt.icd9`, `iptbedmove.movedate`, `ward.name`, `opitemrece.vstdate`, `opitemrece.vsttime`, `opitemrece.icode`, and `drugitems.name`, `drugitems.antibiotic`, `drugitems.drugcategory`.
 - The inventory alone does not establish local business meaning, ICD inclusion/exclusion lists, or THIP numerator/denominator logic. Those must be validated against anonymised staging data before live KPI queries are enabled.
 
 ## Current product decision
 
-The UI ships with a clearly labelled demo fallback and a live foundation query. The first query implements `DH0101`, `DN0101`, and `DR0101` from the PDF definitions using `ipt`, `an_stat`, `iptdiag`, and `death`, returning one row per indicator and fiscal month. The app keeps the other indicators on the demo contract until their hospital-specific numerator/denominator rules are confirmed.
+The UI ships with the full 232-entry catalogue in a no-data state and replaces indicators with live BMS results when the session is healthy. The first query implements `DH0101`, `DN0101`, `DR0101`, `CE0101`, `CI0101`, and `DH0102` from the PDF definitions using `ipt`, `an_stat`, `iptdiag`, `death`, `opitemrece`, and `drugitems`, returning one row per indicator and fiscal month. The app keeps the other indicators on the no-data contract until their hospital-specific numerator/denominator rules are confirmed.
 
 For a complete hospital implementation, register a normalized read-only source view and set `VITE_BMS_KPI_SOURCE_VIEW`. The view contract is recorded in `docs/THIP-DATA-CONTRACT.md`; it allows the same frontend to replace all catalogue entries without exposing raw patient rows.

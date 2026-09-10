@@ -59,6 +59,9 @@ def mock_bms_routes(page) -> None:
                     {"indicator_code": "DH0101", "period_start": "2025-10-01", "fiscal_year": 2026, "fiscal_month": 1, "numerator": 1, "denominator": 4, "value": 25},
                     {"indicator_code": "DN0101", "period_start": "2025-10-01", "fiscal_year": 2026, "fiscal_month": 1, "numerator": 2, "denominator": 8, "value": 25},
                     {"indicator_code": "DR0101", "period_start": "2025-10-01", "fiscal_year": 2026, "fiscal_month": 1, "numerator": 1, "denominator": 10, "value": 10},
+                    {"indicator_code": "CE0101", "period_start": "2025-10-01", "fiscal_year": 2026, "fiscal_month": 1, "numerator": 12, "denominator": 20, "value": 60},
+                    {"indicator_code": "CI0101", "period_start": "2025-10-01", "fiscal_year": 2026, "fiscal_month": 1, "numerator": 3, "denominator": 20, "value": 15},
+                    {"indicator_code": "DH0102", "period_start": "2025-10-01", "fiscal_year": 2026, "fiscal_month": 1, "numerator": 18, "denominator": 20, "value": 90},
                 ]
             }
         route.fulfill(status=200, headers={**headers, "Content-Type": "application/json"}, body=json.dumps(payload))
@@ -104,9 +107,9 @@ def main() -> None:
         overview.wait_for_selector(".catalog-page")
 
         annual = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1)
-        annual.goto(f"{BASE_URL}/?view=detail&indicator=HE0101", wait_until="networkidle")
-        assert annual.get_by_text("เป้าหมายทั้งปี", exact=True).count() >= 1
-        assert annual.locator("[data-testid='monthly-bar-chart']").count() == 1
+        annual.goto(f"{BASE_URL}/?view=detail&indicator=AA0101", wait_until="networkidle")
+        assert annual.get_by_text("ยังไม่ผูก source view", exact=True).count() >= 1
+        assert annual.get_by_text("รอยืนยันจาก source view ของโรงพยาบาล", exact=True).count() == 1
 
         catalog = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1)
         catalog.goto(f"{BASE_URL}/?view=catalog", wait_until="networkidle")
@@ -137,7 +140,10 @@ def main() -> None:
         live.goto(f"{BASE_URL}/?bms-session-id=smoke-session", wait_until="networkidle")
         live.get_by_text("BMS live data", exact=True).wait_for()
         assert live.get_by_text("Live data", exact=True).count() == 1
-        assert live.locator(".indicator-table tbody tr").count() == 12
+        assert live.locator(".indicator-table tbody tr").count() == 6
+        assert live.get_by_text("DH0101", exact=True).count() >= 1
+        assert live.get_by_text("CE0101", exact=True).count() >= 1
+        assert live.get_by_text("DH0102", exact=True).count() >= 1
         assert live.evaluate("window.localStorage.length") == 0
         assert live.evaluate("window.sessionStorage.length") == 0
 

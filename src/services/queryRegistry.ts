@@ -44,9 +44,9 @@ export const queryRegistry = {
       ORDER BY month_start
     `.trim(),
   },
-  thipMortalityFoundation: {
-    key: 'thipMortalityFoundation',
-    description: 'ผลลัพธ์จริงรายเดือนสำหรับ DH0101, DN0101 และ DR0101 จาก HOSxP IPD',
+  thipIpdFoundation: {
+    key: 'thipIpdFoundation',
+    description: 'ผลลัพธ์จริงรายเดือนสำหรับตัวชี้วัด THIP กลุ่ม IPD จาก HOSxP',
     sql: `
       WITH ipd AS (
         SELECT
@@ -107,7 +107,16 @@ export const queryRegistry = {
                 OR LEFT(UPPER(TRIM(d.death_diag_4)), 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')
                 OR LEFT(UPPER(TRIM(d.death_diag_4)), 5) IN ('J10.0', 'J11.0', 'J17.0', 'J17.1', 'J17.2', 'J17.3', 'J17.8', 'J85.0', 'J85.1')
               )
-          ) AS died_from_pneumonia
+          ) AS died_from_pneumonia,
+          EXISTS (
+            SELECT 1
+            FROM iptdiag sd
+            WHERE sd.an = i.an
+              AND (
+                LEFT(UPPER(TRIM(sd.icd10)), 3) IN ('A02', 'A20', 'A22', 'A26', 'A32', 'A40', 'A41', 'A42', 'B77')
+                OR LEFT(UPPER(TRIM(sd.icd10)), 4) IN ('R65.2')
+              )
+          ) AS has_sepsis_diag
         FROM ipt i
         JOIN an_stat s ON s.an = i.an
         WHERE i.dchdate >= :start_date
@@ -166,6 +175,83 @@ export const queryRegistry = {
          OR LEFT(pdx, 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')
          OR has_pneumonia_sdx
       GROUP BY period_start, calendar_month
+
+      UNION ALL
+
+      SELECT
+        'CE0101' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM opitemrece oi
+          JOIN drugitems di ON di.icode = oi.icode
+          WHERE oi.an = periodized.an
+            AND di.antibiotic = 'Y'
+            AND di.drugcategory ILIKE '%broad%'
+            AND EXTRACT(EPOCH FROM (oi.vstdate::timestamp + COALESCE(oi.vsttime, TIME '00:00:00') - (periodized.regdate::timestamp + COALESCE(periodized.regtime, TIME '00:00:00')))) <= 10800
+        ))::integer AS numerator,
+        COUNT(*)::integer AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM opitemrece oi
+          JOIN drugitems di ON di.icode = oi.icode
+          WHERE oi.an = periodized.an
+            AND di.antibiotic = 'Y'
+            AND di.drugcategory ILIKE '%broad%'
+            AND EXTRACT(EPOCH FROM (oi.vstdate::timestamp + COALESCE(oi.vsttime, TIME '00:00:00') - (periodized.regdate::timestamp + COALESCE(periodized.regtime, TIME '00:00:00')))) <= 10800
+        )) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE LEFT(pdx, 3) IN ('A02', 'A20', 'A22', 'A26', 'A32', 'A40', 'A41', 'A42', 'B77')
+         OR LEFT(pdx, 4) IN ('R65.2')
+         OR has_sepsis_diag
+      GROUP BY period_start, calendar_month
+
+      UNION ALL
+
+      SELECT
+        'CI0101' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE died)::integer AS numerator,
+        COUNT(*)::integer AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE died) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE LEFT(pdx, 3) IN ('A02', 'A20', 'A22', 'A26', 'A32', 'A40', 'A41', 'A42', 'B77')
+         OR LEFT(pdx, 4) IN ('R65.2')
+         OR has_sepsis_diag
+      GROUP BY period_start, calendar_month
+
+      UNION ALL
+
+      SELECT
+        'DH0102' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM opitemrece oi
+          JOIN drugitems di ON di.icode = oi.icode
+          WHERE oi.an = periodized.an
+            AND di.name ILIKE '%aspirin%'
+            AND EXTRACT(EPOCH FROM (oi.vstdate::timestamp + COALESCE(oi.vsttime, TIME '00:00:00') - (periodized.regdate::timestamp + COALESCE(periodized.regtime, TIME '00:00:00')))) <= 86400
+        ))::integer AS numerator,
+        COUNT(*)::integer AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM opitemrece oi
+          JOIN drugitems di ON di.icode = oi.icode
+          WHERE oi.an = periodized.an
+            AND di.name ILIKE '%aspirin%'
+            AND EXTRACT(EPOCH FROM (oi.vstdate::timestamp + COALESCE(oi.vsttime, TIME '00:00:00') - (periodized.regdate::timestamp + COALESCE(periodized.regtime, TIME '00:00:00')))) <= 86400
+        )) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE age_y >= 18
+        AND pdx IN ('I21.0', 'I21.1', 'I21.2', 'I21.3', 'I21.4', 'I21.9')
+      GROUP BY period_start, calendar_month
       ORDER BY indicator_code, period_start
     `.trim(),
   },
@@ -173,6 +259,9 @@ export const queryRegistry = {
 
 const allowedStart = /^(select|with|show|describe|desc|explain)\b/i;
 const blockedSql = /\b(insert|update|delete|merge|drop|alter|truncate|create|grant|revoke|copy|call|do|execute|begin|commit|rollback)\b/i;
+
+/** Default wall-clock budget for a registered query round-trip. */
+export const QUERY_TIMEOUT_MS = 30_000;
 
 export function assertRegisteredReadOnlyQuery(query: RegisteredQuery): void {
   const normalized = query.sql.trim();
@@ -186,6 +275,7 @@ export async function executeRegisteredQuery(
   config: { apiUrl: string; bearerToken: string; appIdentifier: string },
   params?: Record<string, BmsParam>,
   marketplaceToken?: string,
+  options?: { timeoutMs?: number; signal?: AbortSignal },
 ): Promise<BmsSqlResponse> {
   assertRegisteredReadOnlyQuery(query);
   const body: Record<string, unknown> = {
@@ -194,6 +284,15 @@ export async function executeRegisteredQuery(
   };
   if (params && Object.keys(params).length > 0) body.params = params;
   if (marketplaceToken) body['marketplace-token'] = marketplaceToken;
+
+  const timeoutMs = options?.timeoutMs ?? QUERY_TIMEOUT_MS;
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  if (options?.signal) {
+    if (options.signal.aborted) controller.abort();
+    else options.signal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   let response: Response;
   try {
@@ -204,9 +303,15 @@ export async function executeRegisteredQuery(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
+      signal: controller.signal,
     });
   } catch (error) {
+    if (controller.signal.aborted) {
+      throw new BmsRequestError('api', 'timeout', `BMS API request timed out after ${timeoutMs} ms`, undefined, { cause: error });
+    }
     throw new BmsRequestError('api', 'network', 'BMS API request failed', undefined, { cause: error });
+  } finally {
+    clearTimeout(timer);
   }
 
   const responseText = await response.text();
