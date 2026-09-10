@@ -9,7 +9,18 @@ export type IndicatorDirection =
 
 export type IndicatorStatus = 'on-track' | 'watch' | 'action' | 'no-data';
 
+/**
+ * The app keeps the Gregorian end year as the stable ISO-side fiscal-year key.
+ * For example, fiscalYear 2026 is displayed as ปีงบประมาณ 2569.
+ */
+export type FiscalYear = number;
+
+export type TargetScope = 'monthly' | 'annual';
+
 export type MonthlyResult = {
+  /** ISO date for the first day of the source month, e.g. 2025-10-01. */
+  periodStart: string;
+  fiscalYear: FiscalYear;
   fiscalMonth: number;
   label: string;
   numerator: number | null;
@@ -20,8 +31,18 @@ export type MonthlyResult = {
   status: IndicatorStatus;
 };
 
+export type AnnualResult = {
+  fiscalYear: FiscalYear;
+  numerator: number | null;
+  denominator: number | null;
+  value: number | null;
+  target: number | null;
+  status: IndicatorStatus;
+};
+
 export type Indicator = {
   code: string;
+  fiscalYear: FiscalYear;
   group: IndicatorGroup;
   category: string;
   title: string;
@@ -29,6 +50,8 @@ export type Indicator = {
   unit: IndicatorUnit;
   direction: IndicatorDirection;
   target: number | null;
+  targetScope: TargetScope;
+  annual: AnnualResult;
   definition: string;
   formula: string;
   numeratorLabel: string;

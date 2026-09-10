@@ -19,9 +19,10 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import type { BmsConnection, Indicator, IndicatorGroup } from '@/types/thip';
-import { fiscalMonthLabels, groupMeta, sourceDictionaryCount } from '@/data/thipData';
-import { formatCompact, formatIndicatorValue } from '@/utils/format';
+import type { BmsConnection, FiscalYear, Indicator, IndicatorGroup } from '@/types/thip';
+import { groupMeta, sourceDictionaryCount } from '@/data/thipData';
+import { formatFiscalYear, formatFiscalYearShort, getFiscalMonthPeriods } from '@/utils/fiscal';
+import { formatIndicatorValue } from '@/utils/format';
 import { MetricCard } from '@/components/MetricCard';
 import { IndicatorTable } from '@/components/IndicatorTable';
 import { StatusPill } from '@/components/StatusPill';
@@ -35,6 +36,8 @@ type Props = {
   onSearchChange: (value: string) => void;
   monthIndex: number;
   onMonthChange: (index: number) => void;
+  fiscalYear: FiscalYear;
+  onFiscalYearChange: (fiscalYear: FiscalYear) => void;
   onOpenIndicator: (code: string) => void;
   connection: BmsConnection;
 };
@@ -48,10 +51,13 @@ export function DashboardPage({
   onSearchChange,
   monthIndex,
   onMonthChange,
+  fiscalYear,
+  onFiscalYearChange,
   onOpenIndicator,
   connection,
 }: Props) {
-  const selectedMonth = fiscalMonthLabels[monthIndex] ?? fiscalMonthLabels[11];
+  const fiscalMonths = getFiscalMonthPeriods(fiscalYear);
+  const selectedMonth = fiscalMonths[monthIndex] ?? fiscalMonths[11]!;
   const currentValues = indicators.map((indicator) => indicator.monthly[monthIndex]?.value).filter((value): value is number => value !== null && value !== undefined);
   const healthScores = indicators.map((indicator) => getHealthScore(indicator, indicator.monthly[monthIndex]?.value ?? null)).filter((value): value is number => value !== null);
   const averageCurrent = healthScores.length ? healthScores.reduce((sum, value) => sum + value, 0) / healthScores.length : 0;
@@ -65,12 +71,13 @@ export function DashboardPage({
       <div className="page-header">
         <div>
           <div className="eyebrow"><span className="eyebrow-dot" /> THIP / QUALITY SIGNALS</div>
-          <h1>ภาพรวมคุณภาพ <span>ประจำเดือน</span></h1>
+          <h1>ภาพรวมคุณภาพ <span>ปีงบประมาณ</span></h1>
           <p className="page-subtitle">อ่านสัญญาณคุณภาพจากตัวตั้งและตัวหารของตัวชี้วัด ก่อนลงรายละเอียดที่ต้องขยับ</p>
         </div>
         <div className="page-actions">
+          <label className="fiscal-year-control"><span>ปีงบประมาณ</span><select value={fiscalYear} onChange={(event) => onFiscalYearChange(Number(event.target.value))}><option value={fiscalYear}>{formatFiscalYear(fiscalYear)}</option></select><ChevronDown size={14} /></label>
           <div className={`connection-chip connection-chip-${connection.status}`}><span className="connection-led" />{connection.status === 'connected' ? 'BMS connected' : 'Demo data'}</div>
-          <button className="secondary-button" type="button"><Clock3 size={16} /> อัปเดตล่าสุด 08:45</button>
+          <button className="secondary-button" type="button"><Clock3 size={16} /> อัปเดตล่าสุด 08:45 · {selectedMonth.label}</button>
         </div>
       </div>
 
@@ -81,15 +88,15 @@ export function DashboardPage({
           <div className="pulse-orb-core"><strong>{pulseScore}</strong><span>/ 100</span></div>
         </div>
         <div className="pulse-copy">
-          <span className="hero-kicker">QUALITY PULSE · FY2569</span>
-          <h2>สัญญาณเดือน{selectedMonth.replace('.', '')}<br /><em>{pulseScore >= 85 ? 'อยู่ในจังหวะที่ดี' : 'มีจุดต้องเร่งดู'}</em></h2>
+          <span className="hero-kicker">QUALITY PULSE · {formatFiscalYearShort(fiscalYear)}</span>
+          <h2>สัญญาณเดือน{selectedMonth.monthLabel}<br /><em>{pulseScore >= 85 ? 'อยู่ในจังหวะที่ดี' : 'มีจุดต้องเร่งดู'}</em></h2>
           <p>กลุ่ม <strong>{visibleGroupLabel}</strong> มีตัวชี้วัดที่ตามเป้าหมาย {onTrackCount} จาก {indicators.length || 0} รายการ และมี {actionCount} รายการที่ควรเปิดดูต่อ</p>
           <div className="hero-badges"><span><CheckCircle2 size={14} /> {onTrackCount} ตามเป้าหมาย</span><span><TriangleAlert size={14} /> {actionCount} เฝ้าดู</span></div>
         </div>
         <div className="hero-aside">
           <div className="hero-aside-label">ความใกล้เป้าหมายเฉลี่ย</div>
           <div className="hero-aside-value">{formatIndicatorValue({ unit: 'percent' } as Indicator, averageCurrent)}</div>
-          <div className="hero-aside-caption">คะแนนเทียบเป้าหมายของตัวชี้วัดที่มีข้อมูลในเดือน{selectedMonth}</div>
+          <div className="hero-aside-caption">คะแนนเทียบเป้าหมายของตัวชี้วัดที่มีข้อมูลในเดือน{selectedMonth.label}</div>
           <div className="hero-aside-line"><span style={{ width: `${Math.min(100, pulseScore)}%` }} /></div>
           <div className="hero-aside-foot"><span>Data completeness</span><strong>{Math.round((currentValues.length / Math.max(indicators.length, 1)) * 100)}%</strong></div>
         </div>
@@ -98,7 +105,7 @@ export function DashboardPage({
       <section className="metric-grid" aria-label="สรุปตัวชี้วัด">
         <MetricCard eyebrow="ตัวชี้วัดใน dictionary" value={String(sourceDictionaryCount)} helper="รายการตาม THIP 2025" icon={BarChart3} tone="aqua" trend="เต็มชุด" />
         <MetricCard eyebrow="กำลังติดตามใน workspace" value={`${indicators.length} รายการ`} helper="ตัวอย่างที่มี data contract" icon={Target} tone="amber" trend={`${allIndicators.length} wired`} />
-        <MetricCard eyebrow="ข้อมูลครบถ้วน" value={`${Math.round((currentValues.length / Math.max(indicators.length, 1)) * 100)}%`} helper={`เดือน${selectedMonth}`} icon={CheckCircle2} tone="violet" trend="พร้อมอ่าน" />
+        <MetricCard eyebrow="ข้อมูลครบถ้วน" value={`${Math.round((currentValues.length / Math.max(indicators.length, 1)) * 100)}%`} helper={`เดือน${selectedMonth.label}`} icon={CheckCircle2} tone="violet" trend="พร้อมอ่าน" />
         <MetricCard eyebrow="ต้องเปิดดูต่อ" value={`${actionCount} รายการ`} helper="watch + action" icon={TriangleAlert} tone="coral" trend={actionCount ? 'มีงาน' : 'เรียบร้อย'} />
       </section>
 
@@ -108,8 +115,8 @@ export function DashboardPage({
             <div><span className="panel-eyebrow">12 MONTH SIGNAL</span><h3>จังหวะคุณภาพตลอดปีงบประมาณ</h3></div>
             <div className="chart-legend"><span><i className="legend-line legend-aqua" /> pulse score</span><span><i className="legend-line legend-amber" /> เป้าหมาย 85</span></div>
           </div>
-          <QualityPulseChart indicators={indicators} />
-          <div className="chart-footnote"><span><TrendingUp size={15} /> แนวโน้มปรับดีขึ้นจากต้นปีงบประมาณ</span><strong>FY2569 · ต.ค. — ก.ย.</strong></div>
+          <QualityPulseChart indicators={indicators} fiscalYear={fiscalYear} />
+          <div className="chart-footnote"><span><TrendingUp size={15} /> แนวโน้มปรับดีขึ้นจากต้นปีงบประมาณ</span><strong>{formatFiscalYearShort(fiscalYear)} · {fiscalMonths[0].label} — {fiscalMonths[11].label}</strong></div>
         </article>
 
         <article className="panel group-panel">
@@ -142,7 +149,7 @@ export function DashboardPage({
           <div><span className="panel-eyebrow">MONTHLY WORKLIST</span><h3>สัญญาณที่ควรดูเดือนนี้</h3><p>กดแถวเพื่อเปิดตัวตั้ง ตัวหาร และรายละเอียดทั้ง 12 เดือน</p></div>
           <div className="table-actions">
             <label className="search-field"><Search size={16} /><input value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="ค้นหารหัสหรือชื่อตัวชี้วัด" /></label>
-            <label className="select-field"><CalendarIcon /><select value={monthIndex} onChange={(event) => onMonthChange(Number(event.target.value))}>{fiscalMonthLabels.map((month, index) => <option key={month} value={index}>{month} 2569</option>)}</select><ChevronDown size={15} /></label>
+            <label className="select-field"><CalendarIcon /><select value={monthIndex} onChange={(event) => onMonthChange(Number(event.target.value))}>{fiscalMonths.map((month, index) => <option key={month.periodStart} value={index}>{month.label}</option>)}</select><ChevronDown size={15} /></label>
             <button className="filter-button" type="button" onClick={() => onGroupChange(activeGroup === 'all' ? 'D' : 'all')}><Filter size={15} /> {activeGroup === 'all' ? 'กรองกลุ่ม' : groupMeta[activeGroup].shortLabel}</button>
           </div>
         </div>
@@ -153,11 +160,11 @@ export function DashboardPage({
   );
 }
 
-function QualityPulseChart({ indicators }: { indicators: Indicator[] }) {
-  const data = fiscalMonthLabels.map((label, index) => {
+function QualityPulseChart({ indicators, fiscalYear }: { indicators: Indicator[]; fiscalYear: FiscalYear }) {
+  const data = getFiscalMonthPeriods(fiscalYear).map((period, index) => {
     const values = indicators.map((indicator) => indicator.monthly[index]).filter((month) => month?.value !== null && month?.value !== undefined);
     const score = values.length ? Math.round(values.reduce((sum, month) => sum + (month?.status === 'on-track' ? 92 : month?.status === 'watch' ? 77 : 59), 0) / values.length) : null;
-    return { label, score, target: 85 };
+    return { label: period.monthLabel, fullLabel: period.label, score, target: 85 };
   });
   return (
     <div className="quality-chart">
@@ -176,10 +183,10 @@ function QualityPulseChart({ indicators }: { indicators: Indicator[] }) {
   );
 }
 
-function PulseTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ dataKey?: string; value?: number | null }>; label?: string }) {
+function PulseTooltip({ active, payload }: { active?: boolean; payload?: Array<{ dataKey?: string; value?: number | null; payload?: { fullLabel?: string } }> }) {
   if (!active || !payload?.length) return null;
   const score = payload.find((entry) => entry.dataKey === 'score')?.value;
-  return <div className="chart-tooltip"><strong>{label} 2569</strong><span><i className="tooltip-dot tooltip-dot-aqua" />pulse score {typeof score === 'number' ? score : '—'}</span><span><i className="tooltip-dot tooltip-dot-amber" />เป้าหมาย 85</span></div>;
+  return <div className="chart-tooltip"><strong>{payload[0]?.payload?.fullLabel ?? 'เดือนงบประมาณ'}</strong><span><i className="tooltip-dot tooltip-dot-aqua" />pulse score {typeof score === 'number' ? score : '—'}</span><span><i className="tooltip-dot tooltip-dot-amber" />เป้าหมาย 85</span></div>;
 }
 
 function CalendarIcon() {

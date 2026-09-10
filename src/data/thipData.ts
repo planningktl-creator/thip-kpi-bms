@@ -1,27 +1,20 @@
 import type {
+  AnnualResult,
   GroupMeta,
+  FiscalYear,
   Indicator,
   IndicatorDirection,
   IndicatorGroup,
   IndicatorStatus,
   IndicatorUnit,
   MonthlyResult,
+  TargetScope,
 } from '@/types/thip';
+import { getFiscalMonthPeriods } from '@/utils/fiscal';
 
-export const fiscalMonthLabels = [
-  'ต.ค.',
-  'พ.ย.',
-  'ธ.ค.',
-  'ม.ค.',
-  'ก.พ.',
-  'มี.ค.',
-  'เม.ย.',
-  'พ.ค.',
-  'มิ.ย.',
-  'ก.ค.',
-  'ส.ค.',
-  'ก.ย.',
-];
+export const DEMO_FISCAL_YEAR: FiscalYear = 2026;
+export const fiscalMonthPeriods = getFiscalMonthPeriods(DEMO_FISCAL_YEAR);
+export const fiscalMonthLabels = fiscalMonthPeriods.map((period) => period.monthLabel);
 
 export const groupMeta: Record<IndicatorGroup, GroupMeta> = {
   D: {
@@ -63,11 +56,12 @@ export const groupMeta: Record<IndicatorGroup, GroupMeta> = {
 
 type Seed = Omit<
   Indicator,
-  'monthly' | 'target'
+  'annual' | 'monthly' | 'target' | 'targetScope' | 'fiscalYear'
 > & {
   values: Array<number | null>;
   denominators: Array<number | null>;
   target: number | null;
+  targetScope?: TargetScope;
 };
 
 function getStatus(
@@ -93,9 +87,11 @@ function makeMonthly(
   denominators: Array<number | null>,
   unit: IndicatorUnit,
   target: number | null,
+  targetScope: TargetScope,
   direction: IndicatorDirection,
 ): MonthlyResult[] {
   return values.map((inputValue, index) => {
+    const period = fiscalMonthPeriods[index];
     const denominator = denominators[index] ?? null;
     const isEmpty = inputValue === null || denominator === null || denominator === 0;
     const scale = unit === 'percent' || unit === 'rate' ? 100 : 1;
@@ -105,16 +101,45 @@ function makeMonthly(
       : Number(((numerator / denominator) * scale).toFixed(2));
 
     return {
+      periodStart: period.periodStart,
+      fiscalYear: period.fiscalYear,
       fiscalMonth: index + 1,
-      label: fiscalMonthLabels[index],
+      label: period.label,
       numerator,
       denominator,
       value,
-      target,
+      target: targetScope === 'monthly' ? target : null,
       percentile: value === null ? null : Math.max(42, Math.min(96, Math.round(72 + (value - (target ?? value)) * 2))),
       status: getStatus(value, target, direction),
     };
   });
+}
+
+function makeAnnual(
+  monthly: MonthlyResult[],
+  fiscalYear: FiscalYear,
+  unit: IndicatorUnit,
+  target: number | null,
+  direction: IndicatorDirection,
+): AnnualResult {
+  const rows = monthly.filter((month) => month.numerator !== null && month.denominator !== null);
+  const numerator = rows.length ? rows.reduce((sum, month) => sum + (month.numerator ?? 0), 0) : null;
+  const denominator = rows.length ? rows.reduce((sum, month) => sum + (month.denominator ?? 0), 0) : null;
+  const scale = unit === 'percent' || unit === 'rate' ? 100 : 1;
+  const value = unit === 'count'
+    ? (rows.length ? Number(rows.reduce((sum, month) => sum + (month.value ?? 0), 0).toFixed(2)) : null)
+    : numerator !== null && denominator
+      ? Number(((numerator / denominator) * scale).toFixed(2))
+      : null;
+
+  return {
+    fiscalYear,
+    numerator,
+    denominator,
+    value,
+    target,
+    status: getStatus(value, target, direction),
+  };
 }
 
 const seeds: Seed[] = [
@@ -297,6 +322,7 @@ const seeds: Seed[] = [
     titleTh: 'ร้อยละบุคลากรที่ได้รับการตรวจสุขภาพประจำปี',
     unit: 'percent',
     direction: 'higher-is-better',
+    targetScope: 'annual',
     target: 90,
     values: [72, 76, 78, 81, 83, 86, 88, 89, 91, 92, 93, 94],
     denominators: [620, 620, 620, 620, 620, 620, 620, 620, 620, 620, 620, 620],
@@ -348,24 +374,31 @@ const seeds: Seed[] = [
   },
 ];
 
-export const demoIndicators: Indicator[] = seeds.map((seed) => ({
-  code: seed.code,
-  group: seed.group,
-  category: seed.category,
-  title: seed.title,
-  titleTh: seed.titleTh,
-  unit: seed.unit,
-  direction: seed.direction,
-  target: seed.target,
-  definition: seed.definition,
-  formula: seed.formula,
-  numeratorLabel: seed.numeratorLabel,
-  denominatorLabel: seed.denominatorLabel,
-  sourceTables: seed.sourceTables,
-  frequency: seed.frequency,
-  reference: seed.reference,
-  monthly: makeMonthly(seed.values, seed.denominators, seed.unit, seed.target, seed.direction),
-}));
+export const demoIndicators: Indicator[] = seeds.map((seed) => {
+  const targetScope = seed.targetScope ?? 'monthly';
+  const monthly = makeMonthly(seed.values, seed.denominators, seed.unit, seed.target, targetScope, seed.direction);
+  return {
+    code: seed.code,
+    fiscalYear: DEMO_FISCAL_YEAR,
+    group: seed.group,
+    category: seed.category,
+    title: seed.title,
+    titleTh: seed.titleTh,
+    unit: seed.unit,
+    direction: seed.direction,
+    target: seed.target,
+    targetScope,
+    definition: seed.definition,
+    formula: seed.formula,
+    numeratorLabel: seed.numeratorLabel,
+    denominatorLabel: seed.denominatorLabel,
+    sourceTables: seed.sourceTables,
+    frequency: seed.frequency,
+    reference: seed.reference,
+    monthly,
+    annual: makeAnnual(monthly, DEMO_FISCAL_YEAR, seed.unit, seed.target, seed.direction),
+  };
+});
 
 export const sourceDictionaryCount = 232;
 

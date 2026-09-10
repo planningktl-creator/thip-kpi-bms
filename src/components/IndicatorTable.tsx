@@ -42,7 +42,7 @@ export function IndicatorTable({ indicators, onOpen, monthIndex }: Props) {
                     </div>
                   </div>
                 </td>
-                <td><strong className="table-value">{formatIndicatorValue(indicator, latest.value)}</strong><span className="table-subvalue">{latest.label} 2569</span></td>
+                <td><strong className="table-value">{formatIndicatorValue(indicator, latest.value)}</strong><span className="table-subvalue">{latest.label}</span></td>
                 <td><span className="target-value">{formatIndicatorValue(indicator, indicator.target)}</span></td>
                 <td>
                   <div className={`table-delta ${improvement === true ? 'delta-good' : improvement === false ? 'delta-bad' : ''}`}>

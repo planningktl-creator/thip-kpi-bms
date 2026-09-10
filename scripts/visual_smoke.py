@@ -26,6 +26,19 @@ def main() -> None:
         assert desktop.get_by_text("ตัวตั้ง ตัวหาร และสถานะของทุกเดือน", exact=True).count() == 1
         assert desktop.locator(".monthly-table tbody tr").count() == 12
         assert desktop.get_by_text("DH0101", exact=True).count() >= 1
+        assert desktop.get_by_text("ปีงบประมาณ 2569", exact=False).count() >= 1
+        assert desktop.locator("[data-testid='monthly-bar-chart']").count() == 1
+        assert desktop.get_by_text("ต.ค. 2568", exact=True).count() >= 1
+        assert desktop.get_by_text("ก.ย. 2569", exact=True).count() >= 1
+        desktop.get_by_role("tab", name="แนวโน้ม").click()
+        assert desktop.locator("[data-testid='monthly-line-chart']").count() == 1
+        desktop.get_by_role("tab", name="กราฟแท่ง").click()
+        assert desktop.locator("[data-testid='monthly-bar-chart']").count() == 1
+
+        annual = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1)
+        annual.goto("http://127.0.0.1:5173/?view=detail&indicator=HE0101", wait_until="networkidle")
+        assert annual.get_by_text("เป้าหมายทั้งปี", exact=True).count() >= 1
+        assert annual.locator("[data-testid='monthly-bar-chart']").count() == 1
 
         catalog = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1)
         catalog.goto("http://127.0.0.1:5173/?view=catalog", wait_until="networkidle")
@@ -36,8 +49,10 @@ def main() -> None:
         assert pending_row.count() == 1
         pending_row.click()
         catalog.wait_for_selector(".monthly-detail-panel")
+        catalog.screenshot(path=str(ARTIFACTS / "catalog-pending-detail-desktop.png"), full_page=True)
         assert catalog.locator(".monthly-table tbody tr").count() == 12
         assert catalog.locator(".status-muted").count() >= 1
+        assert catalog.locator(".chart-empty-state").count() == 1
 
         mobile = browser.new_page(viewport={"width": 390, "height": 844}, device_scale_factor=1)
         mobile.goto("http://127.0.0.1:5173", wait_until="networkidle")

@@ -1,4 +1,4 @@
-import { fiscalMonthLabels, groupMeta } from '@/data/thipData';
+import { DEMO_FISCAL_YEAR, fiscalMonthPeriods, groupMeta } from '@/data/thipData';
 import type { Indicator, IndicatorGroup, MonthlyResult } from '@/types/thip';
 
 export type ThipCatalogueEntry = {
@@ -1175,9 +1175,11 @@ export const thipCatalogue: readonly ThipCatalogueEntry[] = [
 export const thipCatalogueByCode = new Map(thipCatalogue.map((entry) => [entry.code, entry]));
 
 export function createNoDataIndicator(entry: ThipCatalogueEntry): Indicator {
-  const monthly: MonthlyResult[] = fiscalMonthLabels.map((label, index) => ({
-    fiscalMonth: index + 1,
-    label,
+  const monthly: MonthlyResult[] = fiscalMonthPeriods.map((period) => ({
+    periodStart: period.periodStart,
+    fiscalYear: period.fiscalYear,
+    fiscalMonth: period.fiscalMonth,
+    label: period.label,
     numerator: null,
     denominator: null,
     value: null,
@@ -1188,6 +1190,7 @@ export function createNoDataIndicator(entry: ThipCatalogueEntry): Indicator {
 
   return {
     code: entry.code,
+    fiscalYear: DEMO_FISCAL_YEAR,
     group: entry.group,
     category: groupMeta[entry.group].label,
     title: entry.title,
@@ -1195,6 +1198,7 @@ export function createNoDataIndicator(entry: ThipCatalogueEntry): Indicator {
     unit: 'percent',
     direction: 'neutral',
     target: null,
+    targetScope: 'annual',
     definition: 'ตัวชี้วัดนี้อยู่ใน THIP KPI Dictionary แต่ยังไม่ได้ผูก source view และนิยาม numerator/denominator ของโรงพยาบาล',
     formula: 'รอยืนยันจาก source view ของโรงพยาบาล',
     numeratorLabel: 'ยังไม่กำหนด',
@@ -1202,7 +1206,14 @@ export function createNoDataIndicator(entry: ThipCatalogueEntry): Indicator {
     sourceTables: [],
     frequency: 'ทุกเดือน',
     reference: 'THIP KPI Dictionary 2025',
+    annual: {
+      fiscalYear: DEMO_FISCAL_YEAR,
+      numerator: null,
+      denominator: null,
+      value: null,
+      target: null,
+      status: 'no-data',
+    },
     monthly,
   };
 }
-

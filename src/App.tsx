@@ -4,10 +4,11 @@ import { Sidebar, type View } from '@/components/Sidebar';
 import { DashboardPage } from '@/components/DashboardPage';
 import { DetailView } from '@/components/DetailView';
 import { CatalogPage } from '@/components/CatalogPage';
-import { demoIndicators, groupMeta } from '@/data/thipData';
+import { DEMO_FISCAL_YEAR, demoIndicators, groupMeta } from '@/data/thipData';
 import { createNoDataIndicator, thipCatalogue, thipCatalogueByCode } from '@/data/thipCatalogue';
 import { connectBmsSession } from '@/services/bmsSession';
 import type { BmsConnection, IndicatorGroup } from '@/types/thip';
+import { formatFiscalYear } from '@/utils/fiscal';
 
 function getInitialRoute(): { view: View; code: string | null } {
   const params = new URLSearchParams(window.location.search);
@@ -23,6 +24,7 @@ export default function App() {
   const [activeGroup, setActiveGroup] = useState<IndicatorGroup | 'all'>('all');
   const [search, setSearch] = useState('');
   const [monthIndex, setMonthIndex] = useState(11);
+  const [fiscalYear, setFiscalYear] = useState(DEMO_FISCAL_YEAR);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [connection, setConnection] = useState<BmsConnection>({ status: 'demo', message: 'ยังไม่ได้เปิดจาก BMS launcher' });
 
@@ -114,12 +116,14 @@ export default function App() {
             onSearchChange={setSearch}
             monthIndex={monthIndex}
             onMonthChange={setMonthIndex}
+            fiscalYear={fiscalYear}
+            onFiscalYearChange={setFiscalYear}
             onOpenIndicator={openIndicator}
             connection={connection}
           />
         )}
 
-        <footer className="app-footer"><span><span className="footer-pulse" /> THIP KPI · BMS Marketplace workbench</span><span>FY2569 · Read-only data boundary</span></footer>
+        <footer className="app-footer"><span><span className="footer-pulse" /> THIP KPI · BMS Marketplace workbench</span><span>{formatFiscalYear(fiscalYear)} · Read-only data boundary</span></footer>
       </main>
     </div>
   );

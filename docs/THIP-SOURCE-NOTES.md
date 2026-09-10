@@ -9,6 +9,7 @@ These notes record the source boundary for the first implementation slice.
 - The catalogue is organised into five groups: Disease (D), Care process (C), System (S), Health promotion (H), and Ambulatory care (A).
 - Indicator codes use two group/category letters followed by two two-digit sequences, for example `DH0101`.
 - Monthly indicator reporting uses a numerator and denominator, commonly expressed as `(a/b) x 100`.
+- The database boundary remains ISO and fiscal years run October through September; the frontend maps the ISO period to Thai Buddhist Era labels (for example, `2025-10-01` becomes `ต.ค. 2568`).
 - The detail page in the dashboard keeps the numerator, denominator, formula, frequency, and reference visible so a reviewer can trace the result.
 
 ## HOSxP Structure

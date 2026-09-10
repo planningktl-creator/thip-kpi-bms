@@ -10,7 +10,8 @@ This is a single-context repository. Before exploring or changing domain behavio
 ## Domain vocabulary
 
 - **Indicator**: one THIP KPI code with its group, definition, formula, target, and monthly results.
-- **Monthly result**: one `indicator_code × fiscal_month` row preserving numerator, denominator, value, target, percentile, and status.
+- **Monthly result**: one `indicator_code × fiscal_year × fiscal_month` row preserving the ISO `periodStart`, Thai Buddhist display label, numerator, denominator, value, target, percentile, and status.
+- **Fiscal-year rollup**: one annual numerator/denominator/value/target/status summary derived from a selected October–September fiscal year.
 - **Source view**: the hospital-specific BMS read-only table or view that supplies a normalized THIP monthly result.
 - **Demo contract**: the safe local sample data used when the app has no confirmed hospital source view.
 - **BMS data boundary**: session-scoped, read-only access to HOSxP through registered queries; no arbitrary SQL from the UI.
