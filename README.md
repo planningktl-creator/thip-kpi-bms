@@ -65,6 +65,8 @@ pnpm build
 pnpm test
 ```
 
+The Playwright visual smoke also runs a token-free mocked BMS session through PasteJSON, the PostgreSQL version probe, and the KPI query path. It verifies that live KPI rows reach the dashboard without writing session data to browser storage.
+
 ## Data boundary
 
 `HOSxP Structure.xlsx` is used as a schema inventory. `THIP KPI.pdf` is the 2025 KPI dictionary and defines the five THIP groups (D, C, S, H, A), monthly reporting expectation, and numerator/denominator model. The first live foundation query uses the PDF definitions for `DH0101` (PDF page 39), `DN0101` (page 67), and `DR0101` (page 79), together with the HOSxP `ipt`, `an_stat`, `iptdiag`, and `death` tables. The query preserves raw numerator/denominator counts and returns one row per indicator/month. Hospital-specific source views and further KPI SQL must still be validated on anonymized staging data before being enabled.
