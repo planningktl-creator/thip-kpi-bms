@@ -84,12 +84,15 @@ def main() -> int:
     allow_origin = preflight_headers.get("access-control-allow-origin", "")
     allow_methods = preflight_headers.get("access-control-allow-methods", "").lower()
     allow_headers = preflight_headers.get("access-control-allow-headers", "").lower()
+    vary = preflight_headers.get("vary", "").lower()
     if preflight_status not in (200, 204):
         raise SmokeFailure(f"CORS preflight returned HTTP {preflight_status} from {safe_origin(api_url)}")
     if allow_origin != app_origin:
         raise SmokeFailure("CORS preflight did not allow the THIP app origin")
     if "post" not in allow_methods or "authorization" not in allow_headers or "content-type" not in allow_headers:
         raise SmokeFailure("CORS preflight does not allow the required method or headers")
+    if "origin" not in vary:
+        raise SmokeFailure("CORS preflight did not include Vary: Origin")
 
     probe_body = json.dumps({"sql": "SELECT VERSION() AS version", "app": app_identifier}).encode("utf-8")
     probe_status, probe_headers, probe_payload = request_json(
@@ -110,6 +113,8 @@ def main() -> int:
         raise SmokeFailure("BMS /api/sql rejected the read-only probe")
     if probe_headers.get("access-control-allow-origin") != app_origin:
         raise SmokeFailure("BMS /api/sql response did not include the THIP app origin")
+    if "origin" not in probe_headers.get("vary", "").lower():
+        raise SmokeFailure("BMS /api/sql response did not include Vary: Origin")
 
     print(json.dumps({
         "status": "passed",

@@ -42,7 +42,7 @@ docker compose up -d
 
 The local container is available at `http://127.0.0.1:3082/`. Replace the origins with the approved BMS/HOSxP origins for staging or production; the value is validated as a space-separated list of `http(s)` origins and is used only to render the Nginx CSP. `VITE_BMS_APP_IDENTIFIER` must match the identifier registered by the BMS platform.
 
-Before testing a live session, the BMS API must allow the deployed app origin `https://thip-kpi-10929.kube.bmscloud.in.th` on `OPTIONS` and `POST /api/sql` for `Authorization` and `Content-Type`. The tunnel must return a healthy response rather than `502 Bad Gateway`.
+Before testing a live session, the BMS API must allow the deployed app origin `https://thip-kpi-10929.kube.bmscloud.in.th` on `OPTIONS` and `POST /api/sql` for `Authorization` and `Content-Type`. `OPTIONS /api/sql` must return `200` or `204` with `Access-Control-Allow-Methods: POST, OPTIONS`, `Access-Control-Allow-Headers: Authorization, Content-Type`, the exact `Access-Control-Allow-Origin` value (not `*`), and `Vary: Origin`. The tunnel must return a healthy response rather than `502 Bad Gateway`.
 
 Run the read-only connectivity smoke with a fresh session ID supplied through the environment; the script never prints the session token or query result:
 
