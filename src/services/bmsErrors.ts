@@ -27,8 +27,8 @@ export function getBmsConnectionErrorMessage(error: unknown): string {
   }
 
   if (error.phase === 'data') {
-    if (error.failure === 'http' && error.status === 502) {
-      return 'อ่านข้อมูล THIP KPI ไม่ได้ (HTTP 502) · ตรวจสอบ tunnel และ upstream /api/sql';
+    if (error.failure === 'http' && error.status && error.status >= 500) {
+      return `อ่านข้อมูล THIP KPI ไม่ได้ (HTTP ${error.status}) · ตรวจสอบ tunnel และ upstream /api/sql`;
     }
     if (error.failure === 'message') {
       return 'ยังอ่านข้อมูล THIP KPI ไม่ได้ · ตรวจสอบ source view และสิทธิ์ read-only';
@@ -39,8 +39,8 @@ export function getBmsConnectionErrorMessage(error: unknown): string {
     return 'อ่านข้อมูล THIP KPI ไม่ได้ · ตรวจสอบ source view, CORS และ tunnel';
   }
 
-  if (error.failure === 'http' && error.status === 502) {
-    return 'BMS API ไม่พร้อม (HTTP 502) · ตรวจสอบ tunnel และ upstream /api/sql';
+  if (error.failure === 'http' && error.status && error.status >= 500) {
+    return `BMS API ไม่พร้อม (HTTP ${error.status}) · ตรวจสอบ tunnel และ upstream /api/sql`;
   }
   if (error.failure === 'http' && error.status) {
     return `BMS API ปฏิเสธคำขอ (HTTP ${error.status}) · ตรวจสอบสิทธิ์และ app identifier`;
