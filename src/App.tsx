@@ -31,6 +31,7 @@ export default function App() {
   const [fiscalYear, setFiscalYear] = useState(DEMO_FISCAL_YEAR);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [connection, setConnection] = useState<BmsConnection>({ status: 'demo', message: 'ยังไม่ได้เปิดจาก BMS launcher' });
+  const [connectionAttempt, setConnectionAttempt] = useState(0);
   const [runtime, setRuntime] = useState<BmsRuntimeConfig | null>(null);
   const [indicators, setIndicators] = useState(demoIndicators);
   const [dataSource, setDataSource] = useState<DataSourceState>('demo');
@@ -46,7 +47,7 @@ export default function App() {
       if (!connectedRuntime) setDataSource('demo');
     });
     return () => { cancelled = true; };
-  }, []);
+  }, [connectionAttempt]);
 
   useEffect(() => {
     if (!runtime) return;
@@ -96,6 +97,15 @@ export default function App() {
         ? 'กำลังอ่านข้อมูล'
         : 'Demo data';
 
+  function retryBms() {
+    setConnection({ status: 'connecting', message: 'กำลังเชื่อมต่อ BMS ใหม่...' });
+    setRuntime(null);
+    setIndicators(demoIndicators);
+    setDataSource('loading');
+    setDataMessage(null);
+    setConnectionAttempt((attempt) => attempt + 1);
+  }
+
   function navigate(nextView: View, code: string | null = selectedCode) {
     setView(nextView);
     setSelectedCode(code);
@@ -136,10 +146,10 @@ export default function App() {
         </div>
 
         {connection.status === 'connected' && (
-          <div className={`connection-banner ${dataSource === 'unavailable' ? 'connection-banner-warning' : 'connection-banner-success'}`} role="status" aria-live="polite"><RefreshCw size={15} /><span>{dataSource === 'unavailable' ? dataMessage : connection.message}</span><strong>{dataSource === 'unavailable' ? 'ใช้ demo' : dataLabel}</strong></div>
+          <div className={`connection-banner ${dataSource === 'unavailable' ? 'connection-banner-warning' : 'connection-banner-success'}`} role="status" aria-live="polite"><RefreshCw size={15} /><span>{dataSource === 'unavailable' ? dataMessage : connection.message}</span><strong>{dataSource === 'unavailable' ? 'ใช้ demo' : dataLabel}</strong>{dataSource === 'unavailable' && <button className="connection-banner-action" type="button" onClick={retryBms}>ลองอีกครั้ง</button>}</div>
         )}
         {connection.status === 'error' && (
-          <div className="connection-banner connection-banner-error" role="alert"><WifiOff size={15} /><span>{connection.message}</span><strong>กลับไปใช้ demo</strong></div>
+          <div className="connection-banner connection-banner-error" role="alert"><WifiOff size={15} /><span>{connection.message}</span><strong>กลับไปใช้ demo</strong><button className="connection-banner-action" type="button" onClick={retryBms}>ลองเชื่อมต่ออีกครั้ง</button></div>
         )}
 
         {view === 'detail' && selectedIndicator ? (

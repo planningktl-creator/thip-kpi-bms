@@ -90,6 +90,8 @@ a { color: inherit; }
 .connection-banner-warning { color: #9a7423; border-color: rgba(244, 185, 66, .38); background: rgba(244, 185, 66, .1); }
 .connection-banner-error { color: #a55346; border-color: rgba(239, 123, 104, .28); background: rgba(239, 123, 104, .08); }
 .connection-banner strong { margin-left: auto; font: 600 10px 'Space Grotesk', sans-serif; }
+.connection-banner-action { flex: 0 0 auto; padding: 3px 7px; color: inherit; border: 1px solid currentColor; border-radius: 6px; background: transparent; font: 600 10px 'IBM Plex Sans Thai', sans-serif; }
+.connection-banner-action:hover { filter: brightness(.84); }
 .page-header { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; }
 .eyebrow, .panel-eyebrow, .hero-kicker { color: var(--aqua-deep); font: 700 10px/1.1 'Space Grotesk', 'IBM Plex Sans Thai', sans-serif; letter-spacing: .14em; text-transform: uppercase; }
 .eyebrow { display: flex; align-items: center; gap: 7px; }
