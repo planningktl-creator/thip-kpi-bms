@@ -307,6 +307,10 @@ export type BmsCoverage = {
   liveIndicatorCount: number;
   expectedCellCount: number;
   coveredCellCount: number;
+  /** Cells whose source row carries a measured denominator (real aggregate). */
+  availableCellCount: number;
+  /** Cells explicitly marked unavailable by the source view (denominator NULL). */
+  unavailableCellCount: number;
   unexpectedCellCount: number;
   complete: boolean;
   liveCodes: string[];
@@ -410,6 +414,7 @@ export function buildSourceViewQuery(sourceView: string): RegisteredQuery {
         frequency,
         reference,
         rule_version,
+        pending_reason,
         refreshed_at
       FROM ${quotedView}
       WHERE period_start >= :start_date
@@ -591,6 +596,8 @@ export function summarizeCoverage(rows: RawKpiRow[], fiscalYear: FiscalYear): Bm
   const cells = new Set<string>();
   const unexpectedCells = new Set<string>();
   const monthsByCode = new Map<string, Set<number>>();
+  let availableCellCount = 0;
+  let unavailableCellCount = 0;
 
   for (const row of rows) {
     const code = asString(getValue(row, 'indicator_code'));
@@ -601,7 +608,16 @@ export function summarizeCoverage(rows: RawKpiRow[], fiscalYear: FiscalYear): Bm
       unexpectedCells.add(cell);
       continue;
     }
+    if (cells.has(cell)) continue;
     cells.add(cell);
+    // A NULL denominator is the contract's explicit "unavailable" state; any
+    // other row is a measured aggregate (including a measured zero cohort,
+    // which the source view represents with denominator = 0 and value = NULL).
+    if (asNumber(getValue(row, 'denominator')) === null) {
+      unavailableCellCount += 1;
+    } else {
+      availableCellCount += 1;
+    }
     const months = monthsByCode.get(code) ?? new Set<number>();
     months.add(month);
     monthsByCode.set(code, months);
@@ -616,6 +632,8 @@ export function summarizeCoverage(rows: RawKpiRow[], fiscalYear: FiscalYear): Bm
     liveIndicatorCount: liveCodes.length,
     expectedCellCount,
     coveredCellCount: cells.size,
+    availableCellCount,
+    unavailableCellCount,
     unexpectedCellCount: unexpectedCells.size,
     complete: liveCodes.length === expectedIndicatorCount && cells.size === expectedCellCount && unexpectedCells.size === 0,
     liveCodes,

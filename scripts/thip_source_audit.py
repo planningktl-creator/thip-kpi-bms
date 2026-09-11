@@ -180,6 +180,8 @@ def audit(path: Path, fiscal_year: int) -> tuple[dict[str, Any], int]:
     }
     cells: set[tuple[str, int]] = set()
     duplicates: set[tuple[str, int]] = set()
+    available_cells: set[tuple[str, int]] = set()
+    unavailable_cells: set[tuple[str, int]] = set()
     unknown_codes: list[str] = []
     period_errors: list[str] = []
     unexpected_cells: list[str] = []
@@ -214,6 +216,12 @@ def audit(path: Path, fiscal_year: int) -> tuple[dict[str, Any], int]:
             if cell in cells:
                 duplicates.add(cell)
             cells.add(cell)
+            # A NULL denominator is the contract's explicit unavailable state;
+            # any other row (including a measured zero cohort) is available.
+            if number(row.get("denominator")) is None:
+                unavailable_cells.add(cell)
+            else:
+                available_cells.add(cell)
 
         unit = text(row.get("unit"))
         group = text(row.get("indicator_group"))
@@ -293,6 +301,8 @@ def audit(path: Path, fiscal_year: int) -> tuple[dict[str, Any], int]:
         "expected_indicators": len(rules),
         "expected_cells": len(expected_cells),
         "covered_cells": len(cells & expected_cells),
+        "available_cells": len(available_cells & expected_cells),
+        "unavailable_cells": len(unavailable_cells & expected_cells),
         "live_indicators": len({code for code, _ in cells & expected_cells}),
         "missing_cell_count": len(missing),
         "duplicate_cell_count": len(duplicates),

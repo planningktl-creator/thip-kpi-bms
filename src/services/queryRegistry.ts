@@ -1,5 +1,7 @@
 import { BmsRequestError } from '@/services/bmsErrors';
-import { foundationRuleCodes, thipKpiRulesByCode } from '@/data/thipKpiRules';
+import { thipKpiRulesByCode } from '@/data/thipKpiRules';
+import { registeredRuleCodes } from '@/data/thipImplementation';
+import { FISCAL_MONTH_EXPR, FISCAL_YEAR_EXPR, ipdBaseCte, type IpdBaseVariant } from '@/services/thipIpdBase';
 import { recordQueryTelemetry, responseRowCount, type QueryTelemetryOutcome } from '@/services/queryTelemetry';
 
 export type BmsParamType = 'string' | 'integer' | 'float' | 'date' | 'time' | 'datetime' | 'text';
@@ -24,163 +26,8 @@ export type BmsSqlResponse = {
   record_count?: number;
 };
 
-const foundationExpectedCodeValues = foundationRuleCodes
-  .map((code) => `('${code}')`)
-  .join(', ');
-
-/**
- * Shared IPD base cohort for the foundation family queries. It keeps the
- * per-admission flags in one place so every family query uses the same
- * episode grain and dotless ICD-10 comparison.
- */
-const IPD_FOUNDATION_CTE = `
-  WITH ipd AS (
-    SELECT
-      i.an,
-      i.hn,
-      i.regdate,
-      i.regtime,
-      i.dchdate,
-      s.age_y,
-      s.los,
-      REPLACE(UPPER(TRIM(s.pdx)), '.', '') AS pdx,
-      EXISTS (
-        SELECT 1
-        FROM death d
-        WHERE d.an = i.an
-      ) AS died,
-      EXISTS (
-        SELECT 1
-        FROM iptdiag sd
-        WHERE sd.an = i.an
-          AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') <> REPLACE(UPPER(TRIM(s.pdx)), '.', '')
-          AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
-      ) AS has_acs_sdx,
-      EXISTS (
-        SELECT 1
-        FROM death d
-        WHERE d.an = i.an
-          AND (
-            REPLACE(UPPER(TRIM(d.death_diag_icd10)), '.', '') IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
-            OR REPLACE(UPPER(TRIM(d.death_cause)), '.', '') IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
-            OR REPLACE(UPPER(TRIM(d.death_diag_1)), '.', '') IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
-            OR REPLACE(UPPER(TRIM(d.death_diag_2)), '.', '') IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
-            OR REPLACE(UPPER(TRIM(d.death_diag_3)), '.', '') IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
-            OR REPLACE(UPPER(TRIM(d.death_diag_4)), '.', '') IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
-          )
-      ) AS died_from_acs,
-      EXISTS (
-        SELECT 1
-        FROM iptdiag sd
-        WHERE sd.an = i.an
-          AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') <> REPLACE(UPPER(TRIM(s.pdx)), '.', '')
-          AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') IN ('I210', 'I211', 'I212', 'I213')
-      ) AS has_stemi_sdx,
-      EXISTS (
-        SELECT 1
-        FROM iptdiag sd
-        WHERE sd.an = i.an
-          AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') <> REPLACE(UPPER(TRIM(s.pdx)), '.', '')
-          AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') IN ('I214', 'I219')
-      ) AS has_nste_sdx,
-      EXISTS (
-        SELECT 1
-        FROM death d
-        WHERE d.an = i.an
-          AND d.death_date IS NOT NULL
-          AND (d.death_date + COALESCE(d.death_time, TIME '23:59:59')) >=
-            (i.regdate + COALESCE(i.regtime, TIME '00:00:00'))
-          AND (d.death_date + COALESCE(d.death_time, TIME '23:59:59')) <=
-            (i.regdate + COALESCE(i.regtime, TIME '00:00:00')) + INTERVAL '48 hours'
-      ) AS died_within_48h,
-      EXISTS (
-        SELECT 1
-        FROM death d
-        WHERE d.an = i.an
-          AND (
-            REPLACE(UPPER(TRIM(d.death_diag_icd10)), '.', '') IN ('I210', 'I211', 'I212', 'I213')
-            OR REPLACE(UPPER(TRIM(d.death_cause)), '.', '') IN ('I210', 'I211', 'I212', 'I213')
-            OR REPLACE(UPPER(TRIM(d.death_diag_1)), '.', '') IN ('I210', 'I211', 'I212', 'I213')
-            OR REPLACE(UPPER(TRIM(d.death_diag_2)), '.', '') IN ('I210', 'I211', 'I212', 'I213')
-            OR REPLACE(UPPER(TRIM(d.death_diag_3)), '.', '') IN ('I210', 'I211', 'I212', 'I213')
-            OR REPLACE(UPPER(TRIM(d.death_diag_4)), '.', '') IN ('I210', 'I211', 'I212', 'I213')
-          )
-      ) AS died_from_stemi,
-      EXISTS (
-        SELECT 1
-        FROM death d
-        WHERE d.an = i.an
-          AND (
-            REPLACE(UPPER(TRIM(d.death_diag_icd10)), '.', '') IN ('I214', 'I219')
-            OR REPLACE(UPPER(TRIM(d.death_cause)), '.', '') IN ('I214', 'I219')
-            OR REPLACE(UPPER(TRIM(d.death_diag_1)), '.', '') IN ('I214', 'I219')
-            OR REPLACE(UPPER(TRIM(d.death_diag_2)), '.', '') IN ('I214', 'I219')
-            OR REPLACE(UPPER(TRIM(d.death_diag_3)), '.', '') IN ('I214', 'I219')
-            OR REPLACE(UPPER(TRIM(d.death_diag_4)), '.', '') IN ('I214', 'I219')
-          )
-      ) AS died_from_nste,
-      EXISTS (
-        SELECT 1
-        FROM iptdiag sd
-        WHERE sd.an = i.an
-          AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') <> REPLACE(UPPER(TRIM(s.pdx)), '.', '')
-          AND (
-            LEFT(REPLACE(UPPER(TRIM(sd.icd10)), '.', ''), 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')
-            OR LEFT(REPLACE(UPPER(TRIM(sd.icd10)), '.', ''), 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851')
-          )
-      ) AS has_pneumonia_sdx,
-      EXISTS (
-        SELECT 1
-        FROM death d
-        WHERE d.an = i.an
-          AND (
-            LEFT(REPLACE(UPPER(TRIM(d.death_diag_icd10)), '.', ''), 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')
-            OR LEFT(REPLACE(UPPER(TRIM(d.death_diag_icd10)), '.', ''), 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851')
-            OR LEFT(REPLACE(UPPER(TRIM(d.death_cause)), '.', ''), 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')
-            OR LEFT(REPLACE(UPPER(TRIM(d.death_cause)), '.', ''), 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851')
-            OR LEFT(REPLACE(UPPER(TRIM(d.death_diag_1)), '.', ''), 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')
-            OR LEFT(REPLACE(UPPER(TRIM(d.death_diag_1)), '.', ''), 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851')
-            OR LEFT(REPLACE(UPPER(TRIM(d.death_diag_2)), '.', ''), 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')
-            OR LEFT(REPLACE(UPPER(TRIM(d.death_diag_2)), '.', ''), 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851')
-            OR LEFT(REPLACE(UPPER(TRIM(d.death_diag_3)), '.', ''), 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')
-            OR LEFT(REPLACE(UPPER(TRIM(d.death_diag_3)), '.', ''), 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851')
-            OR LEFT(REPLACE(UPPER(TRIM(d.death_diag_4)), '.', ''), 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')
-            OR LEFT(REPLACE(UPPER(TRIM(d.death_diag_4)), '.', ''), 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851')
-          )
-      ) AS died_from_pneumonia,
-      EXISTS (
-        SELECT 1
-        FROM iptdiag sd
-        WHERE sd.an = i.an
-          AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') IN ('A400', 'A419', 'R572', 'R651')
-      ) AS has_ce0101_sepsis,
-      EXISTS (
-        SELECT 1
-        FROM iptdiag sd
-        WHERE sd.an = i.an
-          AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') IN ('A400', 'A409', 'A410', 'A419', 'R572', 'R651')
-      ) AS has_ci0101_sepsis
-    FROM ipt i
-    JOIN an_stat s ON s.an = i.an
-    WHERE i.dchdate >= :start_date
-      AND i.dchdate < :end_date
-      AND i.regdate IS NOT NULL
-      AND EXTRACT(EPOCH FROM (
-        (i.dchdate + COALESCE(i.dchtime, TIME '23:59:59')) -
-        (i.regdate + COALESCE(i.regtime, TIME '00:00:00'))
-      )) >= 14400
-  ),
-  periodized AS (
-    SELECT
-      *,
-      DATE_TRUNC('month', dchdate)::date AS period_start,
-      EXTRACT(MONTH FROM dchdate)::integer AS calendar_month
-    FROM ipd
-  )
-`.trim();
-
-const fiscalMonthExpr = "CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END";
-const fiscalYearExpr = "CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END";
+const fiscalMonthExpr = FISCAL_MONTH_EXPR;
+const fiscalYearExpr = FISCAL_YEAR_EXPR;
 
 function branch(code: string, numerator: string, denominator: string, value: string, where: string, options: { groupBy?: string } = {}): string {
   const groupBy = options.groupBy ?? 'period_start, calendar_month';
@@ -206,6 +53,12 @@ const pneumoniaWhere = "LEFT(pdx, 4) IN ('J100', 'J110', 'J170', 'J171', 'J172',
 const sepsisCeWhere = "pdx IN ('A400', 'A419', 'R572', 'R651') OR has_ce0101_sepsis";
 const sepsisCiWhere = "pdx IN ('A400', 'A409', 'A410', 'A419', 'R572', 'R651') OR has_ci0101_sepsis";
 const ugihWhere = "pdx IN ('K250', 'K251', 'K252', 'K254', 'K255', 'K256', 'K260', 'K261', 'K262', 'K264', 'K265', 'K266', 'K270', 'K271', 'K272', 'K274', 'K275', 'K276', 'K280', 'K281', 'K282', 'K284', 'K285', 'K286', 'K290', 'K920', 'K921', 'K922')";
+const asthmaWhere = "LEFT(pdx, 3) IN ('J45', 'J46')";
+const copdWhere = "LEFT(pdx, 3) = 'J44'";
+const cancerWhere = "pdx IN ('C00','C01','C02','C03','C04','C05','C06','C07','C08','C09','C10','C11','C12','C13','C14','C15','C16','C17','C18','C19','C20','C21','C22','C23','C24','C25','C26','C30','C31','C32','C33','C34','C37','C38','C39','C40','C41','C43','C44','C45','C46','C47','C48','C49','C50','C51','C52','C53','C54','C55','C56','C57','C58','C60','C61','C62','C63','C64','C65','C66','C67','C68','C69','C70','C71','C72','C73','C74','C75','C76','C77','C78','C79','C80','C81','C82','C83','C84','C85','C86','C87','C88','C89','C90','C91','C92','C93','C94','C95','C96','C97','D00','D01','D02','D03','D04','D05','D06','D07','D08','D09','Z510','Z511')";
+const tbWhere = "pdx IN ('A15', 'A16')";
+const appendicitisWhere = "pdx IN ('K35', 'K352', 'K353', 'K358')";
+const csWhere = "pdx IN ('O820', 'O821', 'O822', 'O828', 'O829', 'O842')";
 
 const readmitSubquery = `
         COUNT(*) FILTER (WHERE NOT died AND EXISTS (
@@ -241,6 +94,16 @@ function ratioValue(numerator: string, denominator: string): string {
   return `ROUND((${numerator} * 100.0) / NULLIF(${denominator}, 0), 2)`;
 }
 
+/** A mortality branch that only needs `pdx` and `died`, valid on both base variants. */
+function pdxMortalityBranch(code: string, where: string): string {
+  return branch(code, 'COUNT(*) FILTER (WHERE died)', 'COUNT(*)', ratioValue('COUNT(*) FILTER (WHERE died)', 'COUNT(*)'), where);
+}
+
+/** A 28-day readmission branch that only needs `pdx`, `died`, `hn`, `an`, `dchdate`. */
+function readmitBranch(code: string, where: string): string {
+  return branch(code, readmitSubquery, 'COUNT(*) FILTER (WHERE NOT died)', ratioValue(readmitSubquery, 'COUNT(*) FILTER (WHERE NOT died)'), where);
+}
+
 const FAMILY_BRANCHES: Readonly<Record<string, readonly string[]>> = {
   ACS: [
     branch('DH0101', acsDeathNumerator, 'COUNT(*)', ratioValue(acsDeathNumerator, 'COUNT(*)'), acsWhere),
@@ -253,6 +116,7 @@ const FAMILY_BRANCHES: Readonly<Record<string, readonly string[]>> = {
       "age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')"),
     branch('DH0112', 'ROUND(SUM(los)::numeric, 2)', 'COUNT(*)', 'ROUND(AVG(los), 2)',
       "age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')"),
+    readmitBranch('DH0111', "age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')"),
   ],
   STROKE: [
     branch('DN0101', 'COUNT(*) FILTER (WHERE died)', 'COUNT(*)', ratioValue('COUNT(*) FILTER (WHERE died)', 'COUNT(*)'), strokeWhere),
@@ -273,32 +137,49 @@ const FAMILY_BRANCHES: Readonly<Record<string, readonly string[]>> = {
   ],
   APPENDICITIS: [
     branch('DG0202', 'COUNT(*) FILTER (WHERE died)', 'COUNT(*)', ratioValue('COUNT(*) FILTER (WHERE died)', 'COUNT(*)'), "LEFT(pdx, 3) = 'K35'"),
+    branch('DG0201', "COUNT(*) FILTER (WHERE pdx = 'K352')", 'COUNT(*)', ratioValue("COUNT(*) FILTER (WHERE pdx = 'K352')", 'COUNT(*)'), appendicitisWhere),
   ],
   ASTHMA_COPD: [
-    branch('DR0403', 'COUNT(*) FILTER (WHERE died)', 'COUNT(*)', ratioValue('COUNT(*) FILTER (WHERE died)', 'COUNT(*)'), "LEFT(pdx, 3) = 'J44'"),
+    pdxMortalityBranch('DR0403', copdWhere),
+    readmitBranch('DR0301', asthmaWhere),
+    readmitBranch('DR0401', copdWhere),
   ],
   UGIH: [
     branch('DG0102', 'ROUND(SUM(los)::numeric, 2)', 'COUNT(*)', 'ROUND(AVG(los), 2)', ugihWhere),
+    readmitBranch('DG0101', ugihWhere),
   ],
   HEAD_INJURY: [
     branch('DN0302', 'COUNT(*) FILTER (WHERE died_within_48h)', 'COUNT(*)', ratioValue('COUNT(*) FILTER (WHERE died_within_48h)', 'COUNT(*)'), "pdx IN ('S060', 'S061', 'S062', 'S063', 'S064', 'S065', 'S066', 'S067', 'S068', 'S069')"),
   ],
+  CANCER: [
+    pdxMortalityBranch('DC0401', cancerWhere),
+  ],
+  HIV_TB: [
+    pdxMortalityBranch('DR0201', tbWhere),
+  ],
+  MATERNAL_CHILD: [
+    branch('CM0105', 'ROUND(SUM(los)::numeric, 2)', 'COUNT(*)', 'ROUND(AVG(los), 2)', csWhere),
+  ],
 };
 
-/** Codes covered by each family, derived from the registered foundation rules. */
+/** Codes covered by each family, restricted to the registered rule codes. */
 const FAMILY_CODES: Readonly<Record<string, readonly string[]>> = Object.fromEntries(
   Object.keys(FAMILY_BRANCHES).map((family) => [
     family,
-    foundationRuleCodes.filter((code) => thipKpiRulesByCode.get(code)?.queryFamily === family),
+    registeredRuleCodes.filter((code) => thipKpiRulesByCode.get(code)?.queryFamily === family),
   ]),
 );
 
-/** Branches for one family, restricted to the codes the manifest registers. */
 function familyBranches(family: string): readonly string[] {
   const codes = FAMILY_CODES[family] ?? [];
   const branches = FAMILY_BRANCHES[family] ?? [];
   return branches.filter((sql) => codes.some((code) => sql.includes(`'${code}' AS indicator_code`)));
 }
+
+export const registeredBranches = registeredRuleCodes.flatMap((code) => {
+  const family = thipKpiRulesByCode.get(code)?.queryFamily ?? '';
+  return familyBranches(family).filter((sql) => sql.includes(`'${code}' AS indicator_code`));
+});
 
 function expectedCodeValues(codes: readonly string[]): string {
   return codes.map((code) => `('${code}')`).join(', ');
@@ -309,12 +190,12 @@ function expectedCodeValues(codes: readonly string[]): string {
  * fact branches. Every query returns one row per indicator x reporting period
  * and never exposes a patient row.
  */
-function buildFoundationQuery(key: string, description: string, codes: readonly string[], branches: readonly string[]): RegisteredQuery {
+function buildFoundationQuery(key: string, description: string, codes: readonly string[], branches: readonly string[], variant: IpdBaseVariant = 'standard'): RegisteredQuery {
   return {
     key,
     description,
     sql: `
-      ${IPD_FOUNDATION_CTE},
+      ${ipdBaseCte(variant)},
       facts AS (
       ${branches.join('\n\n      UNION ALL\n')}
       ), expected_codes(indicator_code) AS (
@@ -359,12 +240,6 @@ function buildFoundationQuery(key: string, description: string, codes: readonly 
   };
 }
 
-const allFoundationBranches = foundationRuleCodes.flatMap((code) => {
-  const rule = thipKpiRulesByCode.get(code);
-  const family = rule?.queryFamily ?? '';
-  return familyBranches(family).filter((sql) => sql.includes(`'${code}' AS indicator_code`));
-});
-
 export const foundationFamilyQueries: Readonly<Record<string, RegisteredQuery>> = Object.fromEntries(
   Object.entries(FAMILY_BRANCHES).map(([family]) => [
     family,
@@ -402,8 +277,33 @@ export const queryRegistry = {
   thipIpdFoundation: buildFoundationQuery(
     'thipIpdFoundation',
     'ผลลัพธ์จริงรายเดือนสำหรับตัวชี้วัด THIP กลุ่ม IPD จาก HOSxP',
-    foundationRuleCodes,
-    allFoundationBranches,
+    registeredRuleCodes,
+    registeredBranches,
+  ),
+  // Opt-in variant for sites whose coded diagnosis lives in `ipt_drg_result`.
+  // It shares the pdx-only branches, so it covers mortality/readmission/LOS
+  // that do not need the extra `iptdiag` flags.
+  thipIpdDrgResultFoundation: buildFoundationQuery(
+    'thipIpdDrgResultFoundation',
+    'ผลลัพธ์จริงรายเดือนจาก ipt_drg_result (pdx-only) สำหรับโรงพยาบาลที่เก็บ coded diagnosis ในตารางนี้',
+    registeredRuleCodes,
+    [
+      pdxMortalityBranch('DH0101', "pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')"),
+      pdxMortalityBranch('DH0101.1', "pdx IN ('I210', 'I211', 'I212', 'I213')"),
+      pdxMortalityBranch('DH0101.2', "pdx IN ('I214', 'I219')"),
+      pdxMortalityBranch('DN0101', strokeWhere),
+      pdxMortalityBranch('DR0101', "LEFT(pdx, 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851') OR LEFT(pdx, 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')"),
+      pdxMortalityBranch('DR0403', copdWhere),
+      pdxMortalityBranch('DR0201', tbWhere),
+      pdxMortalityBranch('DG0202', "LEFT(pdx, 3) = 'K35'"),
+      pdxMortalityBranch('DN0302', "pdx IN ('S060', 'S061', 'S062', 'S063', 'S064', 'S065', 'S066', 'S067', 'S068', 'S069')"),
+      pdxMortalityBranch('DC0401', cancerWhere),
+      pdxMortalityBranch('CI0101', "pdx IN ('A400', 'A409', 'A410', 'A419', 'R572', 'R651')"),
+      readmitBranch('DN0107', strokeWhere),
+      readmitBranch('DR0102', "LEFT(pdx, 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851') OR LEFT(pdx, 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')"),
+      readmitBranch('DG0101', ugihWhere),
+    ],
+    'drgResult',
   ),
   ...foundationFamilyQueries,
 } as const satisfies Record<string, RegisteredQuery>;

@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "fixture:export": "node scripts/export-thip-fixture.mjs",
+    "sourceview:build": "node scripts/build-thip-source-view.mjs",
     "audit:source": "python scripts/thip_source_audit.py"
   },
   "dependencies": {

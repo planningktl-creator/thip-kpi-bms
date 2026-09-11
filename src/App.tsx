@@ -20,6 +20,8 @@ const emptyCoverage: BmsCoverage = {
   liveIndicatorCount: 0,
   expectedCellCount: 1552,
   coveredCellCount: 0,
+  availableCellCount: 0,
+  unavailableCellCount: 0,
   unexpectedCellCount: 0,
   complete: false,
   liveCodes: [],

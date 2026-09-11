@@ -60,6 +60,11 @@ describe('THIP aggregate source fixture', () => {
       unexpectedCellCount: 0,
       complete: true,
     });
+    // Registered codes carry measured cells; pending-local-source codes carry
+    // explicit unavailable cells, and the two must add up to the full grid.
+    expect(result.coverage.availableCellCount).toBeGreaterThan(0);
+    expect(result.coverage.unavailableCellCount).toBeGreaterThan(0);
+    expect(result.coverage.availableCellCount + result.coverage.unavailableCellCount).toBe(1552);
     expect(result.indicators).toHaveLength(232);
     expect(result.refreshedAt).toBe(FIXTURE_REFRESHED_AT);
   });

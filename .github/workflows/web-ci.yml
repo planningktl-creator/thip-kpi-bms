@@ -26,6 +26,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
       - run: pnpm fixture:export
+      - run: pnpm sourceview:build
       - run: python scripts/check-thip-fixtures.py
       - run: pnpm run build
       # CI validates the production image contract with a safe identifier only;

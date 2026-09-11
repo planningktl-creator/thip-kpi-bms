@@ -1,6 +1,7 @@
 import { thipCatalogue } from '@/data/thipCatalogue';
 import { getRuleUnit, thipKpiRulesByCode } from '@/data/thipKpiRules';
 import { getExpectedFiscalMonths, getReportingCadence, reportingCadenceLabels } from '@/data/thipReporting';
+import { getPendingReason, getImplementationTier } from '@/data/thipImplementation';
 import type { IndicatorDirection, IndicatorGroup, IndicatorUnit, TargetScope } from '@/types/thip';
 import { getFiscalMonthPeriods } from '@/utils/fiscal';
 
@@ -46,6 +47,7 @@ export type FixtureRow = {
   frequency: string;
   reference: string;
   rule_version: string;
+  pending_reason: string | null;
   refreshed_at: string;
 };
 
@@ -67,25 +69,31 @@ export function buildSourceFixtureRow(code: string, fiscalMonth: number, fiscalY
   const period = periods[fiscalMonth - 1];
   if (!period) throw new Error(`Fixture requested an invalid fiscal month ${fiscalMonth} for ${code}`);
   const unit = getRuleUnit(rule);
+  const tier = getImplementationTier(code);
+  const registered = tier === 'registered';
 
   return {
     indicator_code: code,
     period_start: period.periodStart,
     fiscal_year: fiscalYear,
     fiscal_month: fiscalMonth,
-    numerator: unit === 'count' ? FIXTURE_COUNT_VALUE : FIXTURE_NUMERATOR,
-    denominator: unit === 'count' ? null : FIXTURE_DENOMINATOR,
-    value: scaledValue(unit, rule.formulaScale),
+    // The contract's explicit "unavailable" state for a code that still needs a
+    // local source: denominator and value stay NULL rather than a fabricated 0.
+    numerator: registered ? (unit === 'count' ? FIXTURE_COUNT_VALUE : FIXTURE_NUMERATOR) : null,
+    denominator: registered ? (unit === 'count' ? null : FIXTURE_DENOMINATOR) : null,
+    value: registered ? scaledValue(unit, rule.formulaScale) : null,
     target: null,
     target_scope: cadence === 'annual' ? 'annual' : 'monthly',
-    percentile: FIXTURE_PERCENTILE,
+    percentile: registered ? FIXTURE_PERCENTILE : null,
     indicator_group: entry.group,
     unit,
     direction: 'neutral',
     category: entry.title,
     title: entry.title,
     title_th: entry.title,
-    definition: `Synthetic aggregate fixture for ${code}; not a hospital result.`,
+    definition: registered
+      ? `Synthetic aggregate fixture for ${code}; not a hospital result.`
+      : `Synthetic unavailable fixture for ${code}; the code is in the 232-code contract but still needs a local source.`,
     formula: rule.formulaScale,
     numerator_label: 'synthetic numerator (fixture only)',
     denominator_label: 'synthetic denominator (fixture only)',
@@ -93,6 +101,7 @@ export function buildSourceFixtureRow(code: string, fiscalMonth: number, fiscalY
     frequency: reportingCadenceLabels[cadence],
     reference: `THIP KPI Dictionary 2025 · หน้า ${rule.pdfPage}`,
     rule_version: FIXTURE_RULE_VERSION,
+    pending_reason: getPendingReason(code),
     refreshed_at: FIXTURE_REFRESHED_AT,
   };
 }

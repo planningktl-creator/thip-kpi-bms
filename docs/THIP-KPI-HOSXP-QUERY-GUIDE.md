@@ -32,7 +32,9 @@ HOSxP tables / local modules
     -> BMS API and dashboard
 ```
 
-ใน repository ขณะนี้มี raw foundation query ที่ลงทะเบียนแล้ว 16 รหัส ได้แก่ `DH0101`, `DH0101.1`, `DH0101.2`, `DN0101`, `DR0101`, `CE0101`, `CI0101`, `DH0102`, `DG0102`, `DG0202`, `DR0403`, `DR0102`, `DN0107`, `DH0112`, `DN0109` และ `DN0302` ส่วนอีก 216 รหัสมีชื่อและ PDF mapping ครบใน catalogue/register นี้ แต่ต้องยืนยันกติกาและจัดทำ source-view rows จากข้อมูลจริงของโรงพยาบาลก่อนจึงจะเรียกว่า production query ได้
+ใน repository ขณะนี้มี raw foundation query ที่ลงทะเบียนแล้ว 24 รหัส ได้แก่ `DH0101`, `DH0101.1`, `DH0101.2`, `DH0102`, `DH0111`, `DH0112`, `DN0101`, `DN0107`, `DN0109`, `DN0302`, `DR0101`, `DR0102`, `DR0301`, `DR0401`, `DR0403`, `DR0201`, `DC0401`, `DG0101`, `DG0102`, `DG0201`, `DG0202`, `CM0105`, `CE0101` และ `CI0101` ส่วนอีกรหัสที่เหลือมีชื่อและ PDF mapping ครบใน catalogue/register นี้ แต่ต้องยืนยันกติกาและจัดทำ source-view rows จากข้อมูลจริงของโรงพยาบาลก่อนจึงจะเรียกว่า production query ได้
+
+`src/data/thipImplementation.ts` จำแนกทุก 232 รหัสเป็น `registered` (มี registered query และจะได้ค่า measured) หรือ `pending-local-source` (อยู่ในสัญญา 232 รหัส แต่ยังต้อง local rule พร้อมเหตุผลกำกับ) และ `pnpm sourceview:build` สร้าง `reporting/thip_kpi_monthly.sql` ที่เติมแถว measured สำหรับรหัส registered และเติมแถว `unavailable` (`denominator = NULL`, `value = NULL`, `pending_reason`) สำหรับรหัสที่เหลือ โดยไม่แต่งค่า 0
 
 ดังนั้นคำว่า “query ครบทุกตัว” ในเอกสารนี้หมายถึง
 
@@ -500,9 +502,11 @@ EXISTS (
 
 ใน current code และทะเบียน rule, `CE0101` และ `CI0101` ใช้ printed page 194 และ 199 ตามลำดับ ซึ่งตรงกับเลขหน้าที่พิมพ์ใน footer ของ PDF; เลขหน้าในข้อความ extraction เดิมอาจคลาดเคลื่อนและห้ามใช้แทน printed page
 
-## 7. Query family สำหรับ 216 รหัสที่ยังต้องทำ local mapping
+## 7. Query family สำหรับรหัสที่ยังต้องทำ local mapping
 
-`queryRegistry.thipIpdFoundation` สร้าง fiscal-period grid ให้ foundation ทั้ง 16 รหัสด้วย ดังนั้นช่วง FY ที่ส่งเข้ามาจะได้ 16 รหัส × 12 เดือน = 192 แถว แม้เดือนนั้นไม่มี cohort: `numerator` และ `denominator` จะเป็น 0 และ `value` จะเป็น `NULL` ตาม zero-denominator contract การมีแถวศูนย์นี้ไม่ใช่ synthetic KPI แต่เป็นผลลัพธ์ aggregate ที่ยืนยันว่า query ตรวจช่วงเวลานั้นแล้ว
+`queryRegistry.thipIpdFoundation` สร้าง fiscal-period grid ให้ registered ทั้ง 24 รหัส (รายเดือน × 12) แม้เดือนนั้นไม่มี cohort: `numerator` และ `denominator` จะเป็น 0 และ `value` จะเป็น `NULL` ตาม zero-denominator contract การมีแถวศูนย์นี้ไม่ใช่ synthetic KPI แต่เป็นผลลัพธ์ aggregate ที่ยืนยันว่า query ตรวจช่วงเวลานั้นแล้ว
+
+สำหรับรหัสที่ยังเป็น `pending-local-source` (208 รหัส) reporting layer ต้องเติมแถว `unavailable` (`denominator = NULL`, `value = NULL`, `pending_reason`) ให้ครบ cadence ของแต่ละรหัส การนับ `complete` จึงยังต้องครบ 1,552 ช่อง แต่ `available_cells` จะแยกจาก `unavailable_cells` เพื่อไม่ให้แถวรอ source ถูกตีความเป็นผลงานจริง
 
 คำว่า candidate table หมายถึง table ที่ schema มี field น่าจะรองรับ ไม่ได้หมายถึงผ่าน validation แล้ว สำหรับแต่ละ family ต้องสร้าง approved rule ที่มี cohort, numerator, denominator, event date, code master, target และ test case
 
@@ -563,8 +567,9 @@ EXISTS (
 | Rule manifest รายรหัส | 232/232 | มีใน `src/data/thipKpiRules.ts` พร้อม family, PDF page, candidate tables, tokens และสถานะ query | ต้องเปลี่ยนสถานะเมื่อ local owner sign-off |
 | Normalized source-view reader | 232/232 | มี `buildSourceViewQuery()` และ adapter ใน `src/services/bmsData.ts` | ต้อง provision ชื่อ view จริง |
 | Completeness/duplicate validation | 232 codes ตาม cadence | มี audit SQL, duplicate guard และ coverage gate 1,552 ช่อง | ต้องเชื่อม reporting source |
-| Registered foundation calculation | 16/232 | มีใน `queryRegistry.thipIpdFoundation` และมี unit/smoke tests | ต้องยืนยัน HOSxP local semantics |
-| Raw calculation สำหรับ KPI ที่เหลือ | 216/232 | ทำ rule manifest และ family adapter ต่อได้โดยไม่แตะ UI | clinical rule, code master, event mapping และ aggregate evidence |
+| Registered foundation calculation | 24/232 | มีใน `queryRegistry.thipIpdFoundation` (และ `thipIpdDrgResultFoundation` แบบ opt-in) พร้อม unit/smoke tests | ต้องยืนยัน HOSxP local semantics |
+| Reporting-layer artifact | 232/232 cadence cells | `pnpm sourceview:build` สร้าง `reporting/thip_kpi_monthly.sql` (DDL + refresh) เติม measured/unavailable ครบ 1,552 ช่อง | ต้อง provision บน reporting/BMS layer จริง |
+| Raw calculation สำหรับ KPI ที่เหลือ | 208/232 | rule manifest + family adapter ต่อได้โดยไม่แตะ UI; แถวที่ยังไม่มี rule ออกเป็น `unavailable` พร้อม `pending_reason` | clinical rule, code master, event mapping และ aggregate evidence |
 
 สรุปคือ frontend, contract, source-view adapter, validation และ query registry พร้อมให้พัฒนาต่อได้เลย ระบบไม่มี synthetic production fallback แล้ว ส่วนที่ยังทำให้ตัวเลข production ครบ 232 ไม่ได้คือ “กติกาข้อมูลและ source view ของโรงพยาบาล” ไม่ใช่การขาดชื่อ KPI ในเอกสาร
 

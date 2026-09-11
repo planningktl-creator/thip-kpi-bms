@@ -46,11 +46,18 @@ export function getDataQualitySummary(params: {
   expectedIndicatorCount: number;
   coveredCellCount: number;
   expectedCellCount: number;
+  availableCellCount?: number;
+  unavailableCellCount?: number;
   now?: Date;
 }): DataQualitySummary {
   const { dataSource, refreshedAt, liveIndicatorCount, expectedIndicatorCount, coveredCellCount, expectedCellCount } = params;
   const freshness = getFreshnessState(refreshedAt, params.now ?? new Date());
   const coverage = `${liveIndicatorCount}/${expectedIndicatorCount} ตัวชี้วัด · ${coveredCellCount}/${expectedCellCount} งวดรายงาน`;
+  const measured = params.availableCellCount;
+  const unavailable = params.unavailableCellCount;
+  const split = measured === undefined || unavailable === undefined
+    ? ''
+    : ` · วัดผลได้ ${measured} · รอ local source ${unavailable}`;
 
   if (dataSource === 'loading') {
     return { state: dataSource, freshness, tone: 'muted', label: 'กำลังอ่านข้อมูล', detail: 'กำลังรอผลลัพธ์จาก registered query' };
@@ -59,12 +66,15 @@ export function getDataQualitySummary(params: {
     return { state: dataSource, freshness, tone: 'error', label: 'ไม่มีข้อมูลจริง', detail: 'ไม่พบผลลัพธ์จาก BMS · ระบบไม่แสดงค่า 0 แทนข้อมูลที่หายไป' };
   }
   if (dataSource === 'partial') {
-    return { state: dataSource, freshness, tone: 'warning', label: 'ข้อมูลบางส่วน', detail: `source view ยังไม่ครบตาม cadence · ${coverage}` };
+    return { state: dataSource, freshness, tone: 'warning', label: 'ข้อมูลบางส่วน', detail: `source view ยังไม่ครบตาม cadence · ${coverage}${split}` };
   }
   if (freshness === 'stale') {
-    return { state: dataSource, freshness, tone: 'warning', label: 'ข้อมูลล่าช้า', detail: `ข้อมูลชุดล่าสุดเกิน SLA ${REFRESH_SLA_HOURS} ชั่วโมง · ${coverage}` };
+    return { state: dataSource, freshness, tone: 'warning', label: 'ข้อมูลล่าช้า', detail: `ข้อมูลชุดล่าสุดเกิน SLA ${REFRESH_SLA_HOURS} ชั่วโมง · ${coverage}${split}` };
   }
-  return { state: dataSource, freshness, tone: 'good', label: 'ข้อมูลครบถ้วน', detail: `อ่านครบตามรอบรายงาน · ${coverage}` };
+  if (unavailable !== undefined && unavailable > 0) {
+    return { state: dataSource, freshness, tone: 'warning', label: 'ครบตามรอบ แต่ยังมีตัวชี้วัดรอ local source', detail: `${coverage}${split}` };
+  }
+  return { state: dataSource, freshness, tone: 'good', label: 'ข้อมูลครบถ้วน', detail: `อ่านครบตามรอบรายงาน · ${coverage}${split}` };
 }
 
 export const freshnessLabel: Record<FreshnessState, string> = {
