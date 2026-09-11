@@ -6,6 +6,17 @@ const appIdentifier = import.meta.env.VITE_BMS_APP_IDENTIFIER || 'THIP.KPI.BMS';
 const pasteJsonUrl = 'https://hosxp.net/phapi/PasteJSON';
 const SESSION_TIMEOUT_MS = 15_000;
 
+type LaunchContext = {
+  sessionId: string;
+  marketplaceToken: string | null;
+};
+
+// The launcher URL is a bearer-capability transport, not durable application
+// state. Keep it only in this module's memory after removing it from the URL so
+// a transient network/CORS failure can be retried without exposing credentials
+// in browser history, screenshots, or copied links.
+let inMemoryLaunchContext: LaunchContext | null = null;
+
 type RawSession = {
   result?: {
     user_info?: {
@@ -33,10 +44,23 @@ export function getLaunchContext(): {
   marketplaceToken: string | null;
 } {
   const params = new URLSearchParams(window.location.search);
+  const urlSessionId = params.get('bms-session-id');
+  const urlMarketplaceToken = params.get('marketplace-token') ?? params.get('marketplace_token');
+  if (urlSessionId) {
+    return { sessionId: urlSessionId, marketplaceToken: urlMarketplaceToken };
+  }
   return {
-    sessionId: params.get('bms-session-id'),
-    marketplaceToken: params.get('marketplace-token') ?? params.get('marketplace_token'),
+    sessionId: inMemoryLaunchContext?.sessionId ?? null,
+    marketplaceToken: inMemoryLaunchContext?.marketplaceToken ?? null,
   };
+}
+
+/**
+ * Forget the in-memory launcher capability. The app uses this when BMS has
+ * explicitly rejected the session; tests also use it to isolate browser runs.
+ */
+export function clearInMemoryLaunchContext(): void {
+  inMemoryLaunchContext = null;
 }
 
 /**
@@ -87,15 +111,16 @@ export async function connectBmsSession(): Promise<{
 }> {
   const { sessionId, marketplaceToken } = getLaunchContext();
   if (!sessionId) {
-    return { connection: { status: 'demo', message: 'ยังไม่ได้เปิดจาก BMS launcher' } };
+    return { connection: { status: 'idle', message: 'ยังไม่ได้เปิดจาก BMS launcher จึงยังไม่มีข้อมูลจริง' } };
   }
+
+  inMemoryLaunchContext = { sessionId, marketplaceToken };
+  // Remove credentials before making the network request. The capability stays
+  // available only in memory for a retry during this page lifetime.
+  stripLaunchCredentialsFromUrl();
 
   try {
     const raw = await retrieveSession(sessionId);
-    // The session id is a bearer capability for PasteJSON; drop it from the
-    // address bar as soon as the handshake succeeds (or fails) so it does not
-    // linger in history or shared links.
-    stripLaunchCredentialsFromUrl();
     const info = raw.result?.user_info;
     const apiUrl = info?.bms_url?.trim();
     const bearerToken = info?.bms_session_code || raw.result?.key_value;
@@ -129,9 +154,9 @@ export async function connectBmsSession(): Promise<{
       },
     };
   } catch (error) {
-    // Also strip credentials on a failed handshake — the session id is no
-    // longer useful once PasteJSON rejected it.
-    stripLaunchCredentialsFromUrl();
+    if (isExpiredOrRejectedSession(error)) {
+      clearInMemoryLaunchContext();
+    }
     return {
       connection: {
         status: 'error',
@@ -139,4 +164,19 @@ export async function connectBmsSession(): Promise<{
       },
     };
   }
+}
+
+function isExpiredOrRejectedSession(error: unknown): boolean {
+  if (error instanceof BmsRequestError) {
+    if (error.phase === 'session' && error.failure === 'http') {
+      return [401, 403, 404].includes(error.status ?? 0);
+    }
+    if (error.phase === 'session' && error.failure === 'response') return true;
+    if (error.phase === 'api' && error.failure === 'http') {
+      return [401, 403].includes(error.status ?? 0);
+    }
+  }
+  // A successful PasteJSON response without usable connection fields is not a
+  // retryable transport failure; it is a malformed/expired launch payload.
+  return error instanceof Error && error.message.includes('BMS session ไม่มี endpoint หรือ bearer token');
 }

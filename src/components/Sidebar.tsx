@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { BmsConnection, IndicatorGroup } from '@/types/thip';
-import { groupMeta } from '@/data/thipData';
+import { groupMeta } from '@/data/thipMeta';
 
 export type View = 'dashboard' | 'catalog' | 'detail';
 
@@ -120,13 +120,13 @@ export function Sidebar({
 
         <div className="sidebar-bottom">
           <div className="sidebar-section-label">Data layer</div>
-          <div className={`connection-card connection-${connection.status}`} role="status" aria-label={connection.status === 'connected' ? `เชื่อมต่อ BMS แล้ว ${connection.hospitalCode || ''}` : 'โหมดข้อมูลตัวอย่าง'}>
+          <div className={`connection-card connection-${connection.status}`} role="status" aria-label={connection.status === 'connected' ? `เชื่อมต่อ BMS แล้ว ${connection.hospitalCode || ''}` : 'ยังไม่มี BMS live session'}>
             <div className="connection-icon">
               {connection.status === 'connected' ? <ShieldCheck size={16} /> : <Database size={16} />}
             </div>
             <div className="connection-copy">
-              <strong>{connection.status === 'connected' ? 'BMS connected' : 'Demo workspace'}</strong>
-              <span>{connection.status === 'connected' ? connection.hospitalCode || 'Live session' : 'Safe sample data'}</span>
+              <strong>{connection.status === 'connected' ? 'BMS connected' : 'รอ BMS live session'}</strong>
+              <span>{connection.status === 'connected' ? connection.hospitalCode || 'Live session' : 'ยังไม่มีข้อมูลจริง'}</span>
             </div>
             <span className="connection-led" aria-hidden="true" />
           </div>

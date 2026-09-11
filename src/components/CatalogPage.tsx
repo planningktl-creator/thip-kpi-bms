@@ -1,7 +1,7 @@
 import { ArrowUpRight, BookOpen, CheckCircle2, Search, ShieldAlert } from 'lucide-react';
 import type { ThipCatalogueEntry } from '@/data/thipCatalogue';
 import type { IndicatorGroup } from '@/types/thip';
-import { groupMeta, sourceDictionaryCount } from '@/data/thipData';
+import { groupMeta, sourceDictionaryCount } from '@/data/thipMeta';
 
 type Props = {
   entries: readonly ThipCatalogueEntry[];
@@ -44,7 +44,7 @@ export function CatalogPage({ entries, wiredCodes, activeGroup, search, onSearch
       </section>
 
       <section className="panel catalog-panel">
-        <div className="panel-heading catalog-heading"><div><span className="panel-eyebrow">DICTIONARY INDEX</span><h3>ตัวชี้วัดตามรหัส THIP</h3><p>กดรายการใดก็ได้เพื่อดูโครงสร้าง detail รายเดือน; รายการที่ยังไม่ผูกข้อมูลจะแสดงสถานะ no-data อย่างตรงไปตรงมา</p></div><div className="catalog-controls"><label className="search-field catalog-search"><Search size={16} aria-hidden="true" /><span className="sr-only">ค้นหาตัวชี้วัดใน dictionary</span><input aria-label="ค้นหาตัวชี้วัดใน dictionary" value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="ค้นหารหัสหรือชื่อ KPI" /></label><button className="catalog-all-button" type="button" aria-pressed={activeGroup === 'all'} onClick={() => onGroupChange('all')}>ทั้งหมด <ArrowUpRight size={14} aria-hidden="true" /></button></div></div>
+        <div className="panel-heading catalog-heading"><div><span className="panel-eyebrow">DICTIONARY INDEX</span><h3>ตัวชี้วัดตามรหัส THIP</h3><p>กดรายการใดก็ได้เพื่อดูโครงสร้าง detail ตามรอบรายงาน; รายการที่ยังไม่ผูกข้อมูลจะแสดงสถานะ no-data อย่างตรงไปตรงมา</p></div><div className="catalog-controls"><label className="search-field catalog-search"><Search size={16} aria-hidden="true" /><span className="sr-only">ค้นหาตัวชี้วัดใน dictionary</span><input aria-label="ค้นหาตัวชี้วัดใน dictionary" value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="ค้นหารหัสหรือชื่อ KPI" /></label><button className="catalog-all-button" type="button" aria-pressed={activeGroup === 'all'} onClick={() => onGroupChange('all')}>ทั้งหมด <ArrowUpRight size={14} aria-hidden="true" /></button></div></div>
         <div className="catalog-table-wrap">
           <table className="catalog-table">
             <caption className="sr-only">คลังตัวชี้วัด THIP 2025 จำนวน {filtered.length} รายการที่กรองแล้ว</caption>

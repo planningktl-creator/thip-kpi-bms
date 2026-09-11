@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { DEMO_FISCAL_YEAR, fiscalMonthLabels, groupMeta, sourceDictionaryCount } from '@/data/thipData';
+import { groupMeta, sourceDictionaryCount } from '@/data/thipMeta';
+import { getFiscalMonthPeriods } from '@/utils/fiscal';
 
-describe('THIP source data', () => {
-  it('exposes the fiscal month labels for the demo fiscal year', () => {
-    expect(fiscalMonthLabels).toHaveLength(12);
-    expect(fiscalMonthLabels[0]).toBe('ต.ค.');
-    expect(fiscalMonthLabels[11]).toBe('ก.ย.');
+describe('THIP metadata', () => {
+  it('exposes fiscal month labels from the requested year', () => {
+    const periods = getFiscalMonthPeriods(2026);
+    expect(periods).toHaveLength(12);
+    expect(periods[0]?.monthLabel).toBe('ต.ค.');
+    expect(periods[11]?.monthLabel).toBe('ก.ย.');
   });
 
   it('keeps group metadata for the five THIP groups', () => {
@@ -16,6 +18,5 @@ describe('THIP source data', () => {
 
   it('tracks the THIP 2025 dictionary size', () => {
     expect(sourceDictionaryCount).toBe(232);
-    expect(DEMO_FISCAL_YEAR).toBe(2026);
   });
 });

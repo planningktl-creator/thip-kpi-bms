@@ -1,18 +1,20 @@
 # THIP KPI BMS
 
-THIP KPI quality intelligence dashboard for a BMS Marketplace frontend. It provides a polished, responsive dashboard and monthly detail view with a safe demo fallback and a direct BMS read-only data path. The initial live slice covers three evidence-backed mortality indicators; a registered normalized source view can supply the complete hospital KPI set.
+THIP KPI quality intelligence dashboard for a BMS Marketplace frontend. It provides a polished, responsive dashboard and reporting-period detail view backed by a direct BMS read-only data path. Production never fabricates KPI values: without a live session or a source row, the UI stays explicitly no-data.
 
 ## What is included
 
 - Dashboard view with fiscal-year trend, group health signals, priority indicators, and filters.
-- Indicator library containing all 232 THIP 2025 dictionary entries, with wired/demo and pending-source states.
-- Indicator detail view with 12 fiscal months, a monthly bar chart, line-trend toggle, annual rollup, numerator/denominator, target, status, definition, and source tables.
+- Indicator library containing all 232 THIP 2025 dictionary entries, with live, partial, and no-data states.
+- Indicator detail view with a 12-slot fiscal-year timeline, reporting-period bar chart, line-trend toggle, annual rollup, numerator/denominator, target, status, definition, and source tables.
 - Fiscal-year presentation that keeps ISO dates at the data boundary and renders Thai Buddhist Era dates/years in the frontend and CSV export.
 - Keyboard-friendly navigation with skip link, labeled filters, table semantics, visible focus, reduced-motion support, and direct drill-through from group signals to the full catalogue.
-- Demo data that is clearly labelled and safe to use without patient data. The dashboard starts with the full 232-entry catalogue in a no-data state and replaces wired indicators with live BMS results when the session is healthy.
+- No synthetic production metrics or frontend-seeded benchmarks. The dashboard starts with the full 232-entry catalogue in a no-data state and replaces indicators with live BMS results only when the session and registered query return rows; targets are accepted only from the approved source view.
+- The dashboard's target-attainment summary is derived only from live values and approved targets; indicators without a target are excluded rather than assigned a synthetic score.
+- Development handoff and the complete HOSxP query plan for all 232 indicators: [`docs/THIP-KPI-HOSXP-QUERY-GUIDE.md`](docs/THIP-KPI-HOSXP-QUERY-GUIDE.md).
 - BMS session launch parsing and an in-memory `SELECT VERSION()` handshake through the registered query layer.
 - Domain boundaries for session/transport, query registry, HOSxP adapter, indicator definitions, and UI.
-- Export of the selected indicator's monthly result to CSV.
+- Export of the selected indicator's reporting-period result to CSV.
 
 ## Run locally
 
@@ -21,11 +23,11 @@ pnpm install
 pnpm dev
 ```
 
-Open the local Vite URL. Without a BMS launcher URL, the app stays in demo mode. A BMS launch URL may include `bms-session-id` and an optional `marketplace-token`; the app never writes either value to localStorage or logs them.
+Open the local Vite URL. Without a BMS launcher URL, the app stays in no-data mode. A BMS launch URL may include `bms-session-id` and an optional `marketplace-token`; the app removes both from the address bar before the request and keeps them only in memory for the current page so a transient connection failure can be retried. It never writes either value to localStorage or logs them.
 
 ## Public preview
 
-The demo frontend is also published as a public GitHub Pages preview:
+The frontend is also published as a public GitHub Pages preview. It shows no-data unless it is opened inside an approved BMS live session:
 
 https://planningktl-creator.github.io/thip-kpi-bms/
 
@@ -36,7 +38,7 @@ The intended BMS Marketplace deployment follows the same container contract as `
 Build and run locally with Docker Compose:
 
 ```bash
-docker compose build --build-arg BMS_ALLOWED_ORIGINS="https://hosxp.net https://10929-f446.tunnel.hosxp.net" --build-arg VITE_BMS_APP_IDENTIFIER="THIP.KPI.BMS" --build-arg VITE_BMS_KPI_SOURCE_VIEW=""
+docker compose build --build-arg BMS_ALLOWED_ORIGINS="https://hosxp.net https://10929-f446.tunnel.hosxp.net" --build-arg VITE_BMS_APP_IDENTIFIER="THIP.KPI.BMS" --build-arg VITE_BMS_KPI_SOURCE_VIEW="thip_kpi_monthly"
 docker compose up -d
 ```
 
@@ -54,7 +56,7 @@ python scripts/bms-connectivity-smoke.py
 
 The smoke verifies PasteJSON, CORS preflight, authenticated `SELECT VERSION()`, the app identifier, and CORS headers on the actual API response.
 
-When `VITE_BMS_KPI_SOURCE_VIEW` is empty, the app runs the evidence-backed HOSxP foundation query for `DH0101`, `DN0101`, `DR0101`, `CE0101`, `CI0101`, `DH0102`, `DG0202`, `DR0403`, `DR0102`, `DN0107`, `DH0112`, and `DN0109`. To expose more indicators, register a normalized read-only source view and build with `VITE_BMS_KPI_SOURCE_VIEW` set to its table/view name. The view contract is documented in `docs/THIP-DATA-CONTRACT.md`.
+Production builds fail closed when `VITE_BMS_KPI_SOURCE_VIEW` is empty: the Docker image rejects the build and the browser runtime also refuses the incomplete configuration. A complete hospital release must provide all 232 indicators through the normalized read-only source view. In local Vite development only, an empty value runs the evidence-backed HOSxP foundation query for `DH0101`, `DH0101.1`, `DH0101.2`, `DN0101`, `DR0101`, `CE0101`, `CI0101`, `DH0102`, `DG0102`, `DG0202`, `DR0403`, `DR0102`, `DN0107`, `DH0112`, `DN0109`, and `DN0302` for query validation. The view contract is documented in `docs/THIP-DATA-CONTRACT.md`.
 
 The repository intentionally keeps the GitHub mirror remote separate from the BMS deployment remote. The BMS remote and application identifier must be supplied by the platform owner before production registration.
 
@@ -65,12 +67,20 @@ pnpm build
 pnpm test
 ```
 
-The Playwright visual smoke also runs a token-free mocked BMS session through PasteJSON, the PostgreSQL version probe, and the KPI query path. It verifies that live KPI rows reach the dashboard without writing session data to browser storage.
+The Playwright visual smoke also runs a token-free mocked BMS session through PasteJSON, the PostgreSQL version probe, and the KPI query path. Run it while the repository Vite server is available (or set `THIP_SMOKE_BASE_URL`); it verifies that live KPI rows reach the dashboard without writing session data to browser storage.
 
 ## Data boundary
 
-`HOSxP Structure.xlsx` is used as a schema inventory. `THIP KPI.pdf` is the 2025 KPI dictionary and defines the five THIP groups (D, C, S, H, A), monthly reporting expectation, and numerator/denominator model. The first live foundation query uses the PDF definitions for `DH0101` (PDF page 39), `DH0102` (page 42), `DN0101` (page 67), `DR0101` (page 79), `CE0101` (page 194), `CI0101` (page 199), `DG0202` (page 123), `DR0403` (page 90), `DR0102` (page 80), `DN0107` (page 73), `DH0112` (page 54), and `DN0109` (page 74), together with the HOSxP `ipt`, `an_stat`, `iptdiag`, `death`, `opitemrece`, and `drugitems` tables. The query preserves raw numerator/denominator counts and returns one row per indicator/month. Hospital-specific source views and further KPI SQL must still be validated on anonymized staging data before being enabled.
+`HOSxP Structure.xlsx` is used as a schema inventory. `THIP KPI.pdf` is the 2025 KPI dictionary and defines the five THIP groups (D, C, S, H, A), the reporting cadence (112 monthly, 19 quarterly, 31 semiannual, and 70 annual indicators), and the numerator/denominator model. The first live foundation query uses the PDF definitions for `DH0101` (PDF page 39), `DH0101.1` (page 40), `DH0101.2` (page 41), `DH0102` (page 42), `DG0102` (page 121), `DN0101` (page 67), `DR0101` (page 79), `CE0101` (page 194), `CI0101` (page 199), `DG0202` (page 123), `DR0403` (page 90), `DR0102` (page 80), `DN0107` (page 73), `DH0112` (page 54), `DN0109` (page 74), and `DN0302` (page 77), together with the HOSxP `ipt`, `an_stat`, `iptdiag`, `death`, `opitemrece`, and `drugitems` tables. The query preserves raw numerator/denominator counts and returns one row per indicator/reporting period. Hospital-specific source views and further KPI SQL must still be validated on anonymized staging data before being enabled.
 
-The 232-entry indicator library is intentionally complete at the catalogue/definition level. Twelve IPD indicators can now be replaced by BMS results when the session/API is healthy. The remaining catalogue entries keep their no-data state until their hospital source rules are mapped; a normalized source view can replace all catalogue entries at once.
+The 232-entry indicator library is complete at the catalogue/rule level. The THIP 2025 dictionary contains 112 monthly, 19 quarterly, 31 semiannual, and 70 annual indicators. Sixteen IPD indicators have registered foundation SQL for local validation. A production normalized source view must return one row per indicator and reporting period (1,552 expected cells per fiscal year); incomplete responses fail closed in production and never become a complete live release. Local development can opt into a visible partial state while the source view is assembled. The cadence registry is in `src/data/thipReporting.ts`.
 
 The app follows the BMS baseline: HOSxP is read-only, SQL is allow-listed, parameters are typed, and no PHI is committed to the repository.
+
+Before promoting a hospital reporting view, export only its normalized KPI rows and run the contract audit. The audit never prints row values or accepts raw HOSxP extracts:
+
+```powershell
+python scripts/thip_source_audit.py --input .\thip-kpi-export.json --fiscal-year 2026
+```
+
+It exits successfully only when the repository's 232-code/cadence manifest is covered by all 1,552 expected cells with unique periods, valid metadata, registered formula multipliers, value consistency, and safe denominator semantics.

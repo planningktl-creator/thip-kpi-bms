@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatFiscalRange, formatFiscalYear, getFiscalMonthPeriods } from '@/utils/fiscal';
+import { formatFiscalRange, formatFiscalYear, getCurrentFiscalYear, getFiscalMonthPeriods } from '@/utils/fiscal';
 
 describe('fiscal year display boundary', () => {
   it('maps an ISO fiscal year to Thai Buddhist month labels', () => {
@@ -9,5 +9,10 @@ describe('fiscal year display boundary', () => {
     expect(periods[11]).toMatchObject({ periodStart: '2026-09-01', label: 'ก.ย. 2569', fiscalMonth: 12 });
     expect(formatFiscalYear(2026)).toBe('ปีงบประมาณ 2569');
     expect(formatFiscalRange(2026)).toBe('ต.ค. 2568 — ก.ย. 2569');
+  });
+
+  it('derives the current fiscal year from the October boundary', () => {
+    expect(getCurrentFiscalYear(new Date('2026-09-11T00:00:00Z'))).toBe(2026);
+    expect(getCurrentFiscalYear(new Date('2026-10-01T00:00:00Z'))).toBe(2027);
   });
 });

@@ -7,9 +7,9 @@ export type IndicatorDirection =
   | 'lower-is-better'
   | 'neutral';
 
-export type IndicatorStatus = 'on-track' | 'watch' | 'action' | 'no-data';
+export type IndicatorStatus = 'on-track' | 'watch' | 'action' | 'no-data' | 'unbenchmarked';
 
-export type IndicatorDataSource = 'demo' | 'bms' | 'no-data';
+export type IndicatorDataSource = 'bms' | 'no-data';
 
 /**
  * The app keeps the Gregorian end year as the stable ISO-side fiscal-year key.
@@ -20,7 +20,7 @@ export type FiscalYear = number;
 export type TargetScope = 'monthly' | 'annual';
 
 export type MonthlyResult = {
-  /** ISO date for the first day of the source month, e.g. 2025-10-01. */
+  /** ISO date for the first day of the source reporting period, e.g. 2025-10-01. */
   periodStart: string;
   fiscalYear: FiscalYear;
   fiscalMonth: number;
@@ -74,7 +74,7 @@ export type GroupMeta = {
 };
 
 export type BmsConnectionStatus =
-  | 'demo'
+  | 'idle'
   | 'connecting'
   | 'connected'
   | 'unsupported'

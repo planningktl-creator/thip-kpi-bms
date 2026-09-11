@@ -26,7 +26,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
       - run: pnpm run build
-      - run: docker build --build-arg BMS_ALLOWED_ORIGINS="https://hosxp.net https://10929-f446.tunnel.hosxp.net" --build-arg VITE_BMS_APP_IDENTIFIER="THIP.KPI.BMS" --tag thip-kpi-bms:ci .
+      # CI validates the production image contract with a safe identifier only;
+      # the hospital's approved view name is supplied by the deployment owner.
+      - run: docker build --build-arg BMS_ALLOWED_ORIGINS="https://hosxp.net https://10929-f446.tunnel.hosxp.net" --build-arg VITE_BMS_APP_IDENTIFIER="THIP.KPI.BMS" --build-arg VITE_BMS_KPI_SOURCE_VIEW="thip_kpi_monthly" --tag thip-kpi-bms:ci .
 
       - uses: actions/setup-python@v5
         with:

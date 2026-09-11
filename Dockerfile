@@ -16,6 +16,10 @@ RUN npm install --global pnpm@11.19.0 \
     && pnpm install --frozen-lockfile
 
 COPY . .
+RUN if [ -z "${VITE_BMS_KPI_SOURCE_VIEW}" ]; then \
+      echo "VITE_BMS_KPI_SOURCE_VIEW is required for the production image" >&2; \
+      exit 1; \
+    fi
 RUN pnpm run build
 RUN node scripts/render-nginx.mjs nginx.conf.template nginx.conf
 

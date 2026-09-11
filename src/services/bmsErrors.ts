@@ -1,5 +1,5 @@
 export type BmsRequestPhase = 'session' | 'api' | 'data';
-export type BmsRequestFailure = 'network' | 'http' | 'response' | 'message' | 'timeout';
+export type BmsRequestFailure = 'network' | 'http' | 'response' | 'message' | 'timeout' | 'config';
 
 export class BmsRequestError extends Error {
   constructor(
@@ -30,6 +30,9 @@ export function getBmsConnectionErrorMessage(error: unknown): string {
   }
 
   if (error.phase === 'data') {
+    if (error.failure === 'config') {
+      return 'production build ต้องผูก normalized THIP source view ให้ครบ 232 ตัวชี้วัดก่อนอ่านข้อมูลจริง';
+    }
     if (error.failure === 'timeout') {
       return 'หมดเวลาอ่านข้อมูล THIP KPI · ตรวจสอบ tunnel แล้วลองอีกครั้ง';
     }
@@ -43,6 +46,9 @@ export function getBmsConnectionErrorMessage(error: unknown): string {
       return 'ยังอ่านข้อมูล THIP KPI ไม่ได้ · ตรวจสอบ source view และสิทธิ์ read-only';
     }
     if (error.failure === 'response') {
+      if (/source view .*incomplete|source view .*returned no rows/i.test(error.message)) {
+        return 'source view ของ THIP KPI ยังไม่ครบ 1,552 reporting cells · ตรวจสอบ missing code/period และ duplicate แล้ว refresh view';
+      }
       return 'ข้อมูล THIP KPI จาก BMS มีรูปแบบไม่ถูกต้อง · ตรวจสอบ source view';
     }
     return 'อ่านข้อมูล THIP KPI ไม่ได้ · ตรวจสอบ source view, CORS และ tunnel';

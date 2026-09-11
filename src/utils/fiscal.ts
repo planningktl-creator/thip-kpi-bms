@@ -47,6 +47,11 @@ export function formatFiscalYearShort(fiscalYear: FiscalYear): string {
   return `FY${toBuddhistYear(fiscalYear)}`;
 }
 
+export function getCurrentFiscalYear(date = new Date()): FiscalYear {
+  const calendarYear = date.getFullYear();
+  return date.getMonth() + 1 >= 10 ? calendarYear + 1 : calendarYear;
+}
+
 export function formatThaiMonth(isoDate: string): string {
   const month = Number(isoDate.slice(5, 7));
   return thaiMonthNames[month - 1] ?? '—';

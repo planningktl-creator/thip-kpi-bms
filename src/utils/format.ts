@@ -22,6 +22,10 @@ export function formatIndicatorValue(indicator: Indicator, value: number | null)
   return formatNumber(value);
 }
 
+export function formatTargetValue(indicator: Indicator, value: number | null): string {
+  return value === null ? 'ยังไม่กำหนด' : formatIndicatorValue(indicator, value);
+}
+
 export function formatPercent(value: number | null): string {
   if (value === null) return 'ไม่มีข้อมูล';
   return `${formatNumber(value, 1)}%`;
@@ -45,6 +49,7 @@ export function formatDelta(current: number | null, previous: number | null, ind
   if (current === null || previous === null) return 'ไม่มีฐานเปรียบเทียบ';
   const delta = current - previous;
   if (Math.abs(delta) < 0.005) return 'ทรงตัว';
+  if (indicator.direction === 'neutral') return `เปลี่ยนแปลง ${formatNumber(delta, 1)}`;
   const improved = indicator.direction === 'lower-is-better' ? delta < 0 : delta > 0;
   const sign = delta > 0 ? '+' : '';
   return `${sign}${formatNumber(delta, 1)} ${improved ? 'ดีขึ้น' : 'ควรติดตาม'}`;
@@ -55,6 +60,7 @@ export const statusLabel: Record<IndicatorStatus, string> = {
   watch: 'เฝ้าระวัง',
   action: 'ควรเร่งดำเนินการ',
   'no-data': 'ยังไม่มีข้อมูล',
+  unbenchmarked: 'ยังไม่กำหนดเป้าหมาย',
 };
 
 export const statusClass: Record<IndicatorStatus, string> = {
@@ -62,5 +68,6 @@ export const statusClass: Record<IndicatorStatus, string> = {
   watch: 'status-watch',
   action: 'status-action',
   'no-data': 'status-muted',
+  unbenchmarked: 'status-unbenchmarked',
 };
 

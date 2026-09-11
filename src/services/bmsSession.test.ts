@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { connectBmsSession, getLaunchContext, stripLaunchCredentialsFromUrl } from '@/services/bmsSession';
+import { clearInMemoryLaunchContext, connectBmsSession, getLaunchContext, stripLaunchCredentialsFromUrl } from '@/services/bmsSession';
 
 const pasteJsonPayload = {
   result: {
@@ -41,6 +41,7 @@ describe('BMS launch context', () => {
   });
 
   afterEach(() => {
+    clearInMemoryLaunchContext();
     setUrl('');
     vi.unstubAllGlobals();
   });
@@ -72,9 +73,9 @@ describe('BMS launch context', () => {
     expect(window.location.search).toBe('?view=catalog');
   });
 
-  it('reports a demo connection when no session id is present', async () => {
+  it('reports an idle connection when no session id is present', async () => {
     const result = await connectBmsSession();
-    expect(result.connection.status).toBe('demo');
+    expect(result.connection.status).toBe('idle');
     expect(result.runtime).toBeUndefined();
   });
 
@@ -95,6 +96,40 @@ describe('BMS launch context', () => {
     expect(result.runtime?.bearerToken).toBe('bearer-token-123');
     // Credentials must be gone from the address bar after the handshake.
     expect(window.location.search).toBe('');
+  });
+
+  it('keeps a transiently failed launcher capability in memory for retry', async () => {
+    setUrl('?bms-session-id=transient-session&marketplace-token=marketplace');
+    let pasteAttempts = 0;
+    vi.stubGlobal('fetch', vi.fn((url: string | URL | Request) => {
+      const href = String(url);
+      if (href.includes('PasteJSON')) {
+        pasteAttempts += 1;
+        if (pasteAttempts === 1) return Promise.reject(new TypeError('network unavailable'));
+        return Promise.resolve(new Response(JSON.stringify(pasteJsonPayload), { status: 200 }));
+      }
+      return Promise.resolve(new Response(JSON.stringify({ data: [{ version: 'PostgreSQL 16.2' }] }), { status: 200 }));
+    }));
+
+    const first = await connectBmsSession();
+    applyUrlUpdate();
+    expect(first.connection.status).toBe('error');
+    expect(window.location.search).toBe('');
+    expect(getLaunchContext()).toEqual({ sessionId: 'transient-session', marketplaceToken: 'marketplace' });
+
+    const second = await connectBmsSession();
+    expect(second.connection.status).toBe('connected');
+    expect(pasteAttempts).toBe(2);
+  });
+
+  it('forgets the in-memory capability after an explicit session rejection', async () => {
+    setUrl('?bms-session-id=expired-session');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('expired', { status: 401 })));
+
+    const result = await connectBmsSession();
+    applyUrlUpdate();
+    expect(result.connection.status).toBe('error');
+    expect(getLaunchContext()).toEqual({ sessionId: null, marketplaceToken: null });
   });
 
   it('maps a PasteJSON HTTP failure to a session error', async () => {

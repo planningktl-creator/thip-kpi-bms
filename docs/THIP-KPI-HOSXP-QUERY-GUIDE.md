@@ -2,7 +2,7 @@
 
 สถานะเอกสาร: implementation guide และ mapping register สำหรับงานพัฒนา BMS
 
-วันที่ตรวจสอบ: 2026-09-10
+วันที่ตรวจสอบ: 2026-09-11
 
 เอกสารต้นทาง:
 
@@ -20,7 +20,7 @@
 ผลการสำรวจได้ข้อสรุป 3 ชั้นดังนี้
 
 1. Workbook มี 1 worksheet, 56,868 แถว schema (ไม่รวม header), 6,109 ชื่อตาราง และ 14 คอลัมน์อธิบาย schema
-2. PDF มี 317 หน้า และมี KPI ไม่ซ้ำกัน 232 รหัส แบ่งเป็นกลุ่ม A 5, C 38, D 110, H 22 และ S 57
+2. PDF มี 317 หน้า และมี KPI ไม่ซ้ำกัน 232 รหัส แบ่งเป็นกลุ่ม A 5, C 38, D 110, H 22 และ S 57; รอบรายงานเป็นรายเดือน 112, รายไตรมาส 19, รายครึ่งปี 31 และรายปี 70
 3. ไม่ควรแต่ง raw SQL ให้ครบ 232 ตัวจากชื่อ table เพียงอย่างเดียว เพราะ workbook ไม่มี foreign-key rows และไม่ระบุ business rule, local code master, numerator/denominator ที่เพียงพอสำหรับหลาย KPI
 
 รูปแบบที่ปลอดภัยและครบ coverage คือ
@@ -28,18 +28,20 @@
 ```text
 HOSxP tables / local modules
     -> registered read-only extraction queries
-    -> normalized THIP source view (1 indicator x 1 fiscal month x 1 row)
+    -> normalized THIP source view (1 indicator x 1 reporting period x 1 row)
     -> BMS API and dashboard
 ```
 
-ใน repository ขณะนี้มี raw foundation query ที่ลงทะเบียนแล้ว 6 รหัส ได้แก่ `DH0101`, `DN0101`, `DR0101`, `CE0101`, `CI0101` และ `DH0102` ส่วนอีก 226 รหัสมีชื่อและ PDF mapping ครบใน catalogue/register นี้ แต่ต้องยืนยันกติกาและจัดทำ source-view rows จากข้อมูลจริงของโรงพยาบาลก่อนจึงจะเรียกว่า production query ได้
+ใน repository ขณะนี้มี raw foundation query ที่ลงทะเบียนแล้ว 16 รหัส ได้แก่ `DH0101`, `DH0101.1`, `DH0101.2`, `DN0101`, `DR0101`, `CE0101`, `CI0101`, `DH0102`, `DG0102`, `DG0202`, `DR0403`, `DR0102`, `DN0107`, `DH0112`, `DN0109` และ `DN0302` ส่วนอีก 216 รหัสมีชื่อและ PDF mapping ครบใน catalogue/register นี้ แต่ต้องยืนยันกติกาและจัดทำ source-view rows จากข้อมูลจริงของโรงพยาบาลก่อนจึงจะเรียกว่า production query ได้
 
 ดังนั้นคำว่า “query ครบทุกตัว” ในเอกสารนี้หมายถึง
 
 - มี query path เดียวที่อ่านผลลัพธ์ normalized view ได้ครบทั้ง 232 รหัส
-- มี completeness audit ที่ตรวจ 232 x 12 เดือน = 2,784 ช่องข้อมูล
+- มี completeness audit ที่ตรวจ 1,552 reporting cells ตามรอบรายงานของแต่ละ KPI (`112×12 + 19×4 + 31×2 + 70×1`)
 - มีทะเบียนรายรหัส ระบุ PDF page, formula scale, query family, candidate HOSxP tables และสถานะ
-- ไม่สร้าง SQL ที่เดา numerator/denominator ของ 226 ตัวที่ยังไม่มีหลักฐานจาก local implementation
+- ไม่สร้าง SQL ที่เดา numerator/denominator ของ 216 ตัวที่ยังไม่มีหลักฐานจาก local implementation
+- adapter ตรวจว่า `unit` ของ source view ตรงกับ multiplier ในสูตร (`x100`, `x1,000`, `x100,000` หรือ `x1,000,000`) และใช้ multiplier เดียวกันตอนคำนวณ annual roll-up
+- dashboard summary เป็นค่า derived จากผลจริงเทียบ target จริงเท่านั้น; KPI ที่ไม่มี target ไม่ถูกนำไปสร้างคะแนนสรุป
 
 ## 2. ผลสำรวจ HOSxP Structure.xlsx
 
@@ -190,7 +192,7 @@ Workbook เป็นรายการ table-column ไม่ใช่ data dic
 | `numerator` | จำนวนหรือผลรวมของเหตุการณ์ที่เข้าเกณฑ์ |
 | `denominator` | ประชากร/episode/exposure ที่เข้าเกณฑ์ |
 | `value` | ค่าที่คำนวณแล้ว หรือ `NULL` เมื่อ denominator เป็น 0/ไม่มีข้อมูล |
-| `target`, `target_scope` | benchmark/target และระดับ monthly/annual |
+| `target`, `target_scope` | benchmark/target และระดับ reporting-period/annual |
 | `percentile` | ค่า percentile เมื่อ source มี |
 | `indicator_group` | A, C, D, H หรือ S |
 | `unit`, `direction` | percent/rate/ratio/count และทิศทางการแปลผล |
@@ -222,14 +224,14 @@ END AS fiscal_month
 - `denominator = 0` หรือไม่พร้อมใช้งาน ให้ `value = NULL`; ห้ามแปลงเป็น 0 เพราะจะแปลว่า performance เป็นศูนย์
 - เก็บ numerator และ denominator แยกเสมอ เพื่อ audit และคำนวณ annual แบบ weighted ratio
 - annual percent/rate: `SUM(numerator) / SUM(denominator) x 100`
-- annual ratio/count ให้ใช้สูตรตาม unit ของ KPI; ห้ามนำค่า percent รายเดือนมาเฉลี่ยโดยไม่ผ่าน approved definition
+- annual ratio/count ให้ใช้สูตรตาม unit ของ KPI; ห้ามนำค่า percent รายงวดมาเฉลี่ยโดยไม่ผ่าน approved definition
 - ถ้าไม่มีข้อมูลทั้งปี ให้ annual value เป็น `NULL` และ status เป็น `no-data`
 
 ## 4. Query ที่ครอบคลุม KPI ทั้ง 232 ตัวผ่าน normalized source view
 
 SQL ต่อไปนี้เป็น PostgreSQL-compatible SQL สำหรับ registered BMS query layer ตาม contract ของ repository ชื่อ view เป็นตัวอย่างเท่านั้น ต้องแทนด้วยชื่อที่ผ่าน `VITE_BMS_KPI_SOURCE_VIEW` และ allowlist แล้ว ห้ามรับชื่อ view จาก user input โดยตรง
 
-### 4.1 ดึงผลลัพธ์รายเดือนทั้งหมดตามปีงบประมาณ
+### 4.1 ดึงผลลัพธ์ทุก reporting period ตามปีงบประมาณ
 
 ```sql
 SELECT
@@ -255,7 +257,9 @@ SELECT
   denominator_label,
   source_tables,
   frequency,
-  reference
+  reference,
+  rule_version,
+  refreshed_at
 FROM "public"."thip_kpi_monthly"
 WHERE period_start >= :start_date
   AND period_start < :end_date
@@ -273,9 +277,11 @@ fiscal_year : integer  เช่น 2025
 
 ใน source code ปัจจุบัน query นี้ถูกสร้างโดย `buildSourceViewQuery()` ใน [`src/services/bmsData.ts`](../src/services/bmsData.ts) และส่งผ่าน `executeRegisteredQuery()` เท่านั้น
 
-### 4.2 ตรวจความครบ 232 x 12 = 2,784 ช่องข้อมูล
+### 4.2 ตรวจความครบตามรอบรายงานของ 232 ตัวชี้วัด
 
 ใช้ query นี้หลัง source view refresh เพื่อแยก `missing`, `zero-denominator` และ `ok` โดยไม่คืนข้อมูลผู้ป่วย
+
+> รอบรายงานไม่ได้เหมือนกันทุกตัว: `src/data/thipReporting.ts` กำหนด monthly = เดือน 1–12, quarterly = 1/4/7/10, semiannual = 1/7 และ annual = 1 ของปีงบประมาณ ตัวอย่างด้านล่างย่อ `VALUES` ไว้; `buildCompletenessAuditQuery()` ใน source code จะขยายเป็น 1,552 คู่ `indicator_code × fiscal_month` ให้ครบทุกตัว
 
 ```sql
 WITH params AS (
@@ -284,254 +290,29 @@ WITH params AS (
     CAST(:end_date AS date) AS end_date,
     CAST(:fiscal_year AS integer) AS fiscal_year
 ),
-months AS (
-  SELECT
-    (p.start_date + (m.n * INTERVAL '1 month'))::date AS period_start,
-    p.fiscal_year,
-    m.n + 1 AS fiscal_month
-  FROM params p
-  CROSS JOIN generate_series(0, 11) AS m(n)
-),
-expected(indicator_code) AS (
+expected(indicator_code, fiscal_month) AS (
   VALUES
-    ('AA0101'),
-            ('AA0102'),
-            ('AA0103'),
-            ('AA0104'),
-            ('AA0105'),
-            ('CA0101'),
-            ('CA0102'),
-            ('CA0103'),
-            ('CA0104'),
-            ('CA0105'),
-            ('CE0101'),
-            ('CE0102'),
-            ('CE0103'),
-            ('CE0104'),
-            ('CG0101'),
-            ('CG0102'),
-            ('CG0103'),
-            ('CG0104'),
-            ('CI0101'),
-            ('CM0101'),
-            ('CM0104'),
-            ('CM0105'),
-            ('CM0107'),
-            ('CM0109'),
-            ('CM0110'),
-            ('CM0116'),
-            ('CM0117'),
-            ('CM0118'),
-            ('CM0119'),
-            ('CM0201'),
-            ('CM0202'),
-            ('CM0203'),
-            ('CM0204'),
-            ('CM0205'),
-            ('CM0206'),
-            ('CM0207'),
-            ('CM0208'),
-            ('CM0209'),
-            ('CO0101'),
-            ('CO0105'),
-            ('CO0107'),
-            ('CP0101'),
-            ('CP0201'),
-            ('DC0103'),
-            ('DC0107'),
-            ('DC0108'),
-            ('DC0108.1'),
-            ('DC0108.2'),
-            ('DC0201'),
-            ('DC0201.1'),
-            ('DC0201.2'),
-            ('DC0301'),
-            ('DC0302'),
-            ('DC0306'),
-            ('DC0307'),
-            ('DC0308'),
-            ('DC0309'),
-            ('DC0401'),
-            ('DC0402'),
-            ('DC0403'),
-            ('DC0501'),
-            ('DC0502'),
-            ('DE0101'),
-            ('DE0103'),
-            ('DE0501'),
-            ('DE0801'),
-            ('DE1201'),
-            ('DE1202'),
-            ('DE1301'),
-            ('DE1302'),
-            ('DE1303'),
-            ('DE1304'),
-            ('DE1305'),
-            ('DE1306'),
-            ('DE1401'),
-            ('DE1402'),
-            ('DE1403'),
-            ('DE1404'),
-            ('DE1405'),
-            ('DE1601'),
-            ('DG0101'),
-            ('DG0102'),
-            ('DG0201'),
-            ('DG0202'),
-            ('DH0101'),
-            ('DH0101.1'),
-            ('DH0101.2'),
-            ('DH0102'),
-            ('DH0103'),
-            ('DH0104'),
-            ('DH0105'),
-            ('DH0106'),
-            ('DH0107'),
-            ('DH0108'),
-            ('DH0109'),
-            ('DH0110'),
-            ('DH0111'),
-            ('DH0112'),
-            ('DH0113'),
-            ('DH0201'),
-            ('DH0202'),
-            ('DH0203'),
-            ('DH0204'),
-            ('DH0301'),
-            ('DH0302'),
-            ('DH0401'),
-            ('DH0402'),
-            ('DM0101'),
-            ('DM0102'),
-            ('DM0103'),
-            ('DM0201'),
-            ('DM0202'),
-            ('DM0203'),
-            ('DM0301'),
-            ('DM0302'),
-            ('DM0401'),
-            ('DM0402'),
-            ('DN0101'),
-            ('DN0102'),
-            ('DN0103'),
-            ('DN0104'),
-            ('DN0105'),
-            ('DN0106'),
-            ('DN0107'),
-            ('DN0109'),
-            ('DN0110'),
-            ('DN0301'),
-            ('DN0302'),
-            ('DN0303'),
-            ('DO0202'),
-            ('DO0204'),
-            ('DO0205'),
-            ('DO0302'),
-            ('DO0303'),
-            ('DO0304'),
-            ('DP0101'),
-            ('DR0101'),
-            ('DR0102'),
-            ('DR0103'),
-            ('DR0201'),
-            ('DR0202'),
-            ('DR0203'),
-            ('DR0204'),
-            ('DR0205'),
-            ('DR0301'),
-            ('DR0302'),
-            ('DR0401'),
-            ('DR0403'),
-            ('DR0404'),
-            ('DS0101'),
-            ('DS0201'),
-            ('DS0301'),
-            ('DS0401'),
-            ('HC0101'),
-            ('HC0102'),
-            ('HE0101'),
-            ('HE0102'),
-            ('HE0103'),
-            ('HE0104'),
-            ('HE0105'),
-            ('HE0106'),
-            ('HH0101.1'),
-            ('HH0101.2'),
-            ('HH0102'),
-            ('HH0103.1'),
-            ('HH0103.2'),
-            ('HH0103.3'),
-            ('HH0103.4'),
-            ('HH0103.5'),
-            ('HH0103.6'),
-            ('HH0104.1'),
-            ('HH0104.2'),
-            ('HH0104.3'),
-            ('HH0104.4'),
-            ('HH0104.5'),
-            ('SC0101'),
-            ('SC0102'),
-            ('SC0103'),
-            ('SC0104'),
-            ('SC0105'),
-            ('SC0106'),
-            ('SF0101'),
-            ('SF0102'),
-            ('SF0103'),
-            ('SF0104'),
-            ('SF0105'),
-            ('SF0106'),
-            ('SG0104'),
-            ('SH0101'),
-            ('SH0102'),
-            ('SH0103'),
-            ('SH0104'),
-            ('SH0105'),
-            ('SH0106'),
-            ('SH0107'),
-            ('SH0201'),
-            ('SH0202'),
-            ('SH0203'),
-            ('SH0204'),
-            ('SH0205'),
-            ('SH0206'),
-            ('SH0207'),
-            ('SH0208'),
-            ('SH0209'),
-            ('SH0210'),
-            ('SH0211'),
-            ('SH0212'),
-            ('SH0213'),
-            ('SH0214'),
-            ('SH0215'),
-            ('SH0216'),
-            ('SH0301'),
-            ('SH0302'),
-            ('SH0303'),
-            ('SH0306'),
-            ('SH0307'),
-            ('SI0101'),
-            ('SI0102'),
-            ('SI0103'),
-            ('SI0201'),
-            ('SI0202'),
-            ('SI0203'),
-            ('SI0301'),
-            ('SI0302'),
-            ('SI0303'),
-            ('SL0101'),
-            ('SM0102'),
-            ('SM0103'),
-            ('SM0201'),
-            ('SS0101'),
-            ('SS0102'),
-            ('SS0103')
+    ('AA0101', 1), ('AA0102', 1), ('AA0103', 1), ('AA0104', 1), ('AA0105', 1),
+    ('CA0101', 1), ('CA0102', 1), ('CE0101', 1),
+    -- buildCompletenessAuditQuery emits the remaining cadence cells
+    ('DH0101', 1), ('DH0101', 2), ('DH0101', 3), ('DH0101', 4),
+    ('DH0101', 5), ('DH0101', 6), ('DH0101', 7), ('DH0101', 8),
+    ('DH0101', 9), ('DH0101', 10), ('DH0101', 11), ('DH0101', 12)
+),
+expected_cells AS (
+  SELECT
+    e.indicator_code,
+    (p.start_date + ((e.fiscal_month - 1) * INTERVAL '1 month'))::date AS period_start,
+    p.fiscal_year,
+    e.fiscal_month
+  FROM expected e
+  CROSS JOIN params p
 )
 SELECT
   e.indicator_code,
-  m.period_start,
-  m.fiscal_year,
-  m.fiscal_month,
+  e.period_start,
+  e.fiscal_year,
+  e.fiscal_month,
   s.numerator,
   s.denominator,
   s.value,
@@ -541,17 +322,18 @@ SELECT
     WHEN s.denominator = 0 THEN 'zero-denominator'
     ELSE 'ok'
   END AS completeness_status
-FROM expected e
-CROSS JOIN months m
+FROM expected_cells e
 LEFT JOIN "public"."thip_kpi_monthly" s
   ON s.indicator_code = e.indicator_code
- AND s.period_start = m.period_start
- AND s.fiscal_year = m.fiscal_year
- AND s.fiscal_month = m.fiscal_month
-ORDER BY e.indicator_code, m.fiscal_month;
+ AND s.period_start = e.period_start
+ AND s.fiscal_year = e.fiscal_year
+ AND s.fiscal_month = e.fiscal_month
+ORDER BY e.indicator_code, e.fiscal_month;
 ```
 
-Expected result ต้องมี 2,784 rows ถ้า source view มี exactly one row ต่อ code/month หากได้มากกว่านี้ให้ตรวจ duplicate ก่อน หากได้น้อยกว่านี้ให้ตรวจ missing code/month
+Expected result ต้องมี 1,552 rows ถ้า source view มี exactly one row ต่อ code/reporting period ตาม cadence ของ dictionary หากได้มากกว่านี้ให้ตรวจ duplicate หรือ row นอก cadence ก่อน หากได้น้อยกว่านี้ให้ตรวจ missing code/period
+
+
 
 ### 4.3 ตรวจ duplicate ใน source view
 
@@ -700,16 +482,27 @@ EXISTS (
 
 | รหัส | rule ที่ลงทะเบียนปัจจุบัน | source ที่ใช้จริงใน query | PDF printed page | caveat |
 |---|---|---|---:|---|
-| `DH0101` | IPD อายุ >=18, Pdx ACS, mortality; มี branch สำหรับ Sdx ACS + death cause ACS | `ipt`, `an_stat`, `iptdiag`, `death` | 39 | ตรวจ Pdx/Sdx code set และความหมาย death cause |
+| `DH0101` | IPD อายุ >=18, denominator ใช้ Pdx หรือ qualifying Sdx ACS; numerator ใช้ Pdx ACS ที่เสียชีวิตทุกสาเหตุ หรือ Sdx ACS ที่เสียชีวิตจาก ACS | `ipt`, `an_stat`, `iptdiag`, `death` | 39 | ตรงตาม PDF หน้า 39; ตรวจ Pdx/Sdx code set และความหมาย death cause |
+| `DH0101.1` | IPD อายุ >=18, denominator ใช้ Pdx หรือ qualifying Sdx STEMI (I21.0-I21.3); numerator ใช้ Pdx STEMI ที่เสียชีวิตทุกสาเหตุ หรือ Sdx STEMI ที่เสียชีวิตจาก STEMI | `ipt`, `an_stat`, `iptdiag`, `death` | 40 | ตรงตาม PDF หน้า 40; ตรวจ Pdx/Sdx code set และความหมาย death cause |
+| `DH0101.2` | IPD อายุ >=18, denominator ใช้ Pdx หรือ qualifying Sdx NSTE-ACS (I21.4/I21.9); numerator ใช้ Pdx NSTE-ACS ที่เสียชีวิตทุกสาเหตุ หรือ Sdx NSTE-ACS ที่เสียชีวิตจาก NSTE-ACS | `ipt`, `an_stat`, `iptdiag`, `death` | 41 | ตรงตาม PDF หน้า 41; ตรวจ Pdx/Sdx code set และความหมาย death cause |
 | `DN0101` | IPD stroke ตาม Pdx family I60-I67, numerator คือ died | `ipt`, `an_stat`, `death` | 67 | PDF ใช้ช่วงรหัส ต้องยืนยันการตัด code แบบ 3 หลักกับ local ICD |
 | `DR0101` | pneumonia จาก Pdx หรือ Sdx, numerator คือ death | `ipt`, `an_stat`, `iptdiag`, `death` | 79 | ทบทวน J-code list ให้ตรงกับ PDF ฉบับอนุมัติ |
 | `CE0101` | sepsis cohort และ broad-spectrum antibiotic ภายใน 3 ชั่วโมง | `ipt`, `an_stat`, `iptdiag`, `opitemrece`, `drugitems` | 194 | PDF แสดง token `A40.0,A41.9,R57.2,R65.1`; current query ใช้ sepsis list กว้างกว่า ต้อง reconcile |
 | `CI0101` | sepsis cohort, numerator คือ died | `ipt`, `an_stat`, `iptdiag`, `death` | 199 | PDF แสดง `A40.0,A40.9,A41.0,A41.9,R57.2,R65.1`; current query ใช้ sepsis list กว้างกว่า ต้อง reconcile |
 | `DH0102` | IPD อายุ >=18, Pdx ACS, aspirin ภายใน 24 ชั่วโมง | `ipt`, `an_stat`, `opitemrece`, `drugitems` | 42 | ยืนยันชื่อยา/icode และเวลาที่นับเป็น administration |
+| `DG0102` | IPD Pdx UGIH, average length of stay | `ipt`, `an_stat` | 121 | ใช้ `an_stat.los`; ตรวจว่าค่า LOS local เป็นวันนอนตาม THIP และไม่เป็นค่า placeholder |
+| `DG0202` | IPD Pdx acute appendicitis, mortality | `ipt`, `an_stat`, `iptdiag`, `death` | 123 | ตรวจ K35 code set และความหมายการเสียชีวิต |
+| `DR0403` | IPD Pdx COPD, mortality | `ipt`, `an_stat`, `iptdiag`, `death` | 90 | ตรวจ J44 code set และความหมายการเสียชีวิต |
+| `DR0102` | pneumonia re-admission ภายใน 28 วัน | `ipt`, `an_stat`, `iptdiag` | 80 | กติกา unplanned เป็น approximation ต้อง sign-off |
+| `DN0107` | stroke re-admission ภายใน 28 วัน | `ipt`, `an_stat`, `iptdiag` | 73 | กติกา unplanned เป็น approximation ต้อง sign-off |
+| `DH0112` | ACS average length of stay | `ipt`, `an_stat` | 54 | ตรวจ admission/discharge date และ episode grain |
+| `DN0109` | stroke average length of stay | `ipt`, `an_stat` | 74 | ตรวจ admission/discharge date และ episode grain |
 
-ใน current code, `CE0101` และ `CI0101` มี reference page metadata เดิมเป็น 65 และ 105 แต่เมื่ออ้างอิงเลขหน้าที่พิมพ์ใน footer ของ PDF รายละเอียดอยู่ที่ 194 และ 199 ตามลำดับ เอกสารนี้ใช้ printed page และยังไม่แก้ code ที่อยู่นอก scope ของการเขียน MD
+ใน current code และทะเบียน rule, `CE0101` และ `CI0101` ใช้ printed page 194 และ 199 ตามลำดับ ซึ่งตรงกับเลขหน้าที่พิมพ์ใน footer ของ PDF; เลขหน้าในข้อความ extraction เดิมอาจคลาดเคลื่อนและห้ามใช้แทน printed page
 
-## 7. Query family สำหรับ 226 รหัสที่ยังต้องทำ local mapping
+## 7. Query family สำหรับ 216 รหัสที่ยังต้องทำ local mapping
+
+`queryRegistry.thipIpdFoundation` สร้าง fiscal-period grid ให้ foundation ทั้ง 16 รหัสด้วย ดังนั้นช่วง FY ที่ส่งเข้ามาจะได้ 16 รหัส × 12 เดือน = 192 แถว แม้เดือนนั้นไม่มี cohort: `numerator` และ `denominator` จะเป็น 0 และ `value` จะเป็น `NULL` ตาม zero-denominator contract การมีแถวศูนย์นี้ไม่ใช่ synthetic KPI แต่เป็นผลลัพธ์ aggregate ที่ยืนยันว่า query ตรวจช่วงเวลานั้นแล้ว
 
 คำว่า candidate table หมายถึง table ที่ schema มี field น่าจะรองรับ ไม่ได้หมายถึงผ่าน validation แล้ว สำหรับแต่ละ family ต้องสร้าง approved rule ที่มี cohort, numerator, denominator, event date, code master, target และ test case
 
@@ -762,17 +555,20 @@ EXISTS (
 
 ส่วนนี้คือสิ่งที่ต้องใช้เริ่มพัฒนาระบบได้ทันที เอกสารเดิมไม่ได้ขาด query สำหรับการอ่านผลลัพธ์ แต่ขาด implementation contract ที่บอกว่า developer ต้องสร้างอะไรและอะไรเป็น dependency จากโรงพยาบาล
 
-### 8.1 สถานะที่เริ่มทำได้ทันที
+### 8.1 สถานะปัจจุบันใน repository
 
 | lane | coverage | ทำได้ทันที | dependency ที่เหลือ |
 |---|---:|---|---|
-| Catalogue, routing และ UI model | 232/232 | ใช้ `src/data/thipCatalogue.ts` และทะเบียนท้ายเอกสาร | ไม่มี |
-| Normalized source-view reader | 232/232 | ใช้ query ใน section 4 และ `buildSourceViewQuery()` | ต้องมีชื่อ view ที่ allowlist แล้ว |
-| Completeness/duplicate validation | 232 x 12 | ใช้ audit query 2,784 ช่อง | ต้องเชื่อม reporting source |
-| Registered foundation calculation | 6/232 | harden test และ validate local code/time | ต้องยืนยัน HOSxP local semantics |
-| Raw calculation สำหรับ KPI ที่เหลือ | 226/232 | ทำ rule manifest, fixtures และ family adapter แบบขนานได้ | clinical rule, code master, event mapping และ aggregate evidence |
+| Catalogue, routing และ UI model | 232/232 | มีใน `src/data/thipCatalogue.ts`, `src/data/thipMeta.ts` และ UI | ไม่มี |
+| Rule manifest รายรหัส | 232/232 | มีใน `src/data/thipKpiRules.ts` พร้อม family, PDF page, candidate tables, tokens และสถานะ query | ต้องเปลี่ยนสถานะเมื่อ local owner sign-off |
+| Normalized source-view reader | 232/232 | มี `buildSourceViewQuery()` และ adapter ใน `src/services/bmsData.ts` | ต้อง provision ชื่อ view จริง |
+| Completeness/duplicate validation | 232 codes ตาม cadence | มี audit SQL, duplicate guard และ coverage gate 1,552 ช่อง | ต้องเชื่อม reporting source |
+| Registered foundation calculation | 16/232 | มีใน `queryRegistry.thipIpdFoundation` และมี unit/smoke tests | ต้องยืนยัน HOSxP local semantics |
+| Raw calculation สำหรับ KPI ที่เหลือ | 216/232 | ทำ rule manifest และ family adapter ต่อได้โดยไม่แตะ UI | clinical rule, code master, event mapping และ aggregate evidence |
 
-สรุปคือ frontend, contract, fixture, validation และ query registry เริ่มพัฒนาได้เลย ส่วนที่ยังทำให้ production number ไม่ได้คือ “กติกาข้อมูลของโรงพยาบาล” ไม่ใช่การขาดชื่อ KPI ในเอกสาร
+สรุปคือ frontend, contract, source-view adapter, validation และ query registry พร้อมให้พัฒนาต่อได้เลย ระบบไม่มี synthetic production fallback แล้ว ส่วนที่ยังทำให้ตัวเลข production ครบ 232 ไม่ได้คือ “กติกาข้อมูลและ source view ของโรงพยาบาล” ไม่ใช่การขาดชื่อ KPI ในเอกสาร
+
+การเชื่อมต่อ BMS จะลบ launch capability ออกจาก URL ก่อนเรียก PasteJSON และเก็บไว้เฉพาะใน memory ของหน้าเพื่อ retry เมื่อ network/CORS ขัดข้องชั่วคราว; เมื่อ BMS ปฏิเสธ session จะล้าง capability ทิ้งทันที
 
 ### 8.2 ไฟล์และ interface ที่ developer ต้อง implement
 
@@ -781,39 +577,35 @@ EXISTS (
 ```text
 docs/THIP-KPI-HOSXP-QUERY-GUIDE.md   <- contract และ 232-code register นี้
 src/data/thipCatalogue.ts             <- catalogue 232 codes (มีแล้ว)
-src/data/thipKpiRules.ts              <- rule manifest ราย code (สร้างเพิ่ม)
-src/data/thipKpiFixtures.ts           <- no-PHI fixture 232 x 12 (สร้างเพิ่ม)
-src/services/queryRegistry.ts         <- registered read-only SQL (มีแล้ว, extend ตาม family)
-src/services/bmsData.ts               <- normalized source-view reader (มีแล้ว)
-src/services/thipRuleValidation.ts    <- schema/duplicate/completeness checks (สร้างเพิ่มถ้าต้องการแยก concern)
-src/services/*.test.ts                 <- contract, fixture และ query response tests
+src/data/thipMeta.ts                  <- group metadata และ dictionary count (มีแล้ว)
+src/data/thipKpiRules.ts              <- rule manifest ครบ 232 รหัส (มีแล้ว; 16 foundation, 216 needs-local-mapping)
+src/services/queryRegistry.ts         <- registered read-only SQL (มีแล้วสำหรับ foundation, extend ตาม family)
+src/services/bmsData.ts               <- normalized source-view reader และ cadence-aware coverage gate 1,552 ช่อง (มีแล้ว)
+src/services/thipRuleValidation.ts    <- แยก validator เพิ่มได้ถ้าต้องการ (ปัจจุบัน guard อยู่ใน `bmsData.ts`)
+src/services/*.test.ts                 <- contract, coverage และ query response tests (มีแล้ว)
+scripts/visual_smoke.py                <- browser smoke ใช้ mock เฉพาะ test เท่านั้น (มีแล้ว)
 ```
 
 ห้ามใส่ raw SQL ที่ผู้ใช้แก้ได้ใน `thipKpiRules.ts` หรือ browser code ให้ manifest อ้าง `queryKey`/`family` เท่านั้น ส่วน SQL อยู่ใน `queryRegistry` หรือ reporting layer ที่ review แล้ว
 
-ตัวอย่าง rule manifest สำหรับ foundation หนึ่งตัว:
+รูปแบบ manifest ที่มีอยู่จริงใน repository ตอนนี้เป็นแบบนี้:
 
 ```ts
-export const thipKpiRules = {
-  DH0101: {
-    code: 'DH0101',
-    group: 'D',
-    family: 'ACS',
-    queryKey: 'thipIpdFoundation',
-    episodeKey: 'an',
-    periodField: 'ipt.dchdate',
-    sourceTables: ['ipt', 'an_stat', 'iptdiag', 'death'],
-    numeratorRule: 'acs_discharge_death',
-    denominatorRule: 'acs_adult_discharge',
-    scale: 100,
-    unit: 'percent',
-    ruleVersion: '2025-pdf-plus-local-validation-0',
-    status: 'foundation',
-  },
-} as const;
+{
+  code: 'DH0101',
+  group: 'D',
+  title: 'Acute coronary syndrome: Percent of mortality',
+  pdfPage: 39,
+  formulaScale: 'a/b x 100',
+  queryFamily: 'ACS',
+  candidateSourceTables: ['ipt', 'an_stat', 'iptdiag', 'death'],
+  diagnosisOrProcedureTokens: ['I21.0', 'I21.1', 'I21.2', 'I21.3'],
+  status: 'foundation',
+  queryKey: 'thipIpdFoundation',
+}
 ```
 
-สำหรับ 226 รหัสที่ยังไม่ผ่าน local mapping ให้ใช้ `status: 'needs-local-mapping'`, `queryKey: null` และห้ามให้ระบบแสดงเป็น 0; ให้ source view ส่ง no-data/NULL จนกว่าจะผ่าน sign-off
+สำหรับ 216 รหัสที่ยังไม่ผ่าน local mapping ให้ใช้ `status: 'needs-local-mapping'`, `queryKey: null` และห้ามให้ระบบแสดงเป็น 0; ให้ source view ส่ง no-data/NULL จนกว่าจะผ่าน sign-off เมื่อ KPI ใดพร้อมเปิด production ให้เพิ่ม rule version, episode key, period field, inclusion/exclusion, numerator/denominator rule และ code-set versionลงใน rule evidence หรือ reporting layerที่ผ่าน review แล้ว ไม่ควรอ้างว่าฟิลด์เหล่านี้มีอยู่ใน manifest ปัจจุบันก่อนทำการขยาย schema
 
 ### 8.3 Reporting source-view contract ที่ต้อง provision
 
@@ -829,11 +621,11 @@ CREATE TABLE reporting.thip_kpi_monthly_contract (
   denominator numeric(18, 4),
   value numeric(18, 4),
   target numeric(18, 4),
-  target_scope varchar(16),
+  target_scope varchar(16) NOT NULL CHECK (target_scope IN ('monthly', 'annual')),
   percentile numeric(18, 4),
-  indicator_group varchar(1) NOT NULL,
-  unit varchar(16) NOT NULL,
-  direction varchar(32) NOT NULL,
+  indicator_group varchar(1) NOT NULL CHECK (indicator_group IN ('A', 'C', 'D', 'H', 'S')),
+  unit varchar(16) NOT NULL CHECK (unit IN ('percent', 'rate', 'ratio', 'count')),
+  direction varchar(32) NOT NULL CHECK (direction IN ('higher-is-better', 'lower-is-better', 'neutral')),
   category text NOT NULL,
   title text NOT NULL,
   title_th text,
@@ -841,11 +633,14 @@ CREATE TABLE reporting.thip_kpi_monthly_contract (
   formula text NOT NULL,
   numerator_label text NOT NULL,
   denominator_label text NOT NULL,
-  source_tables text[] NOT NULL,
+  source_tables text[] NOT NULL CHECK (cardinality(source_tables) > 0),
   frequency text NOT NULL,
   reference text NOT NULL,
   rule_version varchar(64) NOT NULL,
   refreshed_at timestamptz NOT NULL,
+  CHECK (unit = 'count' OR denominator IS NOT NULL),
+  CHECK (denominator IS NULL OR denominator <> 0 OR value IS NULL),
+  CHECK (percentile IS NULL OR percentile BETWEEN 0 AND 100),
   UNIQUE (indicator_code, period_start, fiscal_year, fiscal_month)
 );
 ```
@@ -853,12 +648,15 @@ CREATE TABLE reporting.thip_kpi_monthly_contract (
 ข้อกำหนดของ source view:
 
 - expose ชื่อ view ที่ผ่าน `VITE_BMS_KPI_SOURCE_VIEW` และ `quoteSourceView()` เท่านั้น
-- มีหนึ่ง row ต่อ code/month; ถ้าตัวหารเป็นศูนย์ให้เก็บ denominator เป็น 0 และ value เป็น `NULL`
-- production completeness แนะนำให้มี full grid 2,784 rows ต่อ FY; sparse rows ใช้ได้เฉพาะระหว่างพัฒนาและต้องขึ้น audit warning
+- มีหนึ่ง row ต่อ code/reporting period ตาม cadence ของ code; ถ้าตัวหารเป็นศูนย์ให้เก็บ denominator เป็น 0 และ value เป็น `NULL`
+- production completeness ต้องมี full cadence grid 1,552 rows ต่อ FY; sparse rows ใช้ได้เฉพาะระหว่างพัฒนาและต้องขึ้น audit warning
+- ทุก row ที่ส่งเข้า production source view ต้องมี metadata ของ KPI ครบและค่า `unit`, `direction`, `target_scope`, `indicator_group` ต้องอยู่ใน allowlist; descriptive metadata ต้องคงที่ทุกงวดของ code เดียวกัน ส่วน target/percentile/facts เป็นข้อมูลระดับงวด; `percentile` ถ้ามีต้องอยู่ในช่วง 0–100; adapter จะ reject row ที่ขาด/ผิดชนิด รวมถึง multiplier ใน `formula` ที่ไม่ตรงกับ rule manifest, numeric fact ที่ไม่ใช่ตัวเลข, ค่า `value` ที่ไม่เป็น `NULL` เมื่อ denominator เป็นศูนย์, หรือค่า percent/rate/ratio ที่ไม่มี denominator เพื่อไม่ให้ระบบเดาหน่วย/สถานะเอง
+- frontend ไม่มี benchmark seed; ถ้า source view ส่ง `target = NULL` ระบบจะรักษา `NULL` ของงวดนั้น ไม่ carry-forward จากงวดอื่น และไม่เดา target จากค่าเก่าใน frontend
+- ถ้า `target_scope = 'monthly'` ระบบจะไม่ยก target ของงวดใดงวดหนึ่งไปเป็น target ของ annual roll-up; annual target/status จะมีได้เมื่อ source ระบุ target ระดับปีโดยตรง
 - ไม่ expose `hn`, `cid`, ชื่อ, วันเกิด, ที่อยู่, note text หรือ raw clinical row
 - `rule_version` และ `refreshed_at` ทำให้ผลลัพธ์ตรวจย้อนกลับได้ แม้สอง field นี้จะเป็น extension จากขั้นต่ำใน data contract
 
-### 8.4 Development fixture ที่ทำให้เริ่ม frontend ได้โดยไม่รอ PHI
+### 8.4 Test fixture ที่ทำให้ตรวจ frontend ได้โดยไม่รอ PHI
 
 สร้าง fixture จาก catalogue และ fiscal calendar โดยไม่ใช้ข้อมูลผู้ป่วยจริง
 
@@ -879,10 +677,10 @@ CREATE TABLE reporting.thip_kpi_monthly_contract (
 }
 ```
 
-Fixture acceptance:
+Fixture acceptance (ใช้ใน test เท่านั้น ไม่ใช่ production fallback):
 
-- มี code ครบ 232 และเดือนครบ 1-12
-- มี case `denominator = 0`, missing month, duplicate row, unknown code และ invalid fiscal month
+- มี code ครบ 232 และ reporting period ครบตาม `src/data/thipReporting.ts`
+- มี case `denominator = 0`, missing reporting period, duplicate row, unknown code และ invalid fiscal month
 - ตัวอย่าง numerator/denominator เป็น synthetic เท่านั้น
 - dashboard ต้องแสดง no-data เมื่อ source row หาย ไม่ตีความเป็น performance = 0
 
@@ -890,8 +688,8 @@ Fixture acceptance:
 
 | phase | งาน | ผลลัพธ์ที่ส่งมอบ |
 |---|---|---|
-| 0 | contract, fixture, validator | dashboard/query tests รันได้กับ 232 x 12 โดยไม่ใช้ PHI |
-| 1 | harden foundation 6 ตัว | registered query, code-set snapshot, expected aggregate และ local validation note |
+| 0 | contract, fixture, validator | dashboard/query tests รันได้กับ 1,552 cadence cells โดยไม่ใช้ PHI |
+| 1 | harden foundation 16 ตัว | registered query, code-set snapshot, expected aggregate และ local validation note |
 | 2 | IPD clinical outcomes | ACS, stroke, pneumonia, sepsis, surgery, anesthesia, pressure ulcer |
 | 3 | OPD/NCD/chronic | ACSC, DM/HT, CKD, HIV/TB, asthma/COPD, tobacco |
 | 4 | maternal/child/specialty | maternal, newborn, cancer, UGIH, infertility, cleft, stem cell, arthroplasty |
@@ -911,13 +709,13 @@ KPI จะเปลี่ยนจาก `needs-local-mapping` เป็น `rea
 [ ] ระบุ event timestamp, inclusion, exclusion และ observation window
 [ ] raw query อยู่ใน registered query/reporting layer แบบ read-only
 [ ] aggregate ก่อน join one-to-many และมี orphan/duplicate check
-[ ] source view มีหนึ่ง row ต่อ code/month และ metadata ครบ
+[ ] source view มีหนึ่ง row ต่อ code/reporting period ตาม cadence และ metadata ครบ
 [ ] มี expected result แบบ aggregate ที่ไม่เป็น PHI อย่างน้อย 3 เดือน
 [ ] มี test สำหรับ empty month, zero denominator, boundary date และ unknown code
 [ ] domain owner sign-off แล้วจึงเปิดใช้งาน production
 ```
 
-### 8.7 ข้อมูลขั้นต่ำที่ต้องขอจากโรงพยาบาลเพื่อปิด 226 รหัส
+### 8.7 ข้อมูลขั้นต่ำที่ต้องขอจากโรงพยาบาลเพื่อปิด 216 รหัส
 
 ขอเป็น schema/code mapping และ aggregate validation เท่านั้น ไม่ต้องส่ง session credential หรือ raw patient rows
 
@@ -941,10 +739,18 @@ KPI จะเปลี่ยนจาก `needs-local-mapping` เป็น `rea
 4. ระบุ numerator, denominator, formula scale, direction, target และ target scope แยกกัน
 5. เลือก event date เดียวสำหรับ periodization; ห้ามใช้วันที่บันทึกแทนวันที่เกิดเหตุโดยไม่ระบุเหตุผล
 6. สร้าง raw extraction แบบ read-only แล้ว aggregate ที่ episode/visit/person level ก่อน join one-to-many
-7. เขียนผลเข้า normalized source view ที่มีหนึ่ง row ต่อ code/month และ metadata ครบ
-8. รัน completeness/duplicate audit 2,784 ช่อง พร้อมตรวจ `NULL` denominator และ zero denominator
+7. เขียนผลเข้า normalized source view ที่มีหนึ่ง row ต่อ code/reporting period ตาม cadence และ metadata ครบ
+8. รัน completeness/duplicate audit 1,552 ช่องตาม cadence พร้อมตรวจ `NULL` denominator และ zero denominator
 9. เทียบผลกับรายงานโรงพยาบาลหรือ sample ที่ผ่าน de-identification อย่างน้อย 3 เดือน และให้ domain owner sign-off
 10. ลงทะเบียน query ผ่าน `queryRegistry`, เขียน unit/integration test, และตรวจว่าไม่มี PHI ใน response
+
+สำหรับการตรวจ export ก่อน provision view ใช้ `scripts/thip_source_audit.py` โดยส่งออกเฉพาะ normalized rows จาก reporting layer:
+
+```powershell
+python scripts/thip_source_audit.py --input .\thip-kpi-export.json --fiscal-year 2026
+```
+
+คำสั่งนี้อ่าน rule/cadence manifest จาก repository, ตรวจ 232 codes และ 1,552 cells, duplicate, period, metadata, unit/multiplier ตาม formula, ความสอดคล้องของ value กับ numerator/denominator และ zero-denominator แล้วคืน JSON summary ที่ไม่มีค่าจาก row ดิบ; exit code เป็น 1 หากยังไม่พร้อม production
 
 ## 9. Checklist สำหรับ review query ทุกตัว
 
@@ -957,7 +763,7 @@ KPI จะเปลี่ยนจาก `needs-local-mapping` เป็น `rea
 [ ] event date/time และ timezone/NULL rule ชัดเจน
 [ ] denominator 0 ให้ value = NULL
 [ ] numerator + denominator audit ได้ โดยไม่คืน PHI
-[ ] monthly period และ FY Oct-Sep ถูกต้อง
+[ ] reporting period และ FY Oct-Sep ถูกต้อง
 [ ] annual roll-up เป็น weighted rule ตาม unit
 [ ] source_tables เป็นตารางที่ query จริง ไม่ใช่รายชื่อเดา
 [ ] query ถูก register และผ่าน read-only guard
@@ -973,14 +779,44 @@ KPI จะเปลี่ยนจาก `needs-local-mapping` เป็น `rea
 - `CE0101` และ `CI0101` มี code-set evidence ใน PDF ต่างจาก sepsis list ที่ current foundation query ใช้ ต้องทำ reconciliation ก่อน production
 - กลุ่ม infection SI ต้องการ device-day/exposure และ event definition ที่ schema inventory มาตรฐานยังไม่ชัดเจน
 - กลุ่ม finance SF และ governance SG อาจต้องใช้ระบบบัญชี/สิ่งแวดล้อมนอก HOSxP; ห้ามแทนด้วย field ที่ใกล้เคียงโดยไม่มี approval
-- ปัจจุบัน BMS UI ใช้ foundation query 6 รหัสเมื่อไม่มี source view; เมื่อกำหนด source view แล้ว UI จะรับ normalized rows ที่รู้จักและเติม no-data ให้ code ที่ยังไม่มี row
+- ปัจจุบัน local Vite development ใช้ foundation query 16 รหัสเมื่อไม่มี source view; production build ต้องกำหนด source view และ UI จะรับ normalized rows ที่รู้จัก พร้อมตรวจ coverage ตาม cadence 1,552 ช่องก่อนเรียกข้อมูลว่า complete live (ถ้าไม่ครบ production จะ fail closed)
+
+### 10.1 Local SQL evidence ที่พบในเครื่องสำหรับโรงพยาบาล
+
+จากการตรวจไฟล์ SQL ที่มีอยู่ในเครื่องของผู้พัฒนา พบ implementation evidence เพิ่มเติมที่ควรใช้เป็น input ของ local mapping แต่ยังไม่ควรนำไปเปิด production โดยตรง:
+
+```text
+C:\Users\KTLho\Documents\Navicat\PostgreSQL\Servers\test\ktlhos\public\99_SUPER_MASTER_THIP_MOPH.sql
+C:\Users\KTLho\Documents\Navicat\PostgreSQL\Servers\test\ktlhos\public\ร้อยละการเสียชีวิตของผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน.sql
+```
+
+ไฟล์ `99_SUPER_MASTER_THIP_MOPH.sql` มี logic แบบ aggregate สำหรับรหัส THIP ที่พบใน query จริง 32 รหัส ได้แก่ `CI0101`, `CM0105`, `DC0107`, `DC0201`, `DC0401`, `DG0101`, `DG0102`, `DG0201`, `DG0202`, `DH0101`, `DH0101.1`, `DH0101.2`, `DH0102`, `DH0104`, `DH0106`, `DH0111`, `DH0112`, `DH0114`, `DH0301`, `DN0101`, `DN0102`, `DN0107`, `DN0109`, `DN0302`, `DR0101`, `DR0102`, `DR0112`, `DR0201`, `DR0301`, `DR0401`, `DR0403` และ `DR0412` โดยอ้าง `ipt_drg_result` เป็น source ของ Pdx/Sdx, `ipt.dchstts` เป็นสถานะจำหน่าย และ `opitemrece`/`drugitems` เป็น evidence ของยา
+
+หลักฐานนี้ทำให้เห็นทางต่อของ query จริง แต่มีข้อจำกัดที่ต้องแก้ก่อน register:
+
+- ใช้ `fy_start`, `fy_end`, death status (`3`,`8`) และ lab/vaccine code เป็นค่าคงที่ใน query; ต้องย้ายเป็น hospital configuration ที่มี owner/version และตรวจจาก master จริง
+- match ยาจาก `drugitems.name` ด้วย `ILIKE` เป็นเพียง fallback discovery; production ต้องใช้ versioned local `icode` crosswalk และแยก charge/dispense/administration ให้ชัด
+- output มีเฉพาะเดือนที่มี cohort ไม่ได้สร้าง cadence grid ที่มีเดือนศูนย์/ตัวหารศูนย์ และไม่มี metadata ตาม normalized source-view contract
+- `DN0302` ใน master query ใช้ `is_death` อย่างเดียว ยังไม่ยืนยันช่วงเวลา 48 ชั่วโมง; registered foundation query ใน repository จึงยังใช้ admission/death timestamp และไม่ควรถูกแทนที่โดยอัตโนมัติ
+- มีรหัส MOPH ที่ไม่อยู่ใน catalogue THIP และรหัสที่ต้อง reconcile กับ PDF เช่น `DR0112`, `DR0412`, `DH0114`; adapter ต้อง reject code ที่ไม่อยู่ใน 232-code catalogue
+- readmission ใช้ `HN + discharge date` เป็น approximation และยังต้องยืนยัน unplanned exclusion, transferred episode และ same-day readmission
+
+วิธีนำ evidence นี้ไปใช้:
+
+1. รันบน anonymized staging ด้วย `EXPLAIN`/aggregate comparison และตรวจว่าตาราง `ipt_drg_result`, field Pdx/Sdx และ `dchstts` มี semantics ตรงกับ local HOSxP version
+2. แยกแต่ละ KPI ออกจาก master query ให้มี numerator/denominator/event date/code-set version ของตัวเอง
+3. ทำผลลัพธ์เข้า normalized source view ตาม DDL ในหัวข้อ 8.3 พร้อมเติมแถวที่ไม่มี cohortเป็น `denominator = 0`, `value = NULL`
+4. รัน duplicate/completeness audit แล้วจึงเปลี่ยน rule จาก `needs-local-mapping` เป็น `ready` หลัง domain owner sign-off
+
+ดังนั้น local SQL นี้เป็นหลักฐานให้ลดงาน discovery ของ 32 รหัสได้ แต่ไม่ใช่เหตุผลให้ระบบแสดงผลแทน 216 รหัสที่ยังไม่มี validation และไม่ใช่ source ที่ frontend ควรส่ง raw SQL ไปเรียกเอง
 
 ## 11. Source of truth ใน repository
 
 - Data boundary และ normalized view contract: [`docs/THIP-DATA-CONTRACT.md`](./THIP-DATA-CONTRACT.md)
 - Workbook/PDF evidence notes: [`docs/THIP-SOURCE-NOTES.md`](./THIP-SOURCE-NOTES.md)
 - Catalogue 232 codes: [`src/data/thipCatalogue.ts`](../src/data/thipCatalogue.ts)
-- Registered read-only queries and six foundation calculations: [`src/services/queryRegistry.ts`](../src/services/queryRegistry.ts)
+- Rule manifest 232 codes and query readiness: [`src/data/thipKpiRules.ts`](../src/data/thipKpiRules.ts)
+- Registered read-only queries and sixteen foundation calculations: [`src/services/queryRegistry.ts`](../src/services/queryRegistry.ts)
 - Source-view query builder and response validation: [`src/services/bmsData.ts`](../src/services/bmsData.ts)
 
 ## 12. ทะเบียนตัวชี้วัดครบ 232 รหัส
@@ -1092,12 +928,12 @@ KPI จะเปลี่ยนจาก `needs-local-mapping` เป็น `rea
 | DE1405 | Upper Gastrointestinal Hemorrhage (UGIH): Complication rates of upper endoscopic treatment | 149 | a/b x 100 | UGIH | ipt, an_stat, iptdiag, operation_list, operation_detail, operation_item, lab_head, lab_order, lab_items | I85, I98.3, K22.1, K25.0, K25.1, K25.2, K25.4, K25.5, K25.6, K26.0, K26.1, K26.2, K26.4, K26.5, K26.6, K27.0, K27.1, K27.2, K27.4, K27.5, K27.6, K28.0, K28.1, K28.2, K28.4, K28.5, K28.6, K29.0, K31.8, K70, K71, K74, K92.0, K92.1, K92.2 | SOURCE VIEW / rule pending |
 | DE1601 | New born: Percent of hearing screening within 30 days | 150 | a/b x 100 | NEWBORN | ipt_newborn, ipt_pregnancy, ipt_pregnancy_vital_sign, ipt_labour_infant, ipt_labour_child, labor, person_wbc, person_anc | - | SOURCE VIEW / rule pending |
 | DG0101 | Upper Gastrointestinal Hemorrhage (UGIH): Percent of unplanned re-admission into the hospital within 28 days after last discharge | 120 | a/b x 100 | UGIH | ipt, an_stat, iptdiag, operation_list, operation_detail, operation_item, lab_head, lab_order, lab_items | K25.0, K25.1, K25.2, K25.4, K25.5, K25.6, K26.0, K26.1, K26.2, K26.4, K26.5, K26.6, K27.0, K27.1, K27.2, K27.4, K27.5, K27.6, K28.0, K28.1, K28.2, K28.4, K28.5, K28.6, K29.0, K92.0, K92.1, K92.2 | SOURCE VIEW / rule pending |
-| DG0102 | Upper Gastrointestinal Hemorrhage (UGIH): Average length of stay | 121 | a/b | UGIH | ipt, an_stat, iptdiag, operation_list, operation_detail, operation_item, lab_head, lab_order, lab_items | K25.0, K25.1, K25.2, K25.4, K25.5, K25.6, K26.0, K26.1, K26.2, K26.4, K26.5, K26.6, K27.0, K27.1, K27.2, K27.4, K27.5, K27.6, K28.0, K28.1, K28.2, K28.4, K28.5, K28.6, K29.0, K92.0, K92.1, K92.2 | SOURCE VIEW / rule pending |
+| DG0102 | Upper Gastrointestinal Hemorrhage (UGIH): Average length of stay | 121 | a/b | UGIH | ipt, an_stat, iptdiag, operation_list, operation_detail, operation_item, lab_head, lab_order, lab_items | K25.0, K25.1, K25.2, K25.4, K25.5, K25.6, K26.0, K26.1, K26.2, K26.4, K26.5, K26.6, K27.0, K27.1, K27.2, K27.4, K27.5, K27.6, K28.0, K28.1, K28.2, K28.4, K28.5, K28.6, K29.0, K92.0, K92.1, K92.2 | FOUNDATION (registered) |
 | DG0201 | Acute Appendicitis: Percent of abruption | 122 | a/b x 100 | APPENDICITIS | ipt, an_stat, iptdiag, death, operation_list, operation_detail, operation_item | K35, K35.2, K35.3, K35.8 | SOURCE VIEW / rule pending |
-| DG0202 | Acute Appendicitis: Percent of mortality | 123 | a/b x 100 | APPENDICITIS | ipt, an_stat, iptdiag, death, operation_list, operation_detail, operation_item | K35, K35.2, K35.3, K35.8 | SOURCE VIEW / rule pending |
+| DG0202 | Acute Appendicitis: Percent of mortality | 123 | a/b x 100 | APPENDICITIS | ipt, an_stat, iptdiag, death, operation_list, operation_detail, operation_item | K35, K35.2, K35.3, K35.8 | FOUNDATION (registered) |
 | DH0101 | Acute coronary syndrome: Percent of mortality | 39 | a/b x 100 | ACS | ipt, an_stat, iptdiag, death, er_regist, opitemrece, drugitems, operation_list, operation_detail | I21.0, I21.1, I21.2, I21.3, I21.4, I21.9 | FOUNDATION (registered) |
-| DH0101.1 | Acute coronary syndrome (STEMI): Percent of mortality | 40 | a/b x 100 | ACS | ipt, an_stat, iptdiag, death, er_regist, opitemrece, drugitems, operation_list, operation_detail | I21.0, I21.1, I21.2, I21.3 | SOURCE VIEW / rule pending |
-| DH0101.2 | Acute coronary syndrome (NSTE-ACS): Percent of mortality | 41 | a/b x 100 | ACS | ipt, an_stat, iptdiag, death, er_regist, opitemrece, drugitems, operation_list, operation_detail | I21.4, I21.9 | SOURCE VIEW / rule pending |
+| DH0101.1 | Acute coronary syndrome (STEMI): Percent of mortality | 40 | a/b x 100 | ACS | ipt, an_stat, iptdiag, death, er_regist, opitemrece, drugitems, operation_list, operation_detail | I21.0, I21.1, I21.2, I21.3 | FOUNDATION (registered) |
+| DH0101.2 | Acute coronary syndrome (NSTE-ACS): Percent of mortality | 41 | a/b x 100 | ACS | ipt, an_stat, iptdiag, death, er_regist, opitemrece, drugitems, operation_list, operation_detail | I21.4, I21.9 | FOUNDATION (registered) |
 | DH0102 | Acute coronary syndrome: Percent of patient receiving Aspirin within | 42 | a/b x 100 | ACS | ipt, an_stat, iptdiag, death, er_regist, opitemrece, drugitems, operation_list, operation_detail | I21.0, I21.1, I21.2, I21.3, I21.4, I21.9 | FOUNDATION (registered) |
 | DH0103 | Acute coronary syndrome: Percent of Aspirin prescribed at discharge | 43 | a/b x 100 | ACS | ipt, an_stat, iptdiag, death, er_regist, opitemrece, drugitems, operation_list, operation_detail | I21.0, I21.1, I21.2, I21.3, I21.4, I21.9 | SOURCE VIEW / rule pending |
 | DH0104 | Acute coronary syndrome: Percent of ACE inhibitors or ARB received for patient who have LVSD | 44 | a/b x 100 | ACS | ipt, an_stat, iptdiag, death, er_regist, opitemrece, drugitems, operation_list, operation_detail | I21.0, I21.1, I21.2, I21.3, I21.4, I21.9, I22.1, I22.8, I22.9 | SOURCE VIEW / rule pending |
@@ -1108,7 +944,7 @@ KPI จะเปลี่ยนจาก `needs-local-mapping` เป็น `rea
 | DH0109 | Acute coronary syndrome: Average door to refer time | 50 | a/b | ACS | ipt, an_stat, iptdiag, death, er_regist, opitemrece, drugitems, operation_list, operation_detail | I21.0, I21.1, I21.2, I21.3, I21.4, I21.9, I22.1, I22.8, I22.9 | SOURCE VIEW / rule pending |
 | DH0110 | Acute coronary syndrome: Percent of Primary Percutaneous Coronary Intervention (PCI) given within 120 minutes or received Fibrinolytic agent within 30 minutes of arrival | 51 | a/b x 100 | ACS | ipt, an_stat, iptdiag, death, er_regist, opitemrece, drugitems, operation_list, operation_detail | I21.0, I21.1, I21.2, I21.3 | SOURCE VIEW / rule pending |
 | DH0111 | Acute coronary syndrome: Percent of unplanned re-admission within | 53 | a/b x 100 | ACS | ipt, an_stat, iptdiag, death, er_regist, opitemrece, drugitems, operation_list, operation_detail | I21.0, I21.1, I21.2, I21.3, I21.4, I21.9, I22.1, I22.8, I22.9 | SOURCE VIEW / rule pending |
-| DH0112 | Acute coronary syndrome: Average length of stay | 54 | a/b | ACS | ipt, an_stat, iptdiag, death, er_regist, opitemrece, drugitems, operation_list, operation_detail | I21.0, I21.1, I21.2, I21.3, I21.4, I21.9 | SOURCE VIEW / rule pending |
+| DH0112 | Acute coronary syndrome: Average length of stay | 54 | a/b | ACS | ipt, an_stat, iptdiag, death, er_regist, opitemrece, drugitems, operation_list, operation_detail | I21.0, I21.1, I21.2, I21.3, I21.4, I21.9 | FOUNDATION (registered) |
 | DH0113 | Acute coronary syndrome: Percent of time to Fibrinolytic administration agents within 30 minutes of arrival | 55 | a/b x 100 | ACS | ipt, an_stat, iptdiag, death, er_regist, opitemrece, drugitems, operation_list, operation_detail | I21.0, I21.1, I21.2, I21.3, I21.4, I21.9 | SOURCE VIEW / rule pending |
 | DH0201 | Coronary Artery Bypass Graft (CABG): Percent of mortality | 57 | a/b x 100 | CABG | ipt, an_stat, iptdiag, death, operation_list, operation_detail, operation_item, opitemrece, drugitems | - | SOURCE VIEW / rule pending |
 | DH0202 | Coronary Artery Bypass Graft (CABG): Percent of patient who received antibiotic prophylaxis | 58 | a/b x 100 | CABG | ipt, an_stat, iptdiag, death, operation_list, operation_detail, operation_item, opitemrece, drugitems | - | SOURCE VIEW / rule pending |
@@ -1134,11 +970,11 @@ KPI จะเปลี่ยนจาก `needs-local-mapping` เป็น `rea
 | DN0104 | Ischemic stroke: Percent of patient with Atrial fibrillation/Flutter receiving Anticoagulation therapy | 70 | a/b x 100 | STROKE | ipt, an_stat, iptdiag, death, er_regist, operation_list, operation_detail, opitemrece, drugitems | I48, I63 | SOURCE VIEW / rule pending |
 | DN0105 | Stroke: Percent of patients who were given stroke education during their hospital stay | 71 | a/b x 100 | STROKE | ipt, an_stat, iptdiag, death, er_regist, operation_list, operation_detail, opitemrece, drugitems | I60, I61, I62, I63, I64, I65, I66, I67 | SOURCE VIEW / rule pending |
 | DN0106 | Stroke: Percent of treatment, physiotherapy or rehabilitation in stroke or paralytic syndrome within 72 hours | 72 | a/b x 100 | STROKE | ipt, an_stat, iptdiag, death, er_regist, operation_list, operation_detail, opitemrece, drugitems | I60, I61, I62, I63, I64, I65, I66, I67 | SOURCE VIEW / rule pending |
-| DN0107 | Stroke: Percent of unplanned re-admission of stroke within 28 days | 73 | a/b x 100 | STROKE | ipt, an_stat, iptdiag, death, er_regist, operation_list, operation_detail, opitemrece, drugitems | I60, I61, I62, I63, I64, I65, I66, I67 | SOURCE VIEW / rule pending |
-| DN0109 | Stroke: Average length of stay | 74 | a/b | STROKE | ipt, an_stat, iptdiag, death, er_regist, operation_list, operation_detail, opitemrece, drugitems | I60, I61, I62, I63, I64, I65, I66, I67 | SOURCE VIEW / rule pending |
+| DN0107 | Stroke: Percent of unplanned re-admission of stroke within 28 days | 73 | a/b x 100 | STROKE | ipt, an_stat, iptdiag, death, er_regist, operation_list, operation_detail, opitemrece, drugitems | I60, I61, I62, I63, I64, I65, I66, I67 | FOUNDATION (registered) |
+| DN0109 | Stroke: Average length of stay | 74 | a/b | STROKE | ipt, an_stat, iptdiag, death, er_regist, operation_list, operation_detail, opitemrece, drugitems | I60, I61, I62, I63, I64, I65, I66, I67 | FOUNDATION (registered) |
 | DN0110 | Ischemic Stroke: Percent of time to Thrombolytic administration agents within 60 minutes of arrival | 75 | a/b x 100 | STROKE | ipt, an_stat, iptdiag, death, er_regist, operation_list, operation_detail, opitemrece, drugitems | I63, I64, I65, I66, I67 | SOURCE VIEW / rule pending |
 | DN0301 | Head Injury: Percent of unplanned re-admission of Craniotomy within | 76 | a/b x 100 | HEAD_INJURY | ipt, an_stat, iptdiag, death, operation_list, operation_detail, operation_item | - | SOURCE VIEW / rule pending |
-| DN0302 | Head Injury: Percent of mortality within 48 hours | 77 | a/b x 100 | HEAD_INJURY | ipt, an_stat, iptdiag, death, operation_list, operation_detail, operation_item | S06.0, S06.1, S06.2, S06.3, S06.4, S06.5, S06.6, S06.7, S06.8, S06.9 | SOURCE VIEW / rule pending |
+| DN0302 | Head Injury: Percent of mortality within 48 hours | 77 | a/b x 100 | HEAD_INJURY | ipt, an_stat, death | S06.0, S06.1, S06.2, S06.3, S06.4, S06.5, S06.6, S06.7, S06.8, S06.9 | FOUNDATION (registered) |
 | DN0303 | Head Injury: Percent of patient underwent craniotomy for Intracranial | 78 | a/b x 100 | HEAD_INJURY | ipt, an_stat, iptdiag, death, operation_list, operation_detail, operation_item | S06.0, S06.1, S06.2, S06.3, S06.4, S06.5, S06.6, S06.7, S06.8, S06.9 | SOURCE VIEW / rule pending |
 | DO0202 | Hip arthroplasty: Percent of patients who received antibiotic prophylaxis in Hip arthroplasty | 114 | a/b x 100 | ARTHROPLASTY | ipt, an_stat, iptdiag, operation_list, operation_detail, operation_item, opitemrece, drugitems | - | SOURCE VIEW / rule pending |
 | DO0204 | Hip arthroplasty: Percent of hip arthroplasty associated infection within 1 Year | 115 | a/b x 100 | ARTHROPLASTY | ipt, an_stat, iptdiag, operation_list, operation_detail, operation_item, opitemrece, drugitems | - | SOURCE VIEW / rule pending |
@@ -1148,7 +984,7 @@ KPI จะเปลี่ยนจาก `needs-local-mapping` เป็น `rea
 | DO0304 | Knee Arthroplasty: Percent of surgical infection within 90 days | 119 | a/b x 100 | ARTHROPLASTY | ipt, an_stat, iptdiag, operation_list, operation_detail, operation_item, opitemrece, drugitems | - | SOURCE VIEW / rule pending |
 | DP0101 | Diabetes in child and adolescent: Percent of good controlled of blood sugar (age < 18 years) | 124 | a/b x 100 | PEDIATRIC_DM | person, clinicmember, ovst, ovstdiag, opdscreen, lab_head, lab_order, lab_items | E10, E89.1, P70.2 | SOURCE VIEW / rule pending |
 | DR0101 | Pneumonia: Percent of mortality after hospital admission | 79 | a/b x 100 | PNEUMONIA | ipt, an_stat, iptdiag, death, opitemrece, drugitems | J10.0, J11.0, J12, J16, J17.0, J17.1, J17.2, J17.3, J17.8, J18, J85.0, J85.1 | FOUNDATION (registered) |
-| DR0102 | Pneumonia: Percent of unplanned re-admission within 28 days after last discharge | 80 | a/b x 100 | PNEUMONIA | ipt, an_stat, iptdiag, death, opitemrece, drugitems | J10.0, J11.0, J12, J16, J17.0, J17.1, J17.2, J17.3, J17.8, J18, J85.0, J85.1 | SOURCE VIEW / rule pending |
+| DR0102 | Pneumonia: Percent of unplanned re-admission within 28 days after last discharge | 80 | a/b x 100 | PNEUMONIA | ipt, an_stat, iptdiag, death, opitemrece, drugitems | J10.0, J11.0, J12, J16, J17.0, J17.1, J17.2, J17.3, J17.8, J18, J85.0, J85.1 | FOUNDATION (registered) |
 | DR0103 | Pneumonia: Percent of smoking cessation advice given | 81 | a/b x 100 | PNEUMONIA | ipt, an_stat, iptdiag, death, opitemrece, drugitems | J10.0, J11.0, J12, J16, J17.0, J17.1, J17.2, J17.3, J17.8, J18, J85.0, J85.1 | SOURCE VIEW / rule pending |
 | DR0201 | TB: Percent of mortality during 12 months | 82 | a/b x 100 | HIV_TB | clinicmember, clinic_visit, clinicmember_tb, tb_register, tb_register_visit, tb_lab_examination_sputum, arv_tx, arv_lab, ovstdiag | A15, A16 | SOURCE VIEW / rule pending |
 | DR0202 | TB: Percentage of people living with HIV having a TB screening | 83 | a/b x 100 | HIV_TB | clinicmember, clinic_visit, clinicmember_tb, tb_register, tb_register_visit, tb_lab_examination_sputum, arv_tx, arv_lab, ovstdiag | B20, B21, B22, B23, B24, Z21 | SOURCE VIEW / rule pending |
@@ -1158,7 +994,7 @@ KPI จะเปลี่ยนจาก `needs-local-mapping` เป็น `rea
 | DR0301 | Asthma: Percent of unplanned re-admission within 28 days after last discharge | 87 | a/b x 100 | ASTHMA_COPD | patient_asthma_screen, patient_copd_screen, clinicmember, clinic_visit, ovst, ovstdiag, opdscreen | J45, J46 | SOURCE VIEW / rule pending |
 | DR0302 | Asthma: Percent of smoking cessation advice given | 88 | a/b x 100 | ASTHMA_COPD | patient_asthma_screen, patient_copd_screen, clinicmember, clinic_visit, ovst, ovstdiag, opdscreen | J45, J46 | SOURCE VIEW / rule pending |
 | DR0401 | COPD: Percent of unplanned re-admission into the hospital within 28 days after last discharge | 89 | a/b x 100 | ASTHMA_COPD | patient_asthma_screen, patient_copd_screen, clinicmember, clinic_visit, ovst, ovstdiag, opdscreen | J44 | SOURCE VIEW / rule pending |
-| DR0403 | COPD: Percent of mortality | 90 | a/b x 100 | ASTHMA_COPD | patient_asthma_screen, patient_copd_screen, clinicmember, clinic_visit, ovst, ovstdiag, opdscreen | J44 | SOURCE VIEW / rule pending |
+| DR0403 | COPD: Percent of mortality | 90 | a/b x 100 | ASTHMA_COPD | patient_asthma_screen, patient_copd_screen, clinicmember, clinic_visit, ovst, ovstdiag, opdscreen | J44 | FOUNDATION (registered) |
 | DR0404 | COPD: Percent of patient with ongoing smoking | 91 | a/b x 100 | ASTHMA_COPD | patient_asthma_screen, patient_copd_screen, clinicmember, clinic_visit, ovst, ovstdiag, opdscreen | J44 | SOURCE VIEW / rule pending |
 | DS0101 | Methamphetamine Group: 3 months total remission rate | 126 | a/b x 100 | MENTAL_DEVELOPMENT | psych_assess_child, psych_plan, psych_therapy, depression_screen, person_wbc, ovst, ovstdiag, clinicmember | F15.0, F15.9 | SOURCE VIEW / rule pending |
 | DS0201 | Alcohol Group: 3 months total remission rate | 127 | a/b x 100 | MENTAL_DEVELOPMENT | psych_assess_child, psych_plan, psych_therapy, depression_screen, person_wbc, ovst, ovstdiag, clinicmember | F10.0, F10.9 | SOURCE VIEW / rule pending |

@@ -36,4 +36,29 @@ describe('BMS connection error messages', () => {
     expect(getBmsConnectionErrorMessage(error)).toContain('หมดเวลา');
     expect(getBmsConnectionErrorMessage(error)).not.toContain('CORS');
   });
+
+  it('explains the production source-view gate', () => {
+    const error = new BmsRequestError('data', 'config', 'source view is required');
+    expect(getBmsConnectionErrorMessage(error)).toContain('source view');
+    expect(getBmsConnectionErrorMessage(error)).toContain('232');
+  });
+
+  it('explains incomplete source-view coverage instead of hiding the audit failure', () => {
+    const error = new BmsRequestError(
+      'data',
+      'response',
+      'Normalized THIP source view thip_kpi_monthly is incomplete: 1/1552 reporting cells and 1/232 indicators were returned',
+    );
+    expect(getBmsConnectionErrorMessage(error)).toContain('1,552');
+    expect(getBmsConnectionErrorMessage(error)).toContain('missing');
+  });
+
+  it('explains an empty configured source view', () => {
+    const error = new BmsRequestError(
+      'data',
+      'response',
+      'Configured THIP source view thip_kpi_monthly returned no rows',
+    );
+    expect(getBmsConnectionErrorMessage(error)).toContain('1,552');
+  });
 });

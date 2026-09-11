@@ -1,4 +1,5 @@
 import { BmsRequestError } from '@/services/bmsErrors';
+import { foundationRuleCodes } from '@/data/thipKpiRules';
 
 export type BmsParamType = 'string' | 'integer' | 'float' | 'date' | 'time' | 'datetime' | 'text';
 
@@ -21,6 +22,10 @@ export type BmsSqlResponse = {
   result?: Array<Record<string, unknown>>;
   record_count?: number;
 };
+
+const foundationExpectedCodeValues = foundationRuleCodes
+  .map((code) => `('${code}')`)
+  .join(', ');
 
 export const queryRegistry = {
   versionProbe: {
@@ -52,6 +57,8 @@ export const queryRegistry = {
         SELECT
           i.an,
           i.hn,
+          i.regdate,
+          i.regtime,
           i.dchdate,
           s.age_y,
           s.los,
@@ -81,6 +88,56 @@ export const queryRegistry = {
                 OR REPLACE(UPPER(TRIM(d.death_diag_4)), '.', '') IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
               )
           ) AS died_from_acs,
+          EXISTS (
+            SELECT 1
+            FROM iptdiag sd
+            WHERE sd.an = i.an
+              AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') <> REPLACE(UPPER(TRIM(s.pdx)), '.', '')
+              AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') IN ('I210', 'I211', 'I212', 'I213')
+          ) AS has_stemi_sdx,
+          EXISTS (
+            SELECT 1
+            FROM iptdiag sd
+            WHERE sd.an = i.an
+              AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') <> REPLACE(UPPER(TRIM(s.pdx)), '.', '')
+              AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') IN ('I214', 'I219')
+          ) AS has_nste_sdx,
+          EXISTS (
+            SELECT 1
+            FROM death d
+            WHERE d.an = i.an
+              AND d.death_date IS NOT NULL
+              AND (d.death_date + COALESCE(d.death_time, TIME '23:59:59')) >=
+                (i.regdate + COALESCE(i.regtime, TIME '00:00:00'))
+              AND (d.death_date + COALESCE(d.death_time, TIME '23:59:59')) <=
+                (i.regdate + COALESCE(i.regtime, TIME '00:00:00')) + INTERVAL '48 hours'
+          ) AS died_within_48h,
+          EXISTS (
+            SELECT 1
+            FROM death d
+            WHERE d.an = i.an
+              AND (
+                REPLACE(UPPER(TRIM(d.death_diag_icd10)), '.', '') IN ('I210', 'I211', 'I212', 'I213')
+                OR REPLACE(UPPER(TRIM(d.death_cause)), '.', '') IN ('I210', 'I211', 'I212', 'I213')
+                OR REPLACE(UPPER(TRIM(d.death_diag_1)), '.', '') IN ('I210', 'I211', 'I212', 'I213')
+                OR REPLACE(UPPER(TRIM(d.death_diag_2)), '.', '') IN ('I210', 'I211', 'I212', 'I213')
+                OR REPLACE(UPPER(TRIM(d.death_diag_3)), '.', '') IN ('I210', 'I211', 'I212', 'I213')
+                OR REPLACE(UPPER(TRIM(d.death_diag_4)), '.', '') IN ('I210', 'I211', 'I212', 'I213')
+              )
+          ) AS died_from_stemi,
+          EXISTS (
+            SELECT 1
+            FROM death d
+            WHERE d.an = i.an
+              AND (
+                REPLACE(UPPER(TRIM(d.death_diag_icd10)), '.', '') IN ('I214', 'I219')
+                OR REPLACE(UPPER(TRIM(d.death_cause)), '.', '') IN ('I214', 'I219')
+                OR REPLACE(UPPER(TRIM(d.death_diag_1)), '.', '') IN ('I214', 'I219')
+                OR REPLACE(UPPER(TRIM(d.death_diag_2)), '.', '') IN ('I214', 'I219')
+                OR REPLACE(UPPER(TRIM(d.death_diag_3)), '.', '') IN ('I214', 'I219')
+                OR REPLACE(UPPER(TRIM(d.death_diag_4)), '.', '') IN ('I214', 'I219')
+              )
+          ) AS died_from_nste,
           EXISTS (
             SELECT 1
             FROM iptdiag sd
@@ -137,7 +194,7 @@ export const queryRegistry = {
           DATE_TRUNC('month', dchdate)::date AS period_start,
           EXTRACT(MONTH FROM dchdate)::integer AS calendar_month
         FROM ipd
-      )
+      ), facts AS (
       SELECT
         'DH0101' AS indicator_code,
         period_start,
@@ -148,7 +205,37 @@ export const queryRegistry = {
         ROUND((COUNT(*) FILTER (WHERE (pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') AND died) OR (has_acs_sdx AND died_from_acs)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18
-        AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
+        AND (pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') OR has_acs_sdx)
+      GROUP BY period_start, calendar_month
+
+      UNION ALL
+
+      SELECT
+        'DH0101.1' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE (pdx IN ('I210', 'I211', 'I212', 'I213') AND died) OR (has_stemi_sdx AND died_from_stemi))::integer AS numerator,
+        COUNT(*)::integer AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE (pdx IN ('I210', 'I211', 'I212', 'I213') AND died) OR (has_stemi_sdx AND died_from_stemi)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE age_y >= 18
+        AND (pdx IN ('I210', 'I211', 'I212', 'I213') OR has_stemi_sdx)
+      GROUP BY period_start, calendar_month
+
+      UNION ALL
+
+      SELECT
+        'DH0101.2' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE (pdx IN ('I214', 'I219') AND died) OR (has_nste_sdx AND died_from_nste))::integer AS numerator,
+        COUNT(*)::integer AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE (pdx IN ('I214', 'I219') AND died) OR (has_nste_sdx AND died_from_nste)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE age_y >= 18
+        AND (pdx IN ('I214', 'I219') OR has_nste_sdx)
       GROUP BY period_start, calendar_month
 
       UNION ALL
@@ -254,6 +341,26 @@ export const queryRegistry = {
       FROM periodized
       WHERE age_y >= 18
         AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
+      GROUP BY period_start, calendar_month
+
+      UNION ALL
+
+      SELECT
+        'DG0102' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        ROUND(SUM(los)::numeric, 2) AS numerator,
+        COUNT(*)::integer AS denominator,
+        ROUND(AVG(los), 2) AS value
+      FROM periodized
+      WHERE pdx IN (
+        'K250', 'K251', 'K252', 'K254', 'K255', 'K256',
+        'K260', 'K261', 'K262', 'K264', 'K265', 'K266',
+        'K270', 'K271', 'K272', 'K274', 'K275', 'K276',
+        'K280', 'K281', 'K282', 'K284', 'K285', 'K286',
+        'K290', 'K920', 'K921', 'K922'
+      )
       GROUP BY period_start, calendar_month
 
       UNION ALL
@@ -370,7 +477,58 @@ export const queryRegistry = {
       FROM periodized
       WHERE LEFT(pdx, 3) IN ('I60', 'I61', 'I62', 'I63', 'I64', 'I65', 'I66', 'I67')
       GROUP BY period_start, calendar_month
-      ORDER BY indicator_code, period_start
+
+      UNION ALL
+
+      SELECT
+        'DN0302' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE died_within_48h)::integer AS numerator,
+        COUNT(*)::integer AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE died_within_48h) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE pdx IN ('S060', 'S061', 'S062', 'S063', 'S064', 'S065', 'S066', 'S067', 'S068', 'S069')
+      GROUP BY period_start, calendar_month
+      ), expected_codes(indicator_code) AS (
+        VALUES
+          ${foundationExpectedCodeValues}
+      ), fiscal_periods AS (
+        SELECT
+          generated.period_start::date AS period_start,
+          CASE
+            WHEN EXTRACT(MONTH FROM generated.period_start) >= 10
+              THEN EXTRACT(MONTH FROM generated.period_start)::integer - 9
+            ELSE EXTRACT(MONTH FROM generated.period_start)::integer + 3
+          END AS fiscal_month,
+          CASE
+            WHEN EXTRACT(MONTH FROM generated.period_start) >= 10
+              THEN EXTRACT(YEAR FROM generated.period_start)::integer + 1
+            ELSE EXTRACT(YEAR FROM generated.period_start)::integer
+          END AS fiscal_year
+        FROM generate_series(
+          CAST(:start_date AS date),
+          CAST(:end_date AS date) - INTERVAL '1 month',
+          INTERVAL '1 month'
+        ) AS generated(period_start)
+      )
+      SELECT
+        expected_codes.indicator_code,
+        fiscal_periods.period_start,
+        fiscal_periods.fiscal_month,
+        fiscal_periods.fiscal_year,
+        COALESCE(facts.numerator, 0) AS numerator,
+        COALESCE(facts.denominator, 0) AS denominator,
+        facts.value
+      FROM expected_codes
+      CROSS JOIN fiscal_periods
+      LEFT JOIN facts
+        ON facts.indicator_code = expected_codes.indicator_code
+       AND facts.period_start = fiscal_periods.period_start
+       AND facts.fiscal_month = fiscal_periods.fiscal_month
+       AND facts.fiscal_year = fiscal_periods.fiscal_year
+      ORDER BY expected_codes.indicator_code, fiscal_periods.period_start
     `.trim(),
   },
 } as const satisfies Record<string, RegisteredQuery>;

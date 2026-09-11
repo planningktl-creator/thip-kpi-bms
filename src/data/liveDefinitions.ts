@@ -1,7 +1,8 @@
 import type { FiscalYear, Indicator, IndicatorGroup, MonthlyResult, TargetScope } from '@/types/thip';
 import { getFiscalMonthPeriods } from '@/utils/fiscal';
 
-export type LiveDefinition = {
+/** Metadata for indicators returned by the local, evidence-backed foundation query. */
+export type FoundationDefinition = {
   code: string;
   group: IndicatorGroup;
   category: string;
@@ -35,7 +36,7 @@ function createLiveMonthly(fiscalYear: FiscalYear): MonthlyResult[] {
   }));
 }
 
-export function createLiveIndicator(definition: LiveDefinition, fiscalYear: FiscalYear): Indicator {
+export function createFoundationIndicator(definition: FoundationDefinition, fiscalYear: FiscalYear): Indicator {
   return {
     code: definition.code,
     dataSource: 'bms',

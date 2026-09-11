@@ -68,6 +68,7 @@ def mock_bms_routes(page) -> None:
                     {"indicator_code": "DN0107", "period_start": "2025-10-01", "fiscal_year": 2026, "fiscal_month": 1, "numerator": 2, "denominator": 7, "value": 28.57},
                     {"indicator_code": "DH0112", "period_start": "2025-10-01", "fiscal_year": 2026, "fiscal_month": 1, "numerator": 28, "denominator": 4, "value": 7},
                     {"indicator_code": "DN0109", "period_start": "2025-10-01", "fiscal_year": 2026, "fiscal_month": 1, "numerator": 48, "denominator": 8, "value": 6},
+                    {"indicator_code": "DN0302", "period_start": "2025-10-01", "fiscal_year": 2026, "fiscal_month": 1, "numerator": 1, "denominator": 3, "value": 33.33},
                 ]
             }
         route.fulfill(status=200, headers={**headers, "Content-Type": "application/json"}, body=json.dumps(payload))
@@ -89,15 +90,15 @@ def main() -> None:
         assert desktop.get_by_label("เลือกเดือนงบประมาณ").count() == 1
         assert desktop.get_by_label("เลือกปีงบประมาณ").count() == 1
         assert desktop.get_by_text("ภาพรวมคุณภาพ", exact=True).count() >= 1
-        assert desktop.get_by_text("สัญญาณที่ควรดูเดือนนี้", exact=True).count() == 1
+        assert desktop.get_by_text("สัญญาณที่ควรดูในงวดนี้", exact=True).count() == 1
         assert desktop.locator(".indicator-table tbody tr").count() == 232
 
         desktop.locator(".indicator-table tbody tr").first.click()
         desktop.wait_for_load_state("networkidle")
         desktop.screenshot(path=str(ARTIFACTS / "detail-desktop.png"), full_page=True)
-        assert desktop.get_by_text("ตัวตั้ง ตัวหาร และสถานะของทุกเดือน", exact=True).count() == 1
+        assert desktop.get_by_text("ตัวตั้ง ตัวหาร และสถานะของทุกงวดรายงาน", exact=True).count() == 1
         assert desktop.locator(".monthly-table tbody tr").count() == 12
-        assert desktop.get_by_text("DH0101", exact=True).count() >= 1
+        assert desktop.get_by_text("AA0101", exact=True).count() >= 1
         assert desktop.get_by_text("ปีงบประมาณ 2569", exact=False).count() >= 1
         assert desktop.locator("[data-testid='monthly-bar-chart']").count() == 1
         assert desktop.get_by_text("ต.ค. 2568", exact=True).count() >= 1
@@ -114,8 +115,9 @@ def main() -> None:
 
         annual = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1)
         annual.goto(f"{BASE_URL}/?view=detail&indicator=AA0101", wait_until="networkidle")
-        assert annual.get_by_text("ยังไม่ผูก source view", exact=True).count() >= 1
-        assert annual.get_by_text("รอยืนยันจาก source view ของโรงพยาบาล", exact=True).count() == 1
+        assert annual.get_by_text("ยังไม่มีข้อมูลจริง", exact=True).count() >= 1
+        assert annual.get_by_text("a/b x 100,000", exact=True).count() == 1
+        assert annual.get_by_text("ผลงานล่าสุด · ต.ค. 2568", exact=True).count() == 1
 
         catalog = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1)
         catalog.goto(f"{BASE_URL}/?view=catalog", wait_until="networkidle")
@@ -144,18 +146,22 @@ def main() -> None:
         live.on("console", lambda message: console_errors.append(message.text) if message.type == "error" else None)
         mock_bms_routes(live)
         live.goto(f"{BASE_URL}/?bms-session-id=smoke-session", wait_until="networkidle")
-        live.get_by_text("BMS live data", exact=True).wait_for()
-        assert live.get_by_text("Live data", exact=True).count() == 1
-        assert live.locator(".indicator-table tbody tr").count() == 12
-        assert live.get_by_text("DH0101", exact=True).count() >= 1
-        assert live.get_by_text("CE0101", exact=True).count() >= 1
-        assert live.get_by_text("DH0102", exact=True).count() >= 1
-        assert live.get_by_text("DG0202", exact=True).count() >= 1
-        assert live.get_by_text("DR0403", exact=True).count() >= 1
-        assert live.get_by_text("DR0102", exact=True).count() >= 1
-        assert live.get_by_text("DN0107", exact=True).count() >= 1
-        assert live.get_by_text("DH0112", exact=True).count() >= 1
-        assert live.get_by_text("DN0109", exact=True).count() >= 1
+        live.get_by_text("BMS live data บางส่วน", exact=True).wait_for()
+        assert live.get_by_text("Live data บางส่วน", exact=True).count() == 1
+        assert live.get_by_text("อ่านข้อมูลจริง 13/232 ตัวชี้วัด", exact=False).count() == 1
+        assert live.get_by_role("button", name="รีเฟรชข้อมูล").count() == 1
+        assert live.get_by_text("ยังไม่กำหนดเป้าหมาย", exact=False).count() >= 1
+        assert live.locator(".indicator-table tbody tr").count() == 232
+        assert live.get_by_text("DH0101", exact=False).count() >= 1
+        assert live.get_by_text("CE0101", exact=False).count() >= 1
+        assert live.get_by_text("DH0102", exact=False).count() >= 1
+        assert live.get_by_text("DG0202", exact=False).count() >= 1
+        assert live.get_by_text("DR0403", exact=False).count() >= 1
+        assert live.get_by_text("DR0102", exact=False).count() >= 1
+        assert live.get_by_text("DN0107", exact=False).count() >= 1
+        assert live.get_by_text("DH0112", exact=False).count() >= 1
+        assert live.get_by_text("DN0109", exact=False).count() >= 1
+        assert live.get_by_text("DN0302", exact=False).count() >= 1
         assert live.evaluate("window.localStorage.length") == 0
         assert live.evaluate("window.sessionStorage.length") == 0
 

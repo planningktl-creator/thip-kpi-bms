@@ -4,15 +4,15 @@ import { Sidebar, type View } from '@/components/Sidebar';
 import { DashboardPage } from '@/components/DashboardPage';
 import { DetailView } from '@/components/DetailView';
 import { CatalogPage } from '@/components/CatalogPage';
-import { DEMO_FISCAL_YEAR, groupMeta } from '@/data/thipData';
+import { groupMeta } from '@/data/thipMeta';
 import { createNoDataIndicator, thipCatalogue, thipCatalogueByCode } from '@/data/thipCatalogue';
 import { connectBmsSession, type BmsRuntimeConfig } from '@/services/bmsSession';
-import { foundationIndicatorCodes, loadBmsIndicators } from '@/services/bmsData';
+import { loadBmsIndicators } from '@/services/bmsData';
 import { getBmsConnectionErrorMessage } from '@/services/bmsErrors';
 import type { BmsConnection, FiscalYear, Indicator, IndicatorGroup, RefreshedAt } from '@/types/thip';
-import { formatFiscalYear } from '@/utils/fiscal';
+import { formatFiscalYear, getCurrentFiscalYear } from '@/utils/fiscal';
 
-type DataSourceState = 'demo' | 'loading' | 'live' | 'partial' | 'unavailable';
+type DataSourceState = 'loading' | 'live' | 'partial' | 'unavailable';
 
 function getInitialRoute(): { view: View; code: string | null } {
   const params = new URLSearchParams(window.location.search);
@@ -28,13 +28,13 @@ export default function App() {
   const [activeGroup, setActiveGroup] = useState<IndicatorGroup | 'all'>('all');
   const [search, setSearch] = useState('');
   const [monthIndex, setMonthIndex] = useState(11);
-  const [fiscalYear, setFiscalYear] = useState(DEMO_FISCAL_YEAR);
+  const [fiscalYear, setFiscalYear] = useState(getCurrentFiscalYear);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [connection, setConnection] = useState<BmsConnection>({ status: 'demo', message: 'ยังไม่ได้เปิดจาก BMS launcher' });
+  const [connection, setConnection] = useState<BmsConnection>({ status: 'idle', message: 'ยังไม่ได้เปิดจาก BMS launcher จึงยังไม่มีข้อมูลจริง' });
   const [connectionAttempt, setConnectionAttempt] = useState(0);
   const [runtime, setRuntime] = useState<BmsRuntimeConfig | null>(null);
-  const [indicators, setIndicators] = useState<Indicator[]>([]);
-  const [dataSource, setDataSource] = useState<DataSourceState>('demo');
+  const [indicators, setIndicators] = useState<Indicator[]>(() => thipCatalogue.map((entry) => createNoDataIndicator(entry, getCurrentFiscalYear())));
+  const [dataSource, setDataSource] = useState<DataSourceState>('unavailable');
   const [dataMessage, setDataMessage] = useState<string | null>(null);
   const [refreshedAt, setRefreshedAt] = useState<RefreshedAt | null>(null);
 
@@ -50,10 +50,19 @@ export default function App() {
       setConnection(result.connection);
       const connectedRuntime = result.connection.status === 'connected' ? result.runtime ?? null : null;
       setRuntime(connectedRuntime);
-      if (!connectedRuntime) setDataSource('demo');
+      if (!connectedRuntime) {
+        setIndicators(defaultIndicators);
+        setDataSource('unavailable');
+        setRefreshedAt(null);
+        setDataMessage(result.connection.message ?? 'ยังไม่มี BMS live session');
+      }
     });
     return () => { cancelled = true; };
   }, [connectionAttempt]);
+
+  useEffect(() => {
+    if (!runtime) setIndicators(defaultIndicators);
+  }, [defaultIndicators, runtime]);
 
   useEffect(() => {
     if (!runtime) return;
@@ -71,10 +80,10 @@ export default function App() {
       }
       setIndicators(result.indicators);
       setRefreshedAt(result.refreshedAt);
-      setDataSource(result.sourceView || result.liveCodes.length === foundationIndicatorCodes.length ? 'live' : 'partial');
+      setDataSource(result.coverage.complete ? 'live' : 'partial');
       setDataMessage(result.sourceView
-        ? `อ่านข้อมูลจาก source view ${result.sourceView} แล้ว`
-        : `อ่านข้อมูลจริง ${result.liveCodes.length} ตัวชี้วัดจาก HOSxP แล้ว`);
+        ? `อ่านข้อมูลจริง ${result.coverage.liveIndicatorCount}/${result.coverage.expectedIndicatorCount} ตัวชี้วัด · ${result.coverage.coveredCellCount}/${result.coverage.expectedCellCount} งวดรายงานจาก source view ${result.sourceView} แล้ว`
+        : `อ่านข้อมูลจริง ${result.coverage.liveIndicatorCount}/${result.coverage.expectedIndicatorCount} ตัวชี้วัด · ${result.coverage.coveredCellCount}/${result.coverage.expectedCellCount} งวดรายงานจาก HOSxP แล้ว`);
     }).catch((error: unknown) => {
       if (cancelled) return;
       setIndicators(defaultIndicators);
@@ -101,7 +110,7 @@ export default function App() {
   const dataLabel = dataSource === 'live'
     ? 'Live data'
     : dataSource === 'partial'
-      ? 'Live + pending'
+      ? 'Live data บางส่วน'
       : dataSource === 'loading'
         ? 'กำลังอ่านข้อมูล'
         : 'No data source';
@@ -167,10 +176,13 @@ export default function App() {
         </div>
 
         {connection.status === 'connected' && (
-          <div className={`connection-banner ${dataSource === 'unavailable' ? 'connection-banner-warning' : 'connection-banner-success'}`} role="status" aria-live="polite"><RefreshCw size={15} /><span>{dataSource === 'unavailable' ? dataMessage : connection.message}</span><strong>{dataSource === 'unavailable' ? 'ใช้ demo' : dataLabel}</strong>{dataSource === 'unavailable' && <button className="connection-banner-action" type="button" onClick={retryBms}>ลองอีกครั้ง</button>}</div>
+          <div className={`connection-banner ${dataSource === 'unavailable' ? 'connection-banner-warning' : 'connection-banner-success'}`} role="status" aria-live="polite"><RefreshCw size={15} /><span>{dataMessage ?? connection.message}</span><strong>{dataLabel}</strong><button className="connection-banner-action" type="button" onClick={retryBms}>{dataSource === 'unavailable' ? 'ลองอีกครั้ง' : 'รีเฟรชข้อมูล'}</button></div>
         )}
-        {connection.status === 'error' && (
-          <div className="connection-banner connection-banner-error" role="alert"><WifiOff size={15} /><span>{connection.message}</span><strong>กลับไปใช้ demo</strong><button className="connection-banner-action" type="button" onClick={retryBms}>ลองเชื่อมต่ออีกครั้ง</button></div>
+        {connection.status === 'idle' && (
+          <div className="connection-banner connection-banner-warning" role="status" aria-live="polite"><WifiOff size={15} /><span>{connection.message}</span><strong>รอ BMS live session</strong><button className="connection-banner-action" type="button" onClick={retryBms}>ลองเชื่อมต่ออีกครั้ง</button></div>
+        )}
+        {(connection.status === 'error' || connection.status === 'unsupported') && (
+          <div className="connection-banner connection-banner-error" role="alert"><WifiOff size={15} /><span>{connection.message}</span><strong>ยังไม่มีข้อมูลจริง</strong><button className="connection-banner-action" type="button" onClick={retryBms}>ลองเชื่อมต่ออีกครั้ง</button></div>
         )}
 
         {view === 'detail' && selectedIndicator ? (
