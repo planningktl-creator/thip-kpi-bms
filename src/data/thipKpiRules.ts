@@ -1,6 +1,39 @@
+import { thipRuleEvidenceByCode } from '@/data/thipRuleEvidence';
 import type { IndicatorGroup, IndicatorUnit } from '@/types/thip';
 
-export type ThipKpiRuleStatus = 'foundation' | 'needs-local-mapping';
+/**
+ * Lifecycle of a KPI rule. Only `ready` may be published as production data.
+ * `foundation` means a registered read-only query exists for local validation;
+ * it is still not an approved production rule.
+ */
+export type ThipKpiRuleStatus =
+  | 'foundation'
+  | 'needs-local-mapping'
+  | 'ready'
+  | 'pending-local-source'
+  | 'not-applicable';
+
+/**
+ * Optional rule evidence. A field is present only when the hospital workflow or
+ * dictionary actually supplied it; never populate a placeholder to force a rule
+ * to `ready`. `getRuleReadiness()` reports what is still missing.
+ */
+export type ThipKpiRuleEvidence = {
+  /** Episode/observation grain, e.g. `one-row-per-admission`. */
+  episodeGrain?: string;
+  /** Source date column that periodizes the result, e.g. `discharge_date`. */
+  periodField?: string;
+  inclusion?: readonly string[];
+  exclusion?: readonly string[];
+  /** Approved hospital code-set version, e.g. `icd10-2024-hosxp-v3`. */
+  codeSetVersion?: string;
+  /** Rule version, bumped whenever the formula or code set changes. */
+  ruleVersion?: string;
+  /** Accountable domain owner, e.g. `clinical-quality`. */
+  owner?: string;
+  /** Traceable evidence references, e.g. `THIP KPI.pdf:p.39`. */
+  evidence?: readonly string[];
+};
 
 export type ThipKpiRule = {
   code: string;
@@ -14,7 +47,19 @@ export type ThipKpiRule = {
   /** PDF tokens for review; must be normalized and signed off per hospital. */
   diagnosisOrProcedureTokens: readonly string[];
   status: ThipKpiRuleStatus;
-  queryKey: 'thipIpdFoundation' | null;
+  queryKey: string | null;
+} & ThipKpiRuleEvidence;
+
+export type ThipKpiRuleReadiness = {
+  hasEpisodeGrain: boolean;
+  hasPeriodField: boolean;
+  hasCodeSet: boolean;
+  hasOwner: boolean;
+  hasEvidence: boolean;
+  hasRuleVersion: boolean;
+  /** True only when status is `ready` and every required evidence field is present. */
+  ready: boolean;
+  missing: readonly string[];
 };
 
 /**
@@ -38,6 +83,54 @@ export function getFormulaScale(formula: string): number {
   if (!match) return 1;
   const scale = Number(match[1]);
   return Number.isFinite(scale) && scale > 0 ? scale : 1;
+}
+
+function hasText(value: unknown): boolean {
+  return typeof value === 'string' ? value.trim().length > 0 : Array.isArray(value) ? value.length > 0 : false;
+}
+
+/**
+ * Reports whether a rule carries the evidence required before it may be
+ * published. It never mutates the rule and never fills a missing field: a rule
+ * that lacks evidence stays `ready: false` even if someone flips its status.
+ */
+export function getRuleReadiness(rule: ThipKpiRule): ThipKpiRuleReadiness {
+  const hasEpisodeGrain = hasText(rule.episodeGrain);
+  const hasPeriodField = hasText(rule.periodField);
+  const hasCodeSet = hasText(rule.codeSetVersion);
+  const hasOwner = hasText(rule.owner);
+  const hasEvidence = hasText(rule.evidence);
+  const hasRuleVersion = hasText(rule.ruleVersion);
+  const missing: string[] = [];
+  if (!hasEpisodeGrain) missing.push('episodeGrain');
+  if (!hasPeriodField) missing.push('periodField');
+  if (!hasCodeSet) missing.push('codeSetVersion');
+  if (!hasOwner) missing.push('owner');
+  if (!hasEvidence) missing.push('evidence');
+  if (!hasRuleVersion) missing.push('ruleVersion');
+  return {
+    hasEpisodeGrain,
+    hasPeriodField,
+    hasCodeSet,
+    hasOwner,
+    hasEvidence,
+    hasRuleVersion,
+    ready: rule.status === 'ready' && missing.length === 0,
+    missing,
+  };
+}
+
+/**
+ * A rule marked `ready` must carry complete evidence; this guard is the single
+ * source of truth used by tests and the audit so no placeholder can be
+ * published as production.
+ */
+export function assertRuleReadiness(rule: ThipKpiRule): void {
+  if (rule.status !== 'ready') return;
+  const readiness = getRuleReadiness(rule);
+  if (!readiness.ready) {
+    throw new Error(`THIP KPI rule ${rule.code} is marked ready but is missing evidence: ${readiness.missing.join(', ')}`);
+  }
 }
 
 export const thipKpiRules: readonly ThipKpiRule[] = [
@@ -275,8 +368,22 @@ export const thipKpiRules: readonly ThipKpiRule[] = [
   {"code":"SS0103","group":"S","title":"CSSD: Percent of medical supplies which are accurately provided by the CSSD","pdfPage":259,"formulaScale":"a/b x 100","queryFamily":"CSSD","candidateSourceTables":["supply_sterile","supply_sterile_item","operation_list","operation_detail"],"diagnosisOrProcedureTokens":[],"status":"needs-local-mapping","queryKey":null},
 ] as const;
 
-export const thipKpiRulesByCode = new Map(thipKpiRules.map((rule) => [rule.code, rule]));
+/**
+ * Merges curated evidence into the raw manifest. The manifest rows keep their
+ * dictionary facts; evidence is attached by code so a rule cannot claim
+ * readiness without a traceable source.
+ */
+export const thipKpiRulesWithEvidence: readonly ThipKpiRule[] = thipKpiRules.map((rule) => ({
+  ...rule,
+  ...thipRuleEvidenceByCode[rule.code],
+}));
 
-export const foundationRuleCodes = thipKpiRules
+export const thipKpiRulesByCode = new Map(thipKpiRulesWithEvidence.map((rule) => [rule.code, rule]));
+
+export const foundationRuleCodes = thipKpiRulesWithEvidence
   .filter((rule) => rule.status === 'foundation')
+  .map((rule) => rule.code);
+
+export const readyRuleCodes = thipKpiRulesWithEvidence
+  .filter((rule) => getRuleReadiness(rule).ready)
   .map((rule) => rule.code);

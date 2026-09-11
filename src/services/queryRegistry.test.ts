@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { foundationRuleCodes } from '@/data/thipKpiRules';
-import { assertRegisteredReadOnlyQuery, queryRegistry } from '@/services/queryRegistry';
+import { foundationRuleCodes, thipKpiRulesByCode } from '@/data/thipKpiRules';
+import { assertRegisteredReadOnlyQuery, foundationFamilyQueries, queryRegistry } from '@/services/queryRegistry';
 import { buildCompletenessAuditQuery, buildDuplicateCheckQuery } from '@/services/bmsData';
 
 describe('BMS query registry', () => {
@@ -96,5 +96,31 @@ describe('BMS query registry', () => {
       description: 'test',
       sql: 'UPDATE ipt SET drg = :drg',
     })).toThrow(/read-only/);
+  });
+
+  it('exposes one read-only foundation query per family', () => {
+    const families = Object.keys(foundationFamilyQueries);
+    expect(families.length).toBeGreaterThan(1);
+    for (const [family, query] of Object.entries(foundationFamilyQueries)) {
+      expect(() => assertRegisteredReadOnlyQuery(query), family).not.toThrow();
+      expect(query.key).toMatch(/^thip[A-Za-z]+Foundation$/);
+      expect(query.sql).toContain('expected_codes(indicator_code)');
+      expect(query.sql).toContain('generate_series(');
+    }
+  });
+
+  it('covers every foundation manifest code across the family queries', () => {
+    const familySql = Object.values(foundationFamilyQueries).map((query) => query.sql).join('\n');
+    for (const code of foundationRuleCodes) {
+      expect(familySql, code).toContain(`'${code}' AS indicator_code`);
+      expect(thipKpiRulesByCode.get(code)?.queryKey, code).toBe('thipIpdFoundation');
+    }
+  });
+
+  it('keeps each family query scoped to its own codes', () => {
+    const sepsis = foundationFamilyQueries.SEPSIS_ER!.sql;
+    expect(sepsis).toContain("'CE0101' AS indicator_code");
+    expect(sepsis).toContain("'CI0101' AS indicator_code");
+    expect(sepsis).not.toContain("'DH0101' AS indicator_code");
   });
 });

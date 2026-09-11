@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   ChevronDown,
   Clock3,
+  Download,
   Filter,
   Search,
   Target,
@@ -24,6 +25,9 @@ import { groupMeta, sourceDictionaryCount } from '@/data/thipMeta';
 import { getLatestApplicableFiscalMonth } from '@/data/thipReporting';
 import { formatFiscalYear, formatFiscalYearShort, getFiscalMonthPeriods } from '@/utils/fiscal';
 import { formatIndicatorValue, formatPercent, formatRefreshTime } from '@/utils/format';
+import { exportAggregateCsv } from '@/utils/export';
+import { getDataQualitySummary, type DataSourceState } from '@/utils/dataQuality';
+import type { BmsCoverage } from '@/services/bmsData';
 import { MetricCard } from '@/components/MetricCard';
 import { IndicatorTable } from '@/components/IndicatorTable';
 import { StatusPill } from '@/components/StatusPill';
@@ -42,8 +46,9 @@ type Props = {
   onOpenIndicator: (code: string) => void;
   onOpenCatalog: () => void;
   connection: BmsConnection;
-  dataSource: 'loading' | 'live' | 'partial' | 'unavailable';
+  dataSource: DataSourceState;
   refreshedAt: RefreshedAt | null;
+  coverage: BmsCoverage;
 };
 
 /** Fiscal years offered in the selector: the current year plus the two before it. */
@@ -67,6 +72,7 @@ export function DashboardPage({
   connection,
   dataSource,
   refreshedAt,
+  coverage,
 }: Props) {
   const fiscalMonths = getFiscalMonthPeriods(fiscalYear);
   const selectedMonth = fiscalMonths[monthIndex] ?? fiscalMonths[11]!;
@@ -96,6 +102,7 @@ export function DashboardPage({
   const currentCompleteness = Math.round((observedPeriods.length / Math.max(indicators.length, 1)) * 100);
   const hasPulseData = healthScores.length > 0;
   const visibleGroupLabel = activeGroup === 'all' ? 'ทุกกลุ่ม THIP' : `${groupMeta[activeGroup].shortLabel} · ${groupMeta[activeGroup].label}`;
+  const quality = getDataQualitySummary({ dataSource, refreshedAt, ...coverage });
 
   return (
     <div className="page-stack">
@@ -108,9 +115,24 @@ export function DashboardPage({
         <div className="page-actions">
           <label className="fiscal-year-control"><span>ปีงบประมาณ</span><select aria-label="เลือกปีงบประมาณ" value={fiscalYear} onChange={(event) => onFiscalYearChange(Number(event.target.value))}>{selectableFiscalYears(fiscalYear).map((year) => <option key={year} value={year}>{formatFiscalYear(year)}</option>)}</select><ChevronDown size={14} aria-hidden="true" /></label>
           <div className={`connection-chip connection-chip-${connection.status}`}><span className="connection-led" />{dataSource === 'live' ? 'BMS live data' : dataSource === 'partial' ? 'BMS live data บางส่วน' : dataSource === 'loading' ? 'กำลังอ่านข้อมูลจริง' : 'ยังไม่มีข้อมูลจริง'}</div>
+          <button className="secondary-button" type="button" onClick={() => exportAggregateCsv(allIndicators, fiscalYear)} disabled={!allIndicators.some((indicator) => indicator.dataSource === 'bms')}><Download size={15} /> ส่งออก aggregate CSV</button>
           <span className="secondary-button dashboard-refresh-note" role="status"><Clock3 size={16} /> {refreshedAt ? `อัปเดตล่าสุด ${formatRefreshTime(refreshedAt)}` : 'ยังไม่มีการอ่านข้อมูลจริง'} · {selectedMonth.label}</span>
         </div>
       </div>
+
+      <section className={`data-quality-banner data-quality-${quality.tone}`} role="status" aria-live="polite">
+        <div className="data-quality-main">
+          <span className="data-quality-dot" />
+          <div>
+            <strong>{quality.label}</strong>
+            <span>{quality.detail}</span>
+          </div>
+        </div>
+        <div className="data-quality-meta">
+          <span><Clock3 size={14} /> {refreshedAt ? `อัปเดตล่าสุด ${formatRefreshTime(refreshedAt)}` : 'ยังไม่มีการอ่านข้อมูลจริง'}</span>
+          <span>Coverage {coverage.coveredCellCount}/{coverage.expectedCellCount}</span>
+        </div>
+      </section>
 
       <section className="pulse-hero">
         <div className="pulse-orb" role="img" aria-label={`คะแนนสัญญาณคุณภาพ ${pulseScore === null ? 'ยังไม่มีข้อมูล' : `${pulseScore} คะแนน`}`}>

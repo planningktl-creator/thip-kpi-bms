@@ -15,6 +15,7 @@ import type { Indicator } from '@/types/thip';
 import { formatFiscalRange, formatFiscalYear, formatFiscalYearShort } from '@/utils/fiscal';
 import { groupMeta } from '@/data/thipMeta';
 import { getExpectedFiscalMonths } from '@/data/thipReporting';
+import { thipKpiRulesByCode } from '@/data/thipKpiRules';
 import { formatDelta, formatIndicatorValue, formatNumber, formatTargetValue } from '@/utils/format';
 import { exportIndicatorCsv } from '@/utils/export';
 import { StatusPill } from '@/components/StatusPill';
@@ -39,6 +40,7 @@ export function DetailView({ indicator, onBack }: Props) {
     : null;
   const dataMonths = reportedMonths.length;
   const targetLabel = indicator.targetScope === 'annual' ? 'เป้าหมายทั้งปี' : 'เป้าหมายต่อรอบรายงาน';
+  const rule = thipKpiRulesByCode.get(indicator.code);
 
   return (
     <div className="page-stack detail-page">
@@ -90,6 +92,13 @@ export function DetailView({ indicator, onBack }: Props) {
           <div className="definition-block"><span className="definition-label">สูตรคำนวณ</span><strong>{indicator.formula}</strong></div>
           <div className="definition-split"><div><span className="definition-label">ตัวตั้ง (a)</span><p>{indicator.numeratorLabel}</p></div><div><span className="definition-label">ตัวหาร (b)</span><p>{indicator.denominatorLabel}</p></div></div>
           <div className="definition-block"><span className="definition-label">นิยาม / ขอบเขต</span><p>{indicator.definition}</p></div>
+          {rule?.evidence?.length ? (
+            <div className="definition-block rule-evidence">
+              <span className="definition-label">หลักฐานอ้างอิง (evidence)</span>
+              <ul>{rule.evidence.map((reference) => <li key={reference}>{reference}</li>)}</ul>
+              <span className="rule-evidence-meta">{rule.episodeGrain ? `grain: ${rule.episodeGrain}` : ''}{rule.codeSetVersion ? ` · code set: ${rule.codeSetVersion}` : ''}{rule.ruleVersion ? ` · rule: ${rule.ruleVersion}` : ''}{rule.owner ? ` · owner: ${rule.owner}` : ' · ยังไม่มี owner sign-off'}</span>
+            </div>
+          ) : null}
           <div className="definition-meta"><span><Database size={14} /> {indicator.sourceTables.length ? indicator.sourceTables.join(' · ') : 'รอผูก source view'}</span><span><CalendarRange size={14} /> {indicator.frequency} · {formatFiscalYearShort(indicator.fiscalYear)}</span></div>
         </article>
       </section>

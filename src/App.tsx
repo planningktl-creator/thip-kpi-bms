@@ -10,9 +10,20 @@ import { connectBmsSession, type BmsRuntimeConfig } from '@/services/bmsSession'
 import { loadBmsIndicators } from '@/services/bmsData';
 import { getBmsConnectionErrorMessage } from '@/services/bmsErrors';
 import type { BmsConnection, FiscalYear, Indicator, IndicatorGroup, RefreshedAt } from '@/types/thip';
+import type { BmsCoverage } from '@/services/bmsData';
 import { formatFiscalYear, getCurrentFiscalYear } from '@/utils/fiscal';
 
 type DataSourceState = 'loading' | 'live' | 'partial' | 'unavailable';
+
+const emptyCoverage: BmsCoverage = {
+  expectedIndicatorCount: 232,
+  liveIndicatorCount: 0,
+  expectedCellCount: 1552,
+  coveredCellCount: 0,
+  unexpectedCellCount: 0,
+  complete: false,
+  liveCodes: [],
+};
 
 function getInitialRoute(): { view: View; code: string | null } {
   const params = new URLSearchParams(window.location.search);
@@ -37,6 +48,7 @@ export default function App() {
   const [dataSource, setDataSource] = useState<DataSourceState>('unavailable');
   const [dataMessage, setDataMessage] = useState<string | null>(null);
   const [refreshedAt, setRefreshedAt] = useState<RefreshedAt | null>(null);
+  const [coverage, setCoverage] = useState<BmsCoverage>(emptyCoverage);
 
   const defaultIndicators = useMemo(
     () => thipCatalogue.map((entry) => createNoDataIndicator(entry, fiscalYear)),
@@ -54,6 +66,7 @@ export default function App() {
         setIndicators(defaultIndicators);
         setDataSource('unavailable');
         setRefreshedAt(null);
+        setCoverage(emptyCoverage);
         setDataMessage(result.connection.message ?? 'ยังไม่มี BMS live session');
       }
     });
@@ -75,11 +88,13 @@ export default function App() {
         setIndicators(defaultIndicators);
         setDataSource('unavailable');
         setRefreshedAt(null);
+        setCoverage(emptyCoverage);
         setDataMessage('BMS query สำเร็จ แต่ยังไม่พบผลลัพธ์ในช่วงปีงบประมาณที่เลือก');
         return;
       }
       setIndicators(result.indicators);
       setRefreshedAt(result.refreshedAt);
+      setCoverage(result.coverage);
       setDataSource(result.coverage.complete ? 'live' : 'partial');
       setDataMessage(result.sourceView
         ? `อ่านข้อมูลจริง ${result.coverage.liveIndicatorCount}/${result.coverage.expectedIndicatorCount} ตัวชี้วัด · ${result.coverage.coveredCellCount}/${result.coverage.expectedCellCount} งวดรายงานจาก source view ${result.sourceView} แล้ว`
@@ -89,6 +104,7 @@ export default function App() {
       setIndicators(defaultIndicators);
       setDataSource('unavailable');
       setRefreshedAt(null);
+      setCoverage(emptyCoverage);
       setDataMessage(getBmsConnectionErrorMessage(error));
     });
     return () => { cancelled = true; };
@@ -120,6 +136,7 @@ export default function App() {
     setRuntime(null);
     setIndicators(defaultIndicators);
     setDataSource('loading');
+    setCoverage(emptyCoverage);
     setDataMessage(null);
     setConnectionAttempt((attempt) => attempt + 1);
   }
@@ -214,6 +231,7 @@ export default function App() {
             connection={connection}
             dataSource={dataSource}
             refreshedAt={refreshedAt}
+            coverage={coverage}
           />
         )}
 

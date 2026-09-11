@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { foundationRuleCodes, getFormulaScale, getRuleUnit, thipKpiRules, thipKpiRulesByCode } from '@/data/thipKpiRules';
+import {
+  assertRuleReadiness,
+  foundationRuleCodes,
+  getFormulaScale,
+  getRuleReadiness,
+  getRuleUnit,
+  readyRuleCodes,
+  thipKpiRules,
+  thipKpiRulesByCode,
+  thipKpiRulesWithEvidence,
+} from '@/data/thipKpiRules';
 
 describe('THIP KPI rule manifest', () => {
   it('contains one rule for every dictionary indicator', () => {
@@ -28,5 +38,32 @@ describe('THIP KPI rule manifest', () => {
     expect(getFormulaScale('a/b × 1,000')).toBe(1000);
     expect(getFormulaScale('a/b x 100,000')).toBe(100000);
     expect(getFormulaScale('a/b')).toBe(1);
+  });
+
+  it('attaches curated evidence to every foundation rule', () => {
+    for (const code of foundationRuleCodes) {
+      const rule = thipKpiRulesByCode.get(code)!;
+      expect(rule.episodeGrain, code).toBeTruthy();
+      expect(rule.periodField, code).toBeTruthy();
+      expect(rule.codeSetVersion, code).toBeTruthy();
+      expect(rule.ruleVersion, code).toBeTruthy();
+      expect(rule.evidence?.length, code).toBeGreaterThan(0);
+    }
+  });
+
+  it('does not publish any rule as ready without complete evidence', () => {
+    expect(readyRuleCodes).toHaveLength(0);
+    for (const rule of thipKpiRulesWithEvidence) {
+      expect(() => assertRuleReadiness(rule), rule.code).not.toThrow();
+      if (rule.status === 'ready') {
+        expect(getRuleReadiness(rule).ready, rule.code).toBe(true);
+      }
+    }
+  });
+
+  it('reports missing evidence fields for a not-yet-ready rule', () => {
+    const readiness = getRuleReadiness(thipKpiRulesByCode.get('DH0101')!);
+    expect(readiness.ready).toBe(false);
+    expect(readiness.missing).toContain('owner');
   });
 });
