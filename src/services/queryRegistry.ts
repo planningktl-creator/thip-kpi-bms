@@ -51,9 +51,11 @@ export const queryRegistry = {
       WITH ipd AS (
         SELECT
           i.an,
+          i.hn,
           i.dchdate,
           s.age_y,
-          UPPER(TRIM(s.pdx)) AS pdx,
+          s.los,
+          REPLACE(UPPER(TRIM(s.pdx)), '.', '') AS pdx,
           EXISTS (
             SELECT 1
             FROM death d
@@ -63,30 +65,30 @@ export const queryRegistry = {
             SELECT 1
             FROM iptdiag sd
             WHERE sd.an = i.an
-              AND UPPER(TRIM(sd.icd10)) <> UPPER(TRIM(s.pdx))
-              AND UPPER(TRIM(sd.icd10)) IN ('I21.0', 'I21.1', 'I21.2', 'I21.3', 'I21.4', 'I21.9')
+              AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') <> REPLACE(UPPER(TRIM(s.pdx)), '.', '')
+              AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
           ) AS has_acs_sdx,
           EXISTS (
             SELECT 1
             FROM death d
             WHERE d.an = i.an
               AND (
-                UPPER(TRIM(d.death_diag_icd10)) IN ('I21.0', 'I21.1', 'I21.2', 'I21.3', 'I21.4', 'I21.9')
-                OR UPPER(TRIM(d.death_cause)) IN ('I21.0', 'I21.1', 'I21.2', 'I21.3', 'I21.4', 'I21.9')
-                OR UPPER(TRIM(d.death_diag_1)) IN ('I21.0', 'I21.1', 'I21.2', 'I21.3', 'I21.4', 'I21.9')
-                OR UPPER(TRIM(d.death_diag_2)) IN ('I21.0', 'I21.1', 'I21.2', 'I21.3', 'I21.4', 'I21.9')
-                OR UPPER(TRIM(d.death_diag_3)) IN ('I21.0', 'I21.1', 'I21.2', 'I21.3', 'I21.4', 'I21.9')
-                OR UPPER(TRIM(d.death_diag_4)) IN ('I21.0', 'I21.1', 'I21.2', 'I21.3', 'I21.4', 'I21.9')
+                REPLACE(UPPER(TRIM(d.death_diag_icd10)), '.', '') IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
+                OR REPLACE(UPPER(TRIM(d.death_cause)), '.', '') IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
+                OR REPLACE(UPPER(TRIM(d.death_diag_1)), '.', '') IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
+                OR REPLACE(UPPER(TRIM(d.death_diag_2)), '.', '') IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
+                OR REPLACE(UPPER(TRIM(d.death_diag_3)), '.', '') IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
+                OR REPLACE(UPPER(TRIM(d.death_diag_4)), '.', '') IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
               )
           ) AS died_from_acs,
           EXISTS (
             SELECT 1
             FROM iptdiag sd
             WHERE sd.an = i.an
-              AND UPPER(TRIM(sd.icd10)) <> UPPER(TRIM(s.pdx))
+              AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') <> REPLACE(UPPER(TRIM(s.pdx)), '.', '')
               AND (
-                LEFT(UPPER(TRIM(sd.icd10)), 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')
-                OR LEFT(UPPER(TRIM(sd.icd10)), 5) IN ('J10.0', 'J11.0', 'J17.0', 'J17.1', 'J17.2', 'J17.3', 'J17.8', 'J85.0', 'J85.1')
+                LEFT(REPLACE(UPPER(TRIM(sd.icd10)), '.', ''), 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')
+                OR LEFT(REPLACE(UPPER(TRIM(sd.icd10)), '.', ''), 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851')
               )
           ) AS has_pneumonia_sdx,
           EXISTS (
@@ -94,29 +96,32 @@ export const queryRegistry = {
             FROM death d
             WHERE d.an = i.an
               AND (
-                LEFT(UPPER(TRIM(d.death_diag_icd10)), 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')
-                OR LEFT(UPPER(TRIM(d.death_diag_icd10)), 5) IN ('J10.0', 'J11.0', 'J17.0', 'J17.1', 'J17.2', 'J17.3', 'J17.8', 'J85.0', 'J85.1')
-                OR LEFT(UPPER(TRIM(d.death_cause)), 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')
-                OR LEFT(UPPER(TRIM(d.death_cause)), 5) IN ('J10.0', 'J11.0', 'J17.0', 'J17.1', 'J17.2', 'J17.3', 'J17.8', 'J85.0', 'J85.1')
-                OR LEFT(UPPER(TRIM(d.death_diag_1)), 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')
-                OR LEFT(UPPER(TRIM(d.death_diag_1)), 5) IN ('J10.0', 'J11.0', 'J17.0', 'J17.1', 'J17.2', 'J17.3', 'J17.8', 'J85.0', 'J85.1')
-                OR LEFT(UPPER(TRIM(d.death_diag_2)), 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')
-                OR LEFT(UPPER(TRIM(d.death_diag_2)), 5) IN ('J10.0', 'J11.0', 'J17.0', 'J17.1', 'J17.2', 'J17.3', 'J17.8', 'J85.0', 'J85.1')
-                OR LEFT(UPPER(TRIM(d.death_diag_3)), 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')
-                OR LEFT(UPPER(TRIM(d.death_diag_3)), 5) IN ('J10.0', 'J11.0', 'J17.0', 'J17.1', 'J17.2', 'J17.3', 'J17.8', 'J85.0', 'J85.1')
-                OR LEFT(UPPER(TRIM(d.death_diag_4)), 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')
-                OR LEFT(UPPER(TRIM(d.death_diag_4)), 5) IN ('J10.0', 'J11.0', 'J17.0', 'J17.1', 'J17.2', 'J17.3', 'J17.8', 'J85.0', 'J85.1')
+                LEFT(REPLACE(UPPER(TRIM(d.death_diag_icd10)), '.', ''), 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')
+                OR LEFT(REPLACE(UPPER(TRIM(d.death_diag_icd10)), '.', ''), 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851')
+                OR LEFT(REPLACE(UPPER(TRIM(d.death_cause)), '.', ''), 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')
+                OR LEFT(REPLACE(UPPER(TRIM(d.death_cause)), '.', ''), 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851')
+                OR LEFT(REPLACE(UPPER(TRIM(d.death_diag_1)), '.', ''), 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')
+                OR LEFT(REPLACE(UPPER(TRIM(d.death_diag_1)), '.', ''), 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851')
+                OR LEFT(REPLACE(UPPER(TRIM(d.death_diag_2)), '.', ''), 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')
+                OR LEFT(REPLACE(UPPER(TRIM(d.death_diag_2)), '.', ''), 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851')
+                OR LEFT(REPLACE(UPPER(TRIM(d.death_diag_3)), '.', ''), 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')
+                OR LEFT(REPLACE(UPPER(TRIM(d.death_diag_3)), '.', ''), 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851')
+                OR LEFT(REPLACE(UPPER(TRIM(d.death_diag_4)), '.', ''), 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')
+                OR LEFT(REPLACE(UPPER(TRIM(d.death_diag_4)), '.', ''), 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851')
               )
           ) AS died_from_pneumonia,
           EXISTS (
             SELECT 1
             FROM iptdiag sd
             WHERE sd.an = i.an
-              AND (
-                LEFT(UPPER(TRIM(sd.icd10)), 3) IN ('A02', 'A20', 'A22', 'A26', 'A32', 'A40', 'A41', 'A42', 'B77')
-                OR LEFT(UPPER(TRIM(sd.icd10)), 4) IN ('R65.2')
-              )
-          ) AS has_sepsis_diag
+              AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') IN ('A400', 'A419', 'R572', 'R651')
+          ) AS has_ce0101_sepsis,
+          EXISTS (
+            SELECT 1
+            FROM iptdiag sd
+            WHERE sd.an = i.an
+              AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') IN ('A400', 'A409', 'A410', 'A419', 'R572', 'R651')
+          ) AS has_ci0101_sepsis
         FROM ipt i
         JOIN an_stat s ON s.an = i.an
         WHERE i.dchdate >= :start_date
@@ -138,12 +143,12 @@ export const queryRegistry = {
         period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
-        COUNT(*) FILTER (WHERE (pdx IN ('I21.0', 'I21.1', 'I21.2', 'I21.3', 'I21.4', 'I21.9') AND died) OR (has_acs_sdx AND died_from_acs))::integer AS numerator,
+        COUNT(*) FILTER (WHERE (pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') AND died) OR (has_acs_sdx AND died_from_acs))::integer AS numerator,
         COUNT(*)::integer AS denominator,
-        ROUND((COUNT(*) FILTER (WHERE (pdx IN ('I21.0', 'I21.1', 'I21.2', 'I21.3', 'I21.4', 'I21.9') AND died) OR (has_acs_sdx AND died_from_acs)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+        ROUND((COUNT(*) FILTER (WHERE (pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') AND died) OR (has_acs_sdx AND died_from_acs)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18
-        AND pdx IN ('I21.0', 'I21.1', 'I21.2', 'I21.3', 'I21.4', 'I21.9')
+        AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
       GROUP BY period_start, calendar_month
 
       UNION ALL
@@ -167,11 +172,11 @@ export const queryRegistry = {
         period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
-        COUNT(*) FILTER (WHERE (LEFT(pdx, 5) IN ('J10.0', 'J11.0', 'J17.0', 'J17.1', 'J17.2', 'J17.3', 'J17.8', 'J85.0', 'J85.1') OR LEFT(pdx, 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')) AND died OR (has_pneumonia_sdx AND died_from_pneumonia))::integer AS numerator,
+        COUNT(*) FILTER (WHERE (LEFT(pdx, 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851') OR LEFT(pdx, 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')) AND died OR (has_pneumonia_sdx AND died_from_pneumonia))::integer AS numerator,
         COUNT(*)::integer AS denominator,
-        ROUND((COUNT(*) FILTER (WHERE (LEFT(pdx, 5) IN ('J10.0', 'J11.0', 'J17.0', 'J17.1', 'J17.2', 'J17.3', 'J17.8', 'J85.0', 'J85.1') OR LEFT(pdx, 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')) AND died OR (has_pneumonia_sdx AND died_from_pneumonia)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+        ROUND((COUNT(*) FILTER (WHERE (LEFT(pdx, 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851') OR LEFT(pdx, 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')) AND died OR (has_pneumonia_sdx AND died_from_pneumonia)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
-      WHERE LEFT(pdx, 5) IN ('J10.0', 'J11.0', 'J17.0', 'J17.1', 'J17.2', 'J17.3', 'J17.8', 'J85.0', 'J85.1')
+      WHERE LEFT(pdx, 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851')
          OR LEFT(pdx, 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')
          OR has_pneumonia_sdx
       GROUP BY period_start, calendar_month
@@ -203,9 +208,8 @@ export const queryRegistry = {
             AND EXTRACT(EPOCH FROM (oi.vstdate::timestamp + COALESCE(oi.vsttime, TIME '00:00:00') - (periodized.regdate::timestamp + COALESCE(periodized.regtime, TIME '00:00:00')))) <= 10800
         )) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
-      WHERE LEFT(pdx, 3) IN ('A02', 'A20', 'A22', 'A26', 'A32', 'A40', 'A41', 'A42', 'B77')
-         OR LEFT(pdx, 4) IN ('R65.2')
-         OR has_sepsis_diag
+      WHERE pdx IN ('A400', 'A419', 'R572', 'R651')
+         OR has_ce0101_sepsis
       GROUP BY period_start, calendar_month
 
       UNION ALL
@@ -219,9 +223,8 @@ export const queryRegistry = {
         COUNT(*)::integer AS denominator,
         ROUND((COUNT(*) FILTER (WHERE died) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
-      WHERE LEFT(pdx, 3) IN ('A02', 'A20', 'A22', 'A26', 'A32', 'A40', 'A41', 'A42', 'B77')
-         OR LEFT(pdx, 4) IN ('R65.2')
-         OR has_sepsis_diag
+      WHERE pdx IN ('A400', 'A409', 'A410', 'A419', 'R572', 'R651')
+         OR has_ci0101_sepsis
       GROUP BY period_start, calendar_month
 
       UNION ALL
@@ -250,7 +253,122 @@ export const queryRegistry = {
         )) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18
-        AND pdx IN ('I21.0', 'I21.1', 'I21.2', 'I21.3', 'I21.4', 'I21.9')
+        AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
+      GROUP BY period_start, calendar_month
+
+      UNION ALL
+
+      SELECT
+        'DG0202' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE died)::integer AS numerator,
+        COUNT(*)::integer AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE died) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE LEFT(pdx, 3) = 'K35'
+      GROUP BY period_start, calendar_month
+
+      UNION ALL
+
+      SELECT
+        'DR0403' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE died)::integer AS numerator,
+        COUNT(*)::integer AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE died) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE LEFT(pdx, 3) = 'J44'
+      GROUP BY period_start, calendar_month
+
+      UNION ALL
+
+      SELECT
+        'DR0102' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE NOT died AND EXISTS (
+          SELECT 1
+          FROM ipt r
+          WHERE r.hn = periodized.hn
+            AND r.an <> periodized.an
+            AND r.regdate > periodized.dchdate
+            AND r.regdate <= periodized.dchdate + INTERVAL '28 days'
+        ))::integer AS numerator,
+        COUNT(*) FILTER (WHERE NOT died)::integer AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE NOT died AND EXISTS (
+          SELECT 1
+          FROM ipt r
+          WHERE r.hn = periodized.hn
+            AND r.an <> periodized.an
+            AND r.regdate > periodized.dchdate
+            AND r.regdate <= periodized.dchdate + INTERVAL '28 days'
+        )) * 100.0) / NULLIF(COUNT(*) FILTER (WHERE NOT died), 0), 2) AS value
+      FROM periodized
+      WHERE LEFT(pdx, 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851')
+         OR LEFT(pdx, 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')
+         OR has_pneumonia_sdx
+      GROUP BY period_start, calendar_month
+
+      UNION ALL
+
+      SELECT
+        'DN0107' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE NOT died AND EXISTS (
+          SELECT 1
+          FROM ipt r
+          WHERE r.hn = periodized.hn
+            AND r.an <> periodized.an
+            AND r.regdate > periodized.dchdate
+            AND r.regdate <= periodized.dchdate + INTERVAL '28 days'
+        ))::integer AS numerator,
+        COUNT(*) FILTER (WHERE NOT died)::integer AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE NOT died AND EXISTS (
+          SELECT 1
+          FROM ipt r
+          WHERE r.hn = periodized.hn
+            AND r.an <> periodized.an
+            AND r.regdate > periodized.dchdate
+            AND r.regdate <= periodized.dchdate + INTERVAL '28 days'
+        )) * 100.0) / NULLIF(COUNT(*) FILTER (WHERE NOT died), 0), 2) AS value
+      FROM periodized
+      WHERE LEFT(pdx, 3) IN ('I60', 'I61', 'I62', 'I63', 'I64', 'I65', 'I66', 'I67')
+      GROUP BY period_start, calendar_month
+
+      UNION ALL
+
+      SELECT
+        'DH0112' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        ROUND(SUM(los)::numeric, 2) AS numerator,
+        COUNT(*)::integer AS denominator,
+        ROUND(AVG(los), 2) AS value
+      FROM periodized
+      WHERE age_y >= 18
+        AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
+      GROUP BY period_start, calendar_month
+
+      UNION ALL
+
+      SELECT
+        'DN0109' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        ROUND(SUM(los)::numeric, 2) AS numerator,
+        COUNT(*)::integer AS denominator,
+        ROUND(AVG(los), 2) AS value
+      FROM periodized
+      WHERE LEFT(pdx, 3) IN ('I60', 'I61', 'I62', 'I63', 'I64', 'I65', 'I66', 'I67')
       GROUP BY period_start, calendar_month
       ORDER BY indicator_code, period_start
     `.trim(),

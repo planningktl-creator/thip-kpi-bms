@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { BmsRequestError } from '@/services/bmsErrors';
-import { buildIndicatorFromRows, buildSourceViewQuery, loadBmsIndicators, quoteSourceView } from '@/services/bmsData';
+import { buildCompletenessAuditQuery, buildDuplicateCheckQuery, buildIndicatorFromRows, buildSourceViewQuery, loadBmsIndicators, quoteSourceView } from '@/services/bmsData';
 
 describe('BMS KPI data adapter', () => {
   it('maps monthly source facts and calculates a weighted annual result', () => {
@@ -26,6 +26,32 @@ describe('BMS KPI data adapter', () => {
     expect(quoteSourceView('public.thip_kpi_monthly')).toBe('"public"."thip_kpi_monthly"');
     expect(() => quoteSourceView('public.thip_kpi_monthly; DROP TABLE patient')).toThrow();
     expect(buildSourceViewQuery('thip_kpi_monthly').sql).toContain('FROM "thip_kpi_monthly"');
+  });
+
+  it('builds a completeness audit covering every catalogue code x fiscal month', () => {
+    const query = buildCompletenessAuditQuery('thip_kpi_monthly');
+    expect(query.key).toBe('thipCompletenessAudit');
+    expect(query.sql).toContain('completeness_status');
+    expect(query.sql).toContain('"thip_kpi_monthly"');
+    expect(query.sql).toContain("('AA0101')");
+    expect(query.sql).toContain("('DH0101')");
+    expect(query.sql).toContain('zero-denominator');
+  });
+
+  it('builds a duplicate check that flags repeated indicator-month rows', () => {
+    const query = buildDuplicateCheckQuery('thip_kpi_monthly');
+    expect(query.sql).toContain('HAVING COUNT(*) <> 1');
+    expect(query.sql).toContain('"thip_kpi_monthly"');
+  });
+
+  it('builds average-length-of-stay indicators as ratio units', () => {
+    const los = buildIndicatorFromRows('DH0112', [
+      { indicator_code: 'DH0112', fiscal_month: 1, numerator: 42, denominator: 6, value: 7 },
+    ], 2026);
+    expect(los?.unit).toBe('ratio');
+    expect(los?.direction).toBe('neutral');
+    expect(los?.target).toBeNull();
+    expect(los?.monthly[0]).toMatchObject({ numerator: 42, denominator: 6, value: 7 });
   });
 
   it('classifies API failures during the KPI load as data failures', async () => {

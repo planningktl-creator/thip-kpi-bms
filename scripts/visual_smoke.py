@@ -62,6 +62,12 @@ def mock_bms_routes(page) -> None:
                     {"indicator_code": "CE0101", "period_start": "2025-10-01", "fiscal_year": 2026, "fiscal_month": 1, "numerator": 12, "denominator": 20, "value": 60},
                     {"indicator_code": "CI0101", "period_start": "2025-10-01", "fiscal_year": 2026, "fiscal_month": 1, "numerator": 3, "denominator": 20, "value": 15},
                     {"indicator_code": "DH0102", "period_start": "2025-10-01", "fiscal_year": 2026, "fiscal_month": 1, "numerator": 18, "denominator": 20, "value": 90},
+                    {"indicator_code": "DG0202", "period_start": "2025-10-01", "fiscal_year": 2026, "fiscal_month": 1, "numerator": 1, "denominator": 25, "value": 4},
+                    {"indicator_code": "DR0403", "period_start": "2025-10-01", "fiscal_year": 2026, "fiscal_month": 1, "numerator": 3, "denominator": 40, "value": 7.5},
+                    {"indicator_code": "DR0102", "period_start": "2025-10-01", "fiscal_year": 2026, "fiscal_month": 1, "numerator": 1, "denominator": 9, "value": 11.11},
+                    {"indicator_code": "DN0107", "period_start": "2025-10-01", "fiscal_year": 2026, "fiscal_month": 1, "numerator": 2, "denominator": 7, "value": 28.57},
+                    {"indicator_code": "DH0112", "period_start": "2025-10-01", "fiscal_year": 2026, "fiscal_month": 1, "numerator": 28, "denominator": 4, "value": 7},
+                    {"indicator_code": "DN0109", "period_start": "2025-10-01", "fiscal_year": 2026, "fiscal_month": 1, "numerator": 48, "denominator": 8, "value": 6},
                 ]
             }
         route.fulfill(status=200, headers={**headers, "Content-Type": "application/json"}, body=json.dumps(payload))
@@ -84,7 +90,7 @@ def main() -> None:
         assert desktop.get_by_label("เลือกปีงบประมาณ").count() == 1
         assert desktop.get_by_text("ภาพรวมคุณภาพ", exact=True).count() >= 1
         assert desktop.get_by_text("สัญญาณที่ควรดูเดือนนี้", exact=True).count() == 1
-        assert desktop.locator(".indicator-table tbody tr").count() == 12
+        assert desktop.locator(".indicator-table tbody tr").count() == 232
 
         desktop.locator(".indicator-table tbody tr").first.click()
         desktop.wait_for_load_state("networkidle")
@@ -140,10 +146,16 @@ def main() -> None:
         live.goto(f"{BASE_URL}/?bms-session-id=smoke-session", wait_until="networkidle")
         live.get_by_text("BMS live data", exact=True).wait_for()
         assert live.get_by_text("Live data", exact=True).count() == 1
-        assert live.locator(".indicator-table tbody tr").count() == 6
+        assert live.locator(".indicator-table tbody tr").count() == 12
         assert live.get_by_text("DH0101", exact=True).count() >= 1
         assert live.get_by_text("CE0101", exact=True).count() >= 1
         assert live.get_by_text("DH0102", exact=True).count() >= 1
+        assert live.get_by_text("DG0202", exact=True).count() >= 1
+        assert live.get_by_text("DR0403", exact=True).count() >= 1
+        assert live.get_by_text("DR0102", exact=True).count() >= 1
+        assert live.get_by_text("DN0107", exact=True).count() >= 1
+        assert live.get_by_text("DH0112", exact=True).count() >= 1
+        assert live.get_by_text("DN0109", exact=True).count() >= 1
         assert live.evaluate("window.localStorage.length") == 0
         assert live.evaluate("window.sessionStorage.length") == 0
 

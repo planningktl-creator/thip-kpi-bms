@@ -21,7 +21,10 @@ import type {
 } from '@/types/thip';
 import { getFiscalMonthPeriods } from '@/utils/fiscal';
 
-export const foundationIndicatorCodes = ['DH0101', 'DN0101', 'DR0101', 'CE0101', 'CI0101', 'DH0102'] as const;
+export const foundationIndicatorCodes = [
+  'DH0101', 'DN0101', 'DR0101', 'CE0101', 'CI0101', 'DH0102',
+  'DG0202', 'DR0403', 'DR0102', 'DN0107', 'DH0112', 'DN0109',
+] as const;
 
 const liveSeeds: Record<string, Omit<LiveDefinition, 'code'>> = {
   DH0101: {
@@ -90,7 +93,7 @@ const liveSeeds: Record<string, Omit<LiveDefinition, 'code'>> = {
     denominatorLabel: 'ผู้ป่วย Sepsis ที่จำหน่ายทั้งหมด',
     sourceTables: ['ipt', 'iptdiag', 'an_stat', 'opitemrece', 'drugitems'],
     frequency: 'ทุกเดือน',
-    reference: 'THIP KPI Dictionary 2025 · หน้า 65',
+    reference: 'THIP KPI Dictionary 2025 · หน้า 194',
   },
   CI0101: {
     group: 'C',
@@ -107,7 +110,7 @@ const liveSeeds: Record<string, Omit<LiveDefinition, 'code'>> = {
     denominatorLabel: 'ผู้ป่วย Sepsis ที่จำหน่ายทั้งหมด',
     sourceTables: ['ipt', 'iptdiag', 'an_stat'],
     frequency: 'ทุกเดือน',
-    reference: 'THIP KPI Dictionary 2025 · หน้า 105',
+    reference: 'THIP KPI Dictionary 2025 · หน้า 199',
   },
   DH0102: {
     group: 'D',
@@ -125,6 +128,108 @@ const liveSeeds: Record<string, Omit<LiveDefinition, 'code'>> = {
     sourceTables: ['ipt', 'iptdiag', 'an_stat', 'opitemrece', 'drugitems'],
     frequency: 'ทุกเดือน',
     reference: 'THIP KPI Dictionary 2025 · หน้า 42',
+  },
+  DG0202: {
+    group: 'D',
+    category: 'Appendicitis · Acute appendicitis',
+    title: 'Acute Appendicitis: Percent of mortality',
+    titleTh: 'ร้อยละการเสียชีวิตของผู้ป่วยไส้ติ่งอักเสบเฉียบพลัน',
+    unit: 'percent',
+    direction: 'lower-is-better',
+    target: 1,
+    targetScope: 'monthly',
+    definition: 'ผู้ป่วยในที่มี Principal diagnosis เป็น Acute appendicitis และจำหน่ายด้วยการเสียชีวิต',
+    formula: '(จำนวนผู้ป่วยไส้ติ่งอักเสบที่เสียชีวิต ÷ จำนวนผู้ป่วยไส้ติ่งอักเสบที่จำหน่ายทั้งหมด) × 100',
+    numeratorLabel: 'ผู้ป่วย Acute appendicitis ที่เสียชีวิต',
+    denominatorLabel: 'ผู้ป่วย Acute appendicitis ที่จำหน่ายทั้งหมด',
+    sourceTables: ['ipt', 'an_stat', 'death'],
+    frequency: 'ทุกเดือน',
+    reference: 'THIP KPI Dictionary 2025 · หน้า 123',
+  },
+  DR0403: {
+    group: 'D',
+    category: 'Respiratory disease · COPD',
+    title: 'COPD: Percent of mortality',
+    titleTh: 'ร้อยละการเสียชีวิตของผู้ป่วย COPD',
+    unit: 'percent',
+    direction: 'lower-is-better',
+    target: 6,
+    targetScope: 'monthly',
+    definition: 'ผู้ป่วยในที่มี Principal diagnosis เป็น COPD และจำหน่ายด้วยการเสียชีวิต',
+    formula: '(จำนวนผู้ป่วย COPD ที่เสียชีวิต ÷ จำนวนผู้ป่วย COPD ที่จำหน่ายทั้งหมด) × 100',
+    numeratorLabel: 'ผู้ป่วย COPD ที่เสียชีวิต',
+    denominatorLabel: 'ผู้ป่วย COPD ที่จำหน่ายทั้งหมด',
+    sourceTables: ['ipt', 'an_stat', 'death'],
+    frequency: 'ทุกเดือน',
+    reference: 'THIP KPI Dictionary 2025 · หน้า 90',
+  },
+  DR0102: {
+    group: 'D',
+    category: 'Respiratory disease · Pneumonia',
+    title: 'Pneumonia: Percent of unplanned re-admission within 28 days after last discharge',
+    titleTh: 'ร้อยละการรับเข้ารักษาซ้ำของผู้ป่วยปอดบวมภายใน 28 วันหลังจำหน่าย',
+    unit: 'percent',
+    direction: 'lower-is-better',
+    target: 10,
+    targetScope: 'monthly',
+    definition: 'ผู้ป่วยในที่เข้าเกณฑ์ Pneumonia ตามนิยาม และถูกรับเข้ารักษาซ้ำภายใน 28 วันหลังจำหน่าย (ไม่รวมผู้เสียชีวิตระหว่างนอน; การแยก re-admission แบบ unplanned เป็นการประมาณเบื้องต้น)',
+    formula: '(จำนวนผู้ป่วย Pneumonia ที่รับเข้ารักษาซ้ำภายใน 28 วัน ÷ จำนวนผู้ป่วย Pneumonia ที่จำหน่ายทั้งหมด) × 100',
+    numeratorLabel: 'ผู้ป่วย Pneumonia ที่รับเข้ารักษาซ้ำภายใน 28 วัน',
+    denominatorLabel: 'ผู้ป่วย Pneumonia ที่จำหน่ายทั้งหมด',
+    sourceTables: ['ipt', 'an_stat', 'iptdiag'],
+    frequency: 'ทุกเดือน',
+    reference: 'THIP KPI Dictionary 2025 · หน้า 80',
+  },
+  DN0107: {
+    group: 'D',
+    category: 'Neurovascular disease · Stroke',
+    title: 'Stroke: Percent of unplanned re-admission of stroke within 28 days',
+    titleTh: 'ร้อยละการรับเข้ารักษาซ้ำของผู้ป่วย Stroke ภายใน 28 วัน',
+    unit: 'percent',
+    direction: 'lower-is-better',
+    target: 12,
+    targetScope: 'monthly',
+    definition: 'ผู้ป่วยในที่มี Principal diagnosis เป็น Stroke ตามกลุ่มรหัส และถูกรับเข้ารักษาซ้ำภายใน 28 วันหลังจำหน่าย (ไม่รวมผู้เสียชีวิตระหว่างนอน; การแยก re-admission แบบ unplanned เป็นการประมาณเบื้องต้น)',
+    formula: '(จำนวนผู้ป่วย Stroke ที่รับเข้ารักษาซ้ำภายใน 28 วัน ÷ จำนวนผู้ป่วย Stroke ที่จำหน่ายทั้งหมด) × 100',
+    numeratorLabel: 'ผู้ป่วย Stroke ที่รับเข้ารักษาซ้ำภายใน 28 วัน',
+    denominatorLabel: 'ผู้ป่วย Stroke ที่จำหน่ายทั้งหมด',
+    sourceTables: ['ipt', 'an_stat', 'iptdiag'],
+    frequency: 'ทุกเดือน',
+    reference: 'THIP KPI Dictionary 2025 · หน้า 73',
+  },
+  DH0112: {
+    group: 'D',
+    category: 'Cardiovascular disease · Acute coronary syndrome',
+    title: 'Acute coronary syndrome: Average length of stay',
+    titleTh: 'จำนวนวันนอนเฉลี่ยของผู้ป่วย ACS',
+    unit: 'ratio',
+    direction: 'neutral',
+    target: null,
+    targetScope: 'monthly',
+    definition: 'ค่าเฉลี่ยจำนวนวันนอนของผู้ป่วยในอายุ 18 ปีขึ้นไปที่มี Principal diagnosis เป็น Acute coronary syndrome',
+    formula: 'ผลรวมจำนวนวันนอนของผู้ป่วย ACS ÷ จำนวนผู้ป่วย ACS ที่จำหน่าย',
+    numeratorLabel: 'ผลรวมจำนวนวันนอน',
+    denominatorLabel: 'ผู้ป่วย ACS ที่จำหน่ายทั้งหมด',
+    sourceTables: ['ipt', 'an_stat'],
+    frequency: 'ทุกเดือน',
+    reference: 'THIP KPI Dictionary 2025 · หน้า 54',
+  },
+  DN0109: {
+    group: 'D',
+    category: 'Neurovascular disease · Stroke',
+    title: 'Stroke: Average length of stay',
+    titleTh: 'จำนวนวันนอนเฉลี่ยของผู้ป่วย Stroke',
+    unit: 'ratio',
+    direction: 'neutral',
+    target: null,
+    targetScope: 'monthly',
+    definition: 'ค่าเฉลี่ยจำนวนวันนอนของผู้ป่วยในที่มี Principal diagnosis เป็น Stroke ตามกลุ่มรหัส',
+    formula: 'ผลรวมจำนวนวันนอนของผู้ป่วย Stroke ÷ จำนวนผู้ป่วย Stroke ที่จำหน่าย',
+    numeratorLabel: 'ผลรวมจำนวนวันนอน',
+    denominatorLabel: 'ผู้ป่วย Stroke ที่จำหน่ายทั้งหมด',
+    sourceTables: ['ipt', 'an_stat'],
+    frequency: 'ทุกเดือน',
+    reference: 'THIP KPI Dictionary 2025 · หน้า 74',
   },
 };
 
@@ -193,6 +298,87 @@ export function buildSourceViewQuery(sourceView: string): RegisteredQuery {
         AND period_start < :end_date
         AND fiscal_year = :fiscal_year
       ORDER BY indicator_code, fiscal_month
+    `.trim(),
+  };
+}
+
+/**
+ * Builds a registered read-only completeness audit for a normalized source view.
+ * Returns one row per indicator x fiscal month (expected 232 x 12 = 2,784 rows)
+ * labelled missing / unavailable / zero-denominator / ok. Never returns patient rows.
+ */
+export function buildCompletenessAuditQuery(sourceView: string): RegisteredQuery {
+  const quotedView = quoteSourceView(sourceView);
+  const codes = thipCatalogueByCode ? Array.from(thipCatalogueByCode.keys()).sort() : [];
+  const values = codes.map((code) => `('${code}')`).join(',\n      ');
+  return {
+    key: 'thipCompletenessAudit',
+    description: `ตรวจความครบ 232 x 12 ช่องข้อมูลของ source view ${sourceView}`,
+    sql: `
+      WITH params AS (
+        SELECT
+          CAST(:start_date AS date) AS start_date,
+          CAST(:end_date AS date) AS end_date,
+          CAST(:fiscal_year AS integer) AS fiscal_year
+      ),
+      months AS (
+        SELECT
+          (p.start_date + (m.n * INTERVAL '1 month'))::date AS period_start,
+          p.fiscal_year,
+          m.n + 1 AS fiscal_month
+        FROM params p
+        CROSS JOIN generate_series(0, 11) AS m(n)
+      ),
+      expected(indicator_code) AS (
+        VALUES
+          ${values}
+      )
+      SELECT
+        e.indicator_code,
+        m.period_start,
+        m.fiscal_year,
+        m.fiscal_month,
+        s.numerator,
+        s.denominator,
+        s.value,
+        CASE
+          WHEN s.indicator_code IS NULL THEN 'missing'
+          WHEN s.denominator IS NULL THEN 'unavailable'
+          WHEN s.denominator = 0 THEN 'zero-denominator'
+          ELSE 'ok'
+        END AS completeness_status
+      FROM expected e
+      CROSS JOIN months m
+      LEFT JOIN ${quotedView} s
+        ON s.indicator_code = e.indicator_code
+       AND s.period_start = m.period_start
+       AND s.fiscal_year = m.fiscal_year
+       AND s.fiscal_month = m.fiscal_month
+      ORDER BY e.indicator_code, m.fiscal_month
+    `.trim(),
+  };
+}
+
+/** Builds a registered read-only duplicate check for a normalized source view. */
+export function buildDuplicateCheckQuery(sourceView: string): RegisteredQuery {
+  const quotedView = quoteSourceView(sourceView);
+  return {
+    key: 'thipDuplicateCheck',
+    description: `ตรวจ duplicate indicator x month ของ source view ${sourceView}`,
+    sql: `
+      SELECT
+        indicator_code,
+        period_start,
+        fiscal_year,
+        fiscal_month,
+        COUNT(*) AS row_count
+      FROM ${quotedView}
+      WHERE period_start >= :start_date
+        AND period_start < :end_date
+        AND fiscal_year = :fiscal_year
+      GROUP BY indicator_code, period_start, fiscal_year, fiscal_month
+      HAVING COUNT(*) <> 1
+      ORDER BY indicator_code, period_start
     `.trim(),
   };
 }

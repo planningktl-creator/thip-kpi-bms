@@ -54,7 +54,7 @@ python scripts/bms-connectivity-smoke.py
 
 The smoke verifies PasteJSON, CORS preflight, authenticated `SELECT VERSION()`, the app identifier, and CORS headers on the actual API response.
 
-When `VITE_BMS_KPI_SOURCE_VIEW` is empty, the app runs the evidence-backed HOSxP foundation query for `DH0101`, `DN0101`, `DR0101`, `CE0101`, `CI0101`, and `DH0102`. To expose more indicators, register a normalized read-only source view and build with `VITE_BMS_KPI_SOURCE_VIEW` set to its table/view name. The view contract is documented in `docs/THIP-DATA-CONTRACT.md`.
+When `VITE_BMS_KPI_SOURCE_VIEW` is empty, the app runs the evidence-backed HOSxP foundation query for `DH0101`, `DN0101`, `DR0101`, `CE0101`, `CI0101`, `DH0102`, `DG0202`, `DR0403`, `DR0102`, `DN0107`, `DH0112`, and `DN0109`. To expose more indicators, register a normalized read-only source view and build with `VITE_BMS_KPI_SOURCE_VIEW` set to its table/view name. The view contract is documented in `docs/THIP-DATA-CONTRACT.md`.
 
 The repository intentionally keeps the GitHub mirror remote separate from the BMS deployment remote. The BMS remote and application identifier must be supplied by the platform owner before production registration.
 
@@ -69,8 +69,8 @@ The Playwright visual smoke also runs a token-free mocked BMS session through Pa
 
 ## Data boundary
 
-`HOSxP Structure.xlsx` is used as a schema inventory. `THIP KPI.pdf` is the 2025 KPI dictionary and defines the five THIP groups (D, C, S, H, A), monthly reporting expectation, and numerator/denominator model. The first live foundation query uses the PDF definitions for `DH0101` (PDF page 39), `DH0102` (page 42), `DN0101` (page 67), `DR0101` (page 79), `CE0101` (page 65), and `CI0101` (page 105), together with the HOSxP `ipt`, `an_stat`, `iptdiag`, `death`, `opitemrece`, and `drugitems` tables. The query preserves raw numerator/denominator counts and returns one row per indicator/month. Hospital-specific source views and further KPI SQL must still be validated on anonymized staging data before being enabled.
+`HOSxP Structure.xlsx` is used as a schema inventory. `THIP KPI.pdf` is the 2025 KPI dictionary and defines the five THIP groups (D, C, S, H, A), monthly reporting expectation, and numerator/denominator model. The first live foundation query uses the PDF definitions for `DH0101` (PDF page 39), `DH0102` (page 42), `DN0101` (page 67), `DR0101` (page 79), `CE0101` (page 194), `CI0101` (page 199), `DG0202` (page 123), `DR0403` (page 90), `DR0102` (page 80), `DN0107` (page 73), `DH0112` (page 54), and `DN0109` (page 74), together with the HOSxP `ipt`, `an_stat`, `iptdiag`, `death`, `opitemrece`, and `drugitems` tables. The query preserves raw numerator/denominator counts and returns one row per indicator/month. Hospital-specific source views and further KPI SQL must still be validated on anonymized staging data before being enabled.
 
-The 232-entry indicator library is intentionally complete at the catalogue/definition level. Six IPD indicators can now be replaced by BMS results when the session/API is healthy. The remaining catalogue entries keep their no-data state until their hospital source rules are mapped; a normalized source view can replace all catalogue entries at once.
+The 232-entry indicator library is intentionally complete at the catalogue/definition level. Twelve IPD indicators can now be replaced by BMS results when the session/API is healthy. The remaining catalogue entries keep their no-data state until their hospital source rules are mapped; a normalized source view can replace all catalogue entries at once.
 
 The app follows the BMS baseline: HOSxP is read-only, SQL is allow-listed, parameters are typed, and no PHI is committed to the repository.
