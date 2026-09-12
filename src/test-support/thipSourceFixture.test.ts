@@ -77,4 +77,59 @@ describe('THIP aggregate source fixture', () => {
       await expect(loadBmsIndicators(runtime, FIXTURE_FISCAL_YEAR)).rejects.toThrow();
     },
   );
+
+  it('verifies newly promoted Milestone 2 indicators have measured values and null pending reason', () => {
+    const promotedM2Codes = [
+      'DH0301', 'DH0302',
+      'DH0201', 'DH0202', 'DH0203', 'DH0204',
+      'DO0202', 'DO0204', 'DO0205', 'DO0302', 'DO0303', 'DO0304',
+      'DR0302', 'DR0404',
+      'CM0104', 'CM0107', 'CM0109', 'CM0110', 'CM0116', 'CM0117', 'CM0118', 'CM0119',
+      'CM0204', 'CM0205', 'CM0206', 'CM0207', 'CM0208', 'CM0209',
+      'DC0103', 'DC0107', 'DC0108', 'DC0108.1', 'DC0108.2', 'DC0201', 'DC0201.1', 'DC0201.2', 'DP0101',
+    ];
+    const rows = buildCompleteSourceFixture();
+    for (const code of promotedM2Codes) {
+      const codeRows = rows.filter((r) => r.indicator_code === code);
+      expect(codeRows.length).toBeGreaterThan(0);
+      for (const r of codeRows) {
+        expect(r.value, `${code} value should not be null`).not.toBeNull();
+        expect(r.pending_reason, `${code} pending_reason should be null`).toBeNull();
+        if (r.unit !== 'count') {
+          expect(r.denominator, `${code} denominator`).not.toBeNull();
+          expect(r.numerator, `${code} numerator`).not.toBeNull();
+        }
+      }
+    }
+  });
+
+  it('verifies all pending-local-source indicators have null values and explicit non-empty pending reasons', () => {
+    const rows = buildCompleteSourceFixture();
+    const pendingRows = rows.filter((r) => r.pending_reason !== null);
+    expect(pendingRows.length).toBeGreaterThan(0);
+    for (const r of pendingRows) {
+      expect(r.numerator, `${r.indicator_code} numerator`).toBeNull();
+      expect(r.denominator, `${r.indicator_code} denominator`).toBeNull();
+      expect(r.value, `${r.indicator_code} value`).toBeNull();
+      expect(typeof r.pending_reason).toBe('string');
+      expect((r.pending_reason as string).trim().length).toBeGreaterThan(5);
+    }
+  });
+
+  it('enforces zero PHI across all generated fixture rows', () => {
+    const rows = buildCompleteSourceFixture();
+    const phiKeys = ['hn', 'an', 'vn', 'cid', 'patient_name', 'citizen_id', 'id_card'];
+    for (const row of rows) {
+      for (const key of phiKeys) {
+        expect(row).not.toHaveProperty(key);
+      }
+      // Check that string values don't contain 13-digit Thai national ID pattern
+      for (const val of Object.values(row)) {
+        if (typeof val === 'string') {
+          expect(val).not.toMatch(/\b\d{13}\b/);
+        }
+      }
+    }
+  });
 });
+

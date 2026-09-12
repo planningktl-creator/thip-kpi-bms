@@ -25,6 +25,19 @@ export const registeredRuleCodes: readonly string[] = [
   'DG0102', 'DG0202',
   // Added from the reviewed hospital master evidence; Pdx-only cohorts.
   'DC0401', 'DR0201', 'DG0201', 'DH0111', 'DR0301', 'DR0401', 'DG0101', 'CM0105',
+  // Heart Failure
+  'DH0301', 'DH0302',
+  // CABG
+  'DH0201', 'DH0202', 'DH0203', 'DH0204',
+  // Arthroplasty (Hip & Knee)
+  'DO0202', 'DO0204', 'DO0205', 'DO0302', 'DO0303', 'DO0304',
+  // Asthma & COPD
+  'DR0302', 'DR0404',
+  // Maternal & Child
+  'CM0104', 'CM0107', 'CM0109', 'CM0110', 'CM0116', 'CM0117', 'CM0118', 'CM0119',
+  'CM0204', 'CM0205', 'CM0206', 'CM0207', 'CM0208', 'CM0209',
+  // Diabetes & HT
+  'DC0103', 'DC0107', 'DC0108', 'DC0108.1', 'DC0108.2', 'DC0201', 'DC0201.1', 'DC0201.2', 'DP0101',
 ] as const;
 
 export const registeredRuleCodeSet: ReadonlySet<string> = new Set(registeredRuleCodes);
@@ -71,6 +84,55 @@ export const pendingReasonByFamily: Readonly<Record<string, string>> = {
   BLOOD: 'ต้องยืนยัน selective-surgery denominator และ transfusion event',
   MEDICATION: 'ต้องยืนยันนิยาม antibiotic prescribing และสูตร inventory turn',
   CSSD: 'ต้องยืนยัน sterilization test และ equipment/procedure request',
+  ACS: 'ต้องยืนยัน door-to-EKG/needle/balloon timestamp, ผล LVEF/LVSD และรายการยา discharge (Aspirin/Beta-blocker/ACEI/ARB)',
+  APPENDICITIS: 'ต้องยืนยัน diagnostic code ไส้ติ่งแตก (perforated appendicitis) และบันทึกเวลาผ่าตัด',
+  SEPSIS_ER: 'ต้องยืนยันเวลา triage, ER order time และเวลาบริหารยา antibiotic ภายใน 1 ชั่วโมง',
+  STROKE: 'ต้องยืนยัน door-to-needle time, NIHSS score, dysphagia screening, รายการยา antiplatelet/anticoagulant และ physiotherapy window ภายใน 72 ชั่วโมง',
+};
+
+/**
+ * Optional code-specific pending reason overrides.
+ * Provides highly specific, clinically accurate explanations for individual indicators
+ * that require confirmation beyond the family-level rule/source baseline.
+ */
+export const pendingReasonByCode: Readonly<Record<string, string>> = {
+  // Sepsis 1-hour ER antibiotic
+  CE0104: 'ต้องยืนยันเวลา triage, ER order time และเวลาบริหารยา broad-spectrum antibiotic ภายใน 1 ชั่วโมง',
+  // ACS discharge meds and timestamps
+  DH0103: 'ต้องยืนยันรายการยา Aspirin ที่สั่งจ่าย ณ วันจำหน่าย (discharge prescription)',
+  DH0104: 'ต้องยืนยันผลตรวจ LVEF < 40% (LVSD) และรายการยา ACEI/ARB ที่ได้รับ',
+  DH0105: 'ต้องยืนยันแบบบันทึกคำแนะนำการเลิกบุหรี่ (smoking cessation counseling) ในผู้ป่วย ACS',
+  DH0106: 'ต้องยืนยันการบริหารยากลุ่ม Beta-blocker ระหว่างรับไว้รักษาในโรงพยาบาล',
+  DH0107: 'ต้องยืนยันรายการยา Beta-blocker ที่สั่งจ่าย ณ วันจำหน่าย',
+  DH0108: 'ต้องยืนยัน timestamp เวลาถึงโรงพยาบาล (door time) และเวลาทำ EKG 12-lead แผ่นแรก',
+  DH0109: 'ต้องยืนยัน door-to-refer timestamp และเวลาส่งตัวผู้ป่วย ACS',
+  DH0110: 'ต้องยืนยัน door-to-balloon time ภายใน 120 นาที หรือ door-to-needle time ภายใน 30 นาที',
+  DH0113: 'ต้องยืนยัน door-to-needle timestamp ในการให้ยาละลายลิ่มเลือด (Fibrinolytic) ภายใน 30 นาที',
+  // Stroke acute therapies, education, and rehab
+  DN0102: 'ต้องยืนยันการบริหารยา Antiplatelet ภายใน 2 วัน (48 ชั่วโมง) แรกหลังรับไว้รักษา',
+  DN0103: 'ต้องยืนยันรายการยา Antiplatelet หรือ Anticoagulant ที่สั่งจ่าย ณ วันจำหน่าย',
+  DN0104: 'ต้องยืนยันผล EKG ภาวะ Atrial Fibrillation/Flutter และการสั่งจ่ายยา Anticoagulation',
+  DN0105: 'ต้องยืนยันแบบประเมินและบันทึกการให้สุขศึกษาโรคหลอดเลือดสมอง (Stroke education)',
+  DN0106: 'ต้องยืนยันบันทึกการเริ่มทำกายภาพบำบัดหรือเวชศาสตร์ฟื้นฟูภายใน 72 ชั่วโมงหลังรับไว้รักษา',
+  DN0110: 'ต้องยืนยัน door-to-needle timestamp ในการให้ยา Thrombolytic (rtPA) ภายใน 60 นาที',
+  // Pneumonia smoking cessation
+  DR0103: 'ต้องยืนยันแบบบันทึกคำแนะนำการเลิกบุหรี่ (smoking cessation counseling) ในผู้ป่วยปอดอักเสบ',
+  // Maternal & Perinatal mortality population denominators
+  CM0101: 'ต้องยืนยัน mother-infant linkage และฐานข้อมูลการเกิดมีชีพ (live births) ในพื้นที่รับผิดชอบ',
+  CM0201: 'ต้องยืนยันการบันทึกอายุครรภ์ >= 24 สัปดาห์ และการจำแนกทารกตายคลอด (stillbirth)',
+  CM0202: 'ต้องยืนยันการบันทึกอายุครรภ์ >= 28 สัปดาห์ และการเสียชีวิตของทารกภายใน 7 วันหลังคลอด',
+  CM0203: 'ต้องยืนยันฐานข้อมูลการเกิดมีชีพ (live births) และการเสียชีวิตของทารกภายใน 28 วันหลังคลอด',
+  // Newborn screening
+  DE1601: 'ต้องยืนยันเครื่องมือตรวจคัดกรองการได้ยิน (OAE/AABR) และบันทึกผลภายใน 30 วันหลังเกิด',
+  // ACSC population denominators and criteria
+  AA0101: 'ต้องยืนยัน population denominator รายเขตพื้นที่รับผิดชอบ และเกณฑ์คัดแยก Epilepsy ACSC',
+  AA0102: 'ต้องยืนยัน population denominator รายเขตพื้นที่รับผิดชอบ และเกณฑ์คัดแยก Asthma ACSC',
+  AA0103: 'ต้องยืนยัน population denominator รายเขตพื้นที่รับผิดชอบ และเกณฑ์คัดแยก COPD ACSC',
+  AA0104: 'ต้องยืนยัน population denominator รายเขตพื้นที่รับผิดชอบ และการคัดแยกภาวะแทรกซ้อน DM ACSC',
+  AA0105: 'ต้องยืนยัน population denominator รายเขตพื้นที่รับผิดชอบ และการคัดแยกภาวะแทรกซ้อน HT ACSC',
+  // Non-urgent ED & follow-up
+  HC0101: 'ต้องยืนยันระดับความเร่งด่วน triage ของห้องฉุกเฉิน (Non-urgent triage) และเกณฑ์ Asthma/COPD',
+  HC0102: 'ต้องยืนยันนัดตรวจติดตาม OPD follow-up ภายใน 30 วันหลังจำหน่าย',
 };
 
 /** Family name lookup for a code, from the rule manifest. */
@@ -84,6 +146,7 @@ export function getImplementationTier(code: string): ThipImplementationTier {
 
 export function getPendingReason(code: string): string | null {
   if (registeredRuleCodeSet.has(code)) return null;
+  if (pendingReasonByCode[code]) return pendingReasonByCode[code];
   const family = familyByCode.get(code);
   return (family && pendingReasonByFamily[family]) || 'ยังไม่ยืนยัน local rule/source ของตัวชี้วัดนี้';
 }

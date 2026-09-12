@@ -14,3 +14,12 @@ test-fixtures/invalid/
 
 # graft's local graph cache — regenerable, not committed (run `graft build`).
 /graft/
+
+# Agent execution artifacts & temporary scratch
+.agents/
+ORIGINAL_REQUEST.md
+TEST_INFRA.md
+TEST_READY.md
+__pycache__/
+*.pyc
+
