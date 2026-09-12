@@ -50,6 +50,9 @@ export function IndicatorTable({ indicators, onOpen, monthIndex }: Props) {
                     <div>
                       <strong>{indicator.code} <span className="row-category">· {groupMeta[indicator.group].shortLabel}</span></strong>
                       <span>{indicator.titleTh}</span>
+                      {indicator.title && indicator.title !== indicator.titleTh && (
+                        <small className="row-subtitle">{indicator.title}</small>
+                      )}
                     </div>
                   </div>
                 </td>

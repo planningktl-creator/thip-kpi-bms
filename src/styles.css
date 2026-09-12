@@ -256,6 +256,9 @@ h1, h2, h3, p { margin: 0; }
 .catalog-table tbody tr:hover, .catalog-table tbody tr:focus-visible { background: #f7fbfb; }
 .catalog-code { color: var(--ink); font: 600 11px 'Space Grotesk', sans-serif; white-space: nowrap; }
 .catalog-title { display: block; min-width: 390px; max-width: 740px; overflow: hidden; color: #718592; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.catalog-title-cell { display: flex; flex-direction: column; gap: 2px; min-width: 360px; max-width: 720px; }
+.catalog-title-th { color: var(--ink); font: 600 11px 'IBM Plex Sans Thai', sans-serif; line-height: 1.35; }
+.catalog-title-en { color: #718592; font: 400 10px 'Space Grotesk', 'IBM Plex Sans Thai', sans-serif; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .catalog-group { display: inline-flex; align-items: center; gap: 6px; color: #82949e; white-space: nowrap; }
 .catalog-group i { width: 20px; height: 20px; display: grid; place-items: center; color: #082a3d; border-radius: 6px 6px 6px 2px; font: 700 9px 'Space Grotesk', sans-serif; font-style: normal; }
 .catalog-state { display: inline-flex; align-items: center; gap: 6px; padding: 4px 7px; border: 1px solid; border-radius: 999px; font-size: 9px; white-space: nowrap; }
@@ -301,7 +304,8 @@ h1, h2, h3, p { margin: 0; }
 .indicator-name-cell strong, .indicator-name-cell > div > span { display: block; }
 .indicator-name-cell strong { color: var(--ink); font: 600 11px 'Space Grotesk', 'IBM Plex Sans Thai', sans-serif; }
 .row-category { color: #a3b0b7; font: 400 9px 'IBM Plex Sans Thai', sans-serif; }
-.indicator-name-cell > div > span { max-width: 340px; overflow: hidden; color: #82949e; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; margin-top: 3px; }
+.indicator-name-cell > div > span { max-width: 380px; overflow: hidden; color: var(--ink-soft); font-size: 10px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
+.row-subtitle { display: block; max-width: 380px; overflow: hidden; color: #9aaab3; font: 400 9px 'Space Grotesk', 'IBM Plex Sans Thai', sans-serif; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px; }
 .table-value { color: var(--ink); font: 600 13px 'Space Grotesk', 'IBM Plex Sans Thai', sans-serif; }
 .table-subvalue { display: block; color: #a7b4ba; font-size: 9px; margin-top: 3px; }
 .target-value { color: #657c8b; font: 600 11px 'Space Grotesk', 'IBM Plex Sans Thai', sans-serif; }

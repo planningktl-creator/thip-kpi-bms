@@ -17,7 +17,7 @@ export function CatalogPage({ entries, wiredCodes, activeGroup, search, onSearch
   const normalized = search.trim().toLowerCase();
   const filtered = entries.filter((entry) => {
     const matchesGroup = activeGroup === 'all' || entry.group === activeGroup;
-    const matchesSearch = !normalized || `${entry.code} ${entry.title}`.toLowerCase().includes(normalized);
+    const matchesSearch = !normalized || `${entry.code} ${entry.title} ${entry.titleTh}`.toLowerCase().includes(normalized);
     return matchesGroup && matchesSearch;
   });
   const groupCounts = (Object.keys(groupMeta) as IndicatorGroup[]).map((group) => ({
@@ -49,7 +49,7 @@ export function CatalogPage({ entries, wiredCodes, activeGroup, search, onSearch
           <table className="catalog-table">
             <caption className="sr-only">คลังตัวชี้วัด THIP 2025 จำนวน {filtered.length} รายการที่กรองแล้ว</caption>
             <thead><tr><th scope="col">รหัส</th><th scope="col">ชื่อตัวชี้วัดจาก dictionary</th><th scope="col">กลุ่ม</th><th scope="col">สถานะข้อมูล</th><th scope="col" aria-label="เปิดรายละเอียด" /></tr></thead>
-            <tbody>{filtered.map((entry) => { const wired = wiredCodes.has(entry.code); return <tr key={entry.code} aria-label={`เปิดรายละเอียด ${entry.code} ${entry.title}`} tabIndex={0} onClick={() => onOpen(entry.code)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpen(entry.code); } }}><td><strong className="catalog-code">{entry.code}</strong></td><td><span className="catalog-title">{entry.title}</span></td><td><span className="catalog-group"><i aria-hidden="true" style={{ backgroundColor: groupMeta[entry.group].color }}>{entry.group}</i>{groupMeta[entry.group].shortLabel}</span></td><td><span className={`catalog-state ${wired ? 'catalog-state-wired' : 'catalog-state-pending'}`}><span aria-hidden="true" />{wired ? 'มี data contract' : 'รอผูก source view'}</span></td><td><span className="catalog-arrow" aria-hidden="true">↗</span></td></tr>; })}</tbody>
+            <tbody>{filtered.map((entry) => { const wired = wiredCodes.has(entry.code); return <tr key={entry.code} aria-label={`เปิดรายละเอียด ${entry.code} ${entry.titleTh || entry.title}`} tabIndex={0} onClick={() => onOpen(entry.code)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpen(entry.code); } }}><td><strong className="catalog-code">{entry.code}</strong></td><td><div className="catalog-title-cell"><strong className="catalog-title-th">{entry.titleTh}</strong><span className="catalog-title-en">{entry.title}</span></div></td><td><span className="catalog-group"><i aria-hidden="true" style={{ backgroundColor: groupMeta[entry.group].color }}>{entry.group}</i>{groupMeta[entry.group].shortLabel}</span></td><td><span className={`catalog-state ${wired ? 'catalog-state-wired' : 'catalog-state-pending'}`}><span aria-hidden="true" />{wired ? 'มี data contract' : 'รอผูก source view'}</span></td><td><span className="catalog-arrow" aria-hidden="true">↗</span></td></tr>; })}</tbody>
           </table>
           {!filtered.length && <div className="table-empty"><BookOpen size={22} /><strong>ไม่พบรายการใน dictionary</strong><span>ลองเปลี่ยนคำค้นหาหรือกลุ่ม</span></div>}
         </div>

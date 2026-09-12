@@ -90,7 +90,7 @@ export function buildSourceFixtureRow(code: string, fiscalMonth: number, fiscalY
     direction: 'neutral',
     category: entry.title,
     title: entry.title,
-    title_th: entry.title,
+    title_th: entry.titleTh,
     definition: registered
       ? `Synthetic aggregate fixture for ${code}; not a hospital result.`
       : `Synthetic unavailable fixture for ${code}; the code is in the 232-code contract but still needs a local source.`,

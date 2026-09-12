@@ -37,4 +37,11 @@ describe('THIP source catalogue', () => {
     const corrupted = thipCatalogue.filter((entry) => mojibakePattern.test(entry.title));
     expect(corrupted.map((entry) => `${entry.code}: ${entry.title}`)).toEqual([]);
   });
+
+  it('keeps every catalogue Thai title populated and free of mojibake', () => {
+    const mojibakePattern = /[ÖøêĕĂĆÙðÿœ]/;
+    expect(thipCatalogue.every((entry) => typeof entry.titleTh === 'string' && entry.titleTh.trim().length > 0)).toBe(true);
+    const corrupted = thipCatalogue.filter((entry) => mojibakePattern.test(entry.titleTh));
+    expect(corrupted.map((entry) => `${entry.code}: ${entry.titleTh}`)).toEqual([]);
+  });
 });

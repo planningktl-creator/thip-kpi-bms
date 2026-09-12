@@ -54,6 +54,7 @@ WITH ipd AS (
       i.regdate,
       i.regtime,
       i.dchdate,
+      COALESCE(i.bw, 0) AS bw,
       s.age_y,
       s.los,
       REPLACE(UPPER(TRIM(s.pdx)), '.', '') AS pdx,
@@ -399,7 +400,7 @@ facts AS (
         COUNT(*) AS denominator,
         ROUND((COUNT(*) FILTER (WHERE died) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
-      WHERE LEFT(pdx, 3) = 'J44'
+      WHERE age_y >= 18 AND LEFT(pdx, 3) = 'J44'
       GROUP BY period_start, calendar_month
 
   UNION ALL
@@ -601,7 +602,7 @@ facts AS (
             AND r.regdate <= periodized.dchdate + INTERVAL '28 days'
         )) * 100.0) / NULLIF(COUNT(*) FILTER (WHERE NOT died), 0), 2) AS value
       FROM periodized
-      WHERE LEFT(pdx, 3) = 'J44'
+      WHERE age_y >= 18 AND LEFT(pdx, 3) = 'J44'
       GROUP BY period_start, calendar_month
 
   UNION ALL
@@ -646,6 +647,1270 @@ facts AS (
         ROUND(AVG(los), 2) AS value
       FROM periodized
       WHERE pdx IN ('O820', 'O821', 'O822', 'O828', 'O829', 'O842')
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'DH0301' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM opitemrece oi
+          JOIN drugitems di ON di.icode = oi.icode
+          WHERE oi.an = periodized.an
+            AND (
+              di.name ILIKE '%enalapril%' OR di.name ILIKE '%captopril%' OR di.name ILIKE '%lisinopril%'
+              OR di.name ILIKE '%ramipril%' OR di.name ILIKE '%perindopril%' OR di.name ILIKE '%fosinopril%'
+              OR di.name ILIKE '%losartan%' OR di.name ILIKE '%valsartan%' OR di.name ILIKE '%candesartan%'
+              OR di.name ILIKE '%irbesartan%' OR di.name ILIKE '%telmisartan%' OR di.name ILIKE '%olmesartan%'
+              OR di.name ILIKE '%spironolactone%' OR di.name ILIKE '%eplerenone%'
+            ))) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM opitemrece oi
+          JOIN drugitems di ON di.icode = oi.icode
+          WHERE oi.an = periodized.an
+            AND (
+              di.name ILIKE '%enalapril%' OR di.name ILIKE '%captopril%' OR di.name ILIKE '%lisinopril%'
+              OR di.name ILIKE '%ramipril%' OR di.name ILIKE '%perindopril%' OR di.name ILIKE '%fosinopril%'
+              OR di.name ILIKE '%losartan%' OR di.name ILIKE '%valsartan%' OR di.name ILIKE '%candesartan%'
+              OR di.name ILIKE '%irbesartan%' OR di.name ILIKE '%telmisartan%' OR di.name ILIKE '%olmesartan%'
+              OR di.name ILIKE '%spironolactone%' OR di.name ILIKE '%eplerenone%'
+            ))) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE age_y >= 18 AND LEFT(pdx, 3) = 'I50' AND NOT EXISTS (SELECT 1 FROM iptdiag sd WHERE sd.an = periodized.an AND LEFT(REPLACE(UPPER(TRIM(sd.icd10)), '.', ''), 3) IN ('J45', 'J46'))
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'DH0302' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptdiag sd
+          WHERE sd.an = periodized.an
+            AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'Z716'
+          UNION
+          SELECT 1
+          FROM opdscreen scr
+          JOIN ovst v ON v.vn = scr.vn
+          WHERE v.an = periodized.an
+            AND (
+              scr.advice1 = 'Y' OR scr.advice2 = 'Y' OR scr.advice3 = 'Y'
+              OR scr.advice4 = 'Y' OR scr.advice5 = 'Y' OR scr.advice6 = 'Y'
+              OR scr.advice7 = 'Y' OR scr.advice8 = 'Y'
+              OR scr.advice7_note ILIKE '%smoke%' OR scr.advice7_note ILIKE '%สูบ%'
+            ))) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptdiag sd
+          WHERE sd.an = periodized.an
+            AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'Z716'
+          UNION
+          SELECT 1
+          FROM opdscreen scr
+          JOIN ovst v ON v.vn = scr.vn
+          WHERE v.an = periodized.an
+            AND (
+              scr.advice1 = 'Y' OR scr.advice2 = 'Y' OR scr.advice3 = 'Y'
+              OR scr.advice4 = 'Y' OR scr.advice5 = 'Y' OR scr.advice6 = 'Y'
+              OR scr.advice7 = 'Y' OR scr.advice8 = 'Y'
+              OR scr.advice7_note ILIKE '%smoke%' OR scr.advice7_note ILIKE '%สูบ%'
+            ))) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE 
+      LEFT(pdx, 3) = 'I50'
+      AND (
+        EXISTS (
+          SELECT 1 FROM iptdiag sd
+          WHERE sd.an = periodized.an
+            AND (LEFT(REPLACE(UPPER(TRIM(sd.icd10)), '.', ''), 3) = 'F17' OR REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'Z720')
+        )
+        OR EXISTS (
+          SELECT 1 FROM opdscreen scr
+          JOIN ovst v ON v.vn = scr.vn
+          WHERE v.an = periodized.an
+            AND scr.smoking_type_id IN (2, 3)
+        )
+      )
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'DH0201' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE died) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE died) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE EXISTS (
+      SELECT 1 FROM iptoprt o
+      WHERE o.an = periodized.an
+        AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('3610', '3611', '3612', '3613', '3614', '3615', '3616', '3617', '3618', '3619')
+    )
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'DH0202' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptoprt o
+          JOIN opitemrece oi ON oi.an = o.an
+          JOIN drugitems di ON di.icode = oi.icode
+          WHERE o.an = periodized.an
+            AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('3610', '3611', '3612', '3613', '3614', '3615', '3616', '3617', '3618', '3619')
+            AND (di.antibiotic = 'Y' OR di.drugcategory ILIKE '%antibio%')
+            AND EXTRACT(EPOCH FROM (
+              (o.opdate + COALESCE(o.optime, TIME '00:00:00')) -
+              (oi.vstdate + COALESCE(oi.vsttime, TIME '00:00:00'))
+            )) BETWEEN 0 AND 3600)) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptoprt o
+          JOIN opitemrece oi ON oi.an = o.an
+          JOIN drugitems di ON di.icode = oi.icode
+          WHERE o.an = periodized.an
+            AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('3610', '3611', '3612', '3613', '3614', '3615', '3616', '3617', '3618', '3619')
+            AND (di.antibiotic = 'Y' OR di.drugcategory ILIKE '%antibio%')
+            AND EXTRACT(EPOCH FROM (
+              (o.opdate + COALESCE(o.optime, TIME '00:00:00')) -
+              (oi.vstdate + COALESCE(oi.vsttime, TIME '00:00:00'))
+            )) BETWEEN 0 AND 3600)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE EXISTS (
+      SELECT 1 FROM iptoprt o
+      WHERE o.an = periodized.an
+        AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('3610', '3611', '3612', '3613', '3614', '3615', '3616', '3617', '3618', '3619')
+    )
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'DH0203' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptdiag sd
+          WHERE sd.an = periodized.an
+            AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') IN ('T814', 'T826', 'T827')
+          UNION
+          SELECT 1
+          FROM ipt r
+          JOIN an_stat rs ON rs.an = r.an
+          LEFT JOIN iptdiag rd ON rd.an = r.an
+          WHERE r.hn = periodized.hn
+            AND r.an <> periodized.an
+            AND r.regdate > periodized.dchdate
+            AND r.regdate <= periodized.dchdate + INTERVAL '30 days'
+            AND (
+              REPLACE(UPPER(TRIM(rs.pdx)), '.', '') IN ('T814', 'T826', 'T827')
+              OR REPLACE(UPPER(TRIM(rd.icd10)), '.', '') IN ('T814', 'T826', 'T827')
+            ))) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptdiag sd
+          WHERE sd.an = periodized.an
+            AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') IN ('T814', 'T826', 'T827')
+          UNION
+          SELECT 1
+          FROM ipt r
+          JOIN an_stat rs ON rs.an = r.an
+          LEFT JOIN iptdiag rd ON rd.an = r.an
+          WHERE r.hn = periodized.hn
+            AND r.an <> periodized.an
+            AND r.regdate > periodized.dchdate
+            AND r.regdate <= periodized.dchdate + INTERVAL '30 days'
+            AND (
+              REPLACE(UPPER(TRIM(rs.pdx)), '.', '') IN ('T814', 'T826', 'T827')
+              OR REPLACE(UPPER(TRIM(rd.icd10)), '.', '') IN ('T814', 'T826', 'T827')
+            ))) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE EXISTS (
+      SELECT 1 FROM iptoprt o
+      WHERE o.an = periodized.an
+        AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('3610', '3611', '3612', '3613', '3614', '3615', '3616', '3617', '3618', '3619')
+    )
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'DH0204' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (
+        WHERE died OR EXISTS (
+          SELECT 1
+          FROM death d
+          WHERE (d.an = periodized.an OR d.hn = periodized.hn)
+            AND d.death_date IS NOT NULL
+            AND (d.death_date + COALESCE(d.death_time, TIME '23:59:59')) >=
+              (periodized.regdate + COALESCE(periodized.regtime, TIME '00:00:00'))
+            AND (d.death_date + COALESCE(d.death_time, TIME '23:59:59')) <=
+              (periodized.regdate + COALESCE(periodized.regtime, TIME '00:00:00')) + INTERVAL '30 days'
+            AND NOT (
+              LEFT(REPLACE(UPPER(TRIM(COALESCE(d.death_diag_icd10, ''))), '.', ''), 1) IN ('V', 'W', 'X', 'Y')
+              OR LEFT(REPLACE(UPPER(TRIM(COALESCE(d.death_cause, ''))), '.', ''), 1) IN ('V', 'W', 'X', 'Y')
+            )
+        )
+      ) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (
+        WHERE died OR EXISTS (
+          SELECT 1
+          FROM death d
+          WHERE (d.an = periodized.an OR d.hn = periodized.hn)
+            AND d.death_date IS NOT NULL
+            AND (d.death_date + COALESCE(d.death_time, TIME '23:59:59')) >=
+              (periodized.regdate + COALESCE(periodized.regtime, TIME '00:00:00'))
+            AND (d.death_date + COALESCE(d.death_time, TIME '23:59:59')) <=
+              (periodized.regdate + COALESCE(periodized.regtime, TIME '00:00:00')) + INTERVAL '30 days'
+            AND NOT (
+              LEFT(REPLACE(UPPER(TRIM(COALESCE(d.death_diag_icd10, ''))), '.', ''), 1) IN ('V', 'W', 'X', 'Y')
+              OR LEFT(REPLACE(UPPER(TRIM(COALESCE(d.death_cause, ''))), '.', ''), 1) IN ('V', 'W', 'X', 'Y')
+            )
+        )
+      ) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE EXISTS (
+      SELECT 1 FROM iptoprt o
+      WHERE o.an = periodized.an
+        AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('3610', '3611', '3612', '3613', '3614', '3615', '3616', '3617', '3618', '3619')
+    )
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'DO0202' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptoprt o
+          JOIN opitemrece oi ON oi.an = o.an
+          JOIN drugitems di ON di.icode = oi.icode
+          WHERE o.an = periodized.an
+            AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('8151', '8152', '8153')
+            AND (di.antibiotic = 'Y' OR di.drugcategory ILIKE '%antibio%')
+            AND EXTRACT(EPOCH FROM (
+              (o.opdate + COALESCE(o.optime, TIME '00:00:00')) -
+              (oi.vstdate + COALESCE(oi.vsttime, TIME '00:00:00'))
+            )) BETWEEN 0 AND 3600)) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptoprt o
+          JOIN opitemrece oi ON oi.an = o.an
+          JOIN drugitems di ON di.icode = oi.icode
+          WHERE o.an = periodized.an
+            AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('8151', '8152', '8153')
+            AND (di.antibiotic = 'Y' OR di.drugcategory ILIKE '%antibio%')
+            AND EXTRACT(EPOCH FROM (
+              (o.opdate + COALESCE(o.optime, TIME '00:00:00')) -
+              (oi.vstdate + COALESCE(oi.vsttime, TIME '00:00:00'))
+            )) BETWEEN 0 AND 3600)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE EXISTS (
+      SELECT 1 FROM iptoprt o
+      WHERE o.an = periodized.an
+        AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('8151', '8152', '8153')
+    )
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'DO0204' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptdiag sd
+          WHERE sd.an = periodized.an
+            AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'T845'
+          UNION
+          SELECT 1
+          FROM ipt r
+          JOIN an_stat rs ON rs.an = r.an
+          LEFT JOIN iptdiag rd ON rd.an = r.an
+          WHERE r.hn = periodized.hn
+            AND r.an <> periodized.an
+            AND r.regdate > periodized.dchdate
+            AND r.regdate <= periodized.dchdate + INTERVAL '365 days'
+            AND (
+              REPLACE(UPPER(TRIM(rs.pdx)), '.', '') = 'T845'
+              OR REPLACE(UPPER(TRIM(rd.icd10)), '.', '') = 'T845'
+            ))) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptdiag sd
+          WHERE sd.an = periodized.an
+            AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'T845'
+          UNION
+          SELECT 1
+          FROM ipt r
+          JOIN an_stat rs ON rs.an = r.an
+          LEFT JOIN iptdiag rd ON rd.an = r.an
+          WHERE r.hn = periodized.hn
+            AND r.an <> periodized.an
+            AND r.regdate > periodized.dchdate
+            AND r.regdate <= periodized.dchdate + INTERVAL '365 days'
+            AND (
+              REPLACE(UPPER(TRIM(rs.pdx)), '.', '') = 'T845'
+              OR REPLACE(UPPER(TRIM(rd.icd10)), '.', '') = 'T845'
+            ))) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE EXISTS (
+      SELECT 1 FROM iptoprt o
+      WHERE o.an = periodized.an
+        AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('8151', '8152', '8153')
+    )
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'DO0205' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptdiag sd
+          WHERE sd.an = periodized.an
+            AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') IN ('T845', 'T814')
+          UNION
+          SELECT 1
+          FROM ipt r
+          JOIN an_stat rs ON rs.an = r.an
+          LEFT JOIN iptdiag rd ON rd.an = r.an
+          WHERE r.hn = periodized.hn
+            AND r.an <> periodized.an
+            AND r.regdate > periodized.dchdate
+            AND r.regdate <= periodized.dchdate + INTERVAL '90 days'
+            AND (
+              REPLACE(UPPER(TRIM(rs.pdx)), '.', '') IN ('T845', 'T814')
+              OR REPLACE(UPPER(TRIM(rd.icd10)), '.', '') IN ('T845', 'T814')
+            ))) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptdiag sd
+          WHERE sd.an = periodized.an
+            AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') IN ('T845', 'T814')
+          UNION
+          SELECT 1
+          FROM ipt r
+          JOIN an_stat rs ON rs.an = r.an
+          LEFT JOIN iptdiag rd ON rd.an = r.an
+          WHERE r.hn = periodized.hn
+            AND r.an <> periodized.an
+            AND r.regdate > periodized.dchdate
+            AND r.regdate <= periodized.dchdate + INTERVAL '90 days'
+            AND (
+              REPLACE(UPPER(TRIM(rs.pdx)), '.', '') IN ('T845', 'T814')
+              OR REPLACE(UPPER(TRIM(rd.icd10)), '.', '') IN ('T845', 'T814')
+            ))) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE EXISTS (
+      SELECT 1 FROM iptoprt o
+      WHERE o.an = periodized.an
+        AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('8151', '8152', '8153')
+    )
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'DO0302' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptoprt o
+          JOIN opitemrece oi ON oi.an = o.an
+          JOIN drugitems di ON di.icode = oi.icode
+          WHERE o.an = periodized.an
+            AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('8154', '8155')
+            AND (di.antibiotic = 'Y' OR di.drugcategory ILIKE '%antibio%')
+            AND EXTRACT(EPOCH FROM (
+              (o.opdate + COALESCE(o.optime, TIME '00:00:00')) -
+              (oi.vstdate + COALESCE(oi.vsttime, TIME '00:00:00'))
+            )) BETWEEN 0 AND 3600)) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptoprt o
+          JOIN opitemrece oi ON oi.an = o.an
+          JOIN drugitems di ON di.icode = oi.icode
+          WHERE o.an = periodized.an
+            AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('8154', '8155')
+            AND (di.antibiotic = 'Y' OR di.drugcategory ILIKE '%antibio%')
+            AND EXTRACT(EPOCH FROM (
+              (o.opdate + COALESCE(o.optime, TIME '00:00:00')) -
+              (oi.vstdate + COALESCE(oi.vsttime, TIME '00:00:00'))
+            )) BETWEEN 0 AND 3600)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE EXISTS (
+      SELECT 1 FROM iptoprt o
+      WHERE o.an = periodized.an
+        AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('8154', '8155')
+    )
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'DO0303' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptdiag sd
+          WHERE sd.an = periodized.an
+            AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'T845'
+          UNION
+          SELECT 1
+          FROM ipt r
+          JOIN an_stat rs ON rs.an = r.an
+          LEFT JOIN iptdiag rd ON rd.an = r.an
+          WHERE r.hn = periodized.hn
+            AND r.an <> periodized.an
+            AND r.regdate > periodized.dchdate
+            AND r.regdate <= periodized.dchdate + INTERVAL '365 days'
+            AND (
+              REPLACE(UPPER(TRIM(rs.pdx)), '.', '') = 'T845'
+              OR REPLACE(UPPER(TRIM(rd.icd10)), '.', '') = 'T845'
+            ))) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptdiag sd
+          WHERE sd.an = periodized.an
+            AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'T845'
+          UNION
+          SELECT 1
+          FROM ipt r
+          JOIN an_stat rs ON rs.an = r.an
+          LEFT JOIN iptdiag rd ON rd.an = r.an
+          WHERE r.hn = periodized.hn
+            AND r.an <> periodized.an
+            AND r.regdate > periodized.dchdate
+            AND r.regdate <= periodized.dchdate + INTERVAL '365 days'
+            AND (
+              REPLACE(UPPER(TRIM(rs.pdx)), '.', '') = 'T845'
+              OR REPLACE(UPPER(TRIM(rd.icd10)), '.', '') = 'T845'
+            ))) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE EXISTS (
+      SELECT 1 FROM iptoprt o
+      WHERE o.an = periodized.an
+        AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('8154', '8155')
+    )
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'DO0304' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptdiag sd
+          WHERE sd.an = periodized.an
+            AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') IN ('T845', 'T814')
+          UNION
+          SELECT 1
+          FROM ipt r
+          JOIN an_stat rs ON rs.an = r.an
+          LEFT JOIN iptdiag rd ON rd.an = r.an
+          WHERE r.hn = periodized.hn
+            AND r.an <> periodized.an
+            AND r.regdate > periodized.dchdate
+            AND r.regdate <= periodized.dchdate + INTERVAL '90 days'
+            AND (
+              REPLACE(UPPER(TRIM(rs.pdx)), '.', '') IN ('T845', 'T814')
+              OR REPLACE(UPPER(TRIM(rd.icd10)), '.', '') IN ('T845', 'T814')
+            ))) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptdiag sd
+          WHERE sd.an = periodized.an
+            AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') IN ('T845', 'T814')
+          UNION
+          SELECT 1
+          FROM ipt r
+          JOIN an_stat rs ON rs.an = r.an
+          LEFT JOIN iptdiag rd ON rd.an = r.an
+          WHERE r.hn = periodized.hn
+            AND r.an <> periodized.an
+            AND r.regdate > periodized.dchdate
+            AND r.regdate <= periodized.dchdate + INTERVAL '90 days'
+            AND (
+              REPLACE(UPPER(TRIM(rs.pdx)), '.', '') IN ('T845', 'T814')
+              OR REPLACE(UPPER(TRIM(rd.icd10)), '.', '') IN ('T845', 'T814')
+            ))) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE EXISTS (
+      SELECT 1 FROM iptoprt o
+      WHERE o.an = periodized.an
+        AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('8154', '8155')
+    )
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'DR0302' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptdiag sd
+          WHERE sd.an = periodized.an
+            AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'Z716'
+          UNION
+          SELECT 1
+          FROM opdscreen scr
+          JOIN ovst v ON v.vn = scr.vn
+          WHERE v.an = periodized.an
+            AND (
+              scr.advice1 = 'Y' OR scr.advice2 = 'Y' OR scr.advice3 = 'Y'
+              OR scr.advice4 = 'Y' OR scr.advice5 = 'Y' OR scr.advice6 = 'Y'
+              OR scr.advice7 = 'Y' OR scr.advice8 = 'Y'
+              OR scr.advice7_note ILIKE '%smoke%' OR scr.advice7_note ILIKE '%สูบ%'
+            ))) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptdiag sd
+          WHERE sd.an = periodized.an
+            AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'Z716'
+          UNION
+          SELECT 1
+          FROM opdscreen scr
+          JOIN ovst v ON v.vn = scr.vn
+          WHERE v.an = periodized.an
+            AND (
+              scr.advice1 = 'Y' OR scr.advice2 = 'Y' OR scr.advice3 = 'Y'
+              OR scr.advice4 = 'Y' OR scr.advice5 = 'Y' OR scr.advice6 = 'Y'
+              OR scr.advice7 = 'Y' OR scr.advice8 = 'Y'
+              OR scr.advice7_note ILIKE '%smoke%' OR scr.advice7_note ILIKE '%สูบ%'
+            ))) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE 
+      LEFT(pdx, 3) IN ('J45', 'J46')
+      AND (
+        EXISTS (
+          SELECT 1 FROM iptdiag sd
+          WHERE sd.an = periodized.an
+            AND (LEFT(REPLACE(UPPER(TRIM(sd.icd10)), '.', ''), 3) = 'F17' OR REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'Z720')
+        )
+        OR EXISTS (
+          SELECT 1 FROM opdscreen scr
+          JOIN ovst v ON v.vn = scr.vn
+          WHERE v.an = periodized.an
+            AND scr.smoking_type_id IN (2, 3)
+        )
+      )
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'DR0404' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptdiag sd
+          WHERE sd.an = periodized.an
+            AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'Z716'
+          UNION
+          SELECT 1
+          FROM opdscreen scr
+          JOIN ovst v ON v.vn = scr.vn
+          WHERE v.an = periodized.an
+            AND (
+              scr.advice1 = 'Y' OR scr.advice2 = 'Y' OR scr.advice3 = 'Y'
+              OR scr.advice4 = 'Y' OR scr.advice5 = 'Y' OR scr.advice6 = 'Y'
+              OR scr.advice7 = 'Y' OR scr.advice8 = 'Y'
+              OR scr.advice7_note ILIKE '%smoke%' OR scr.advice7_note ILIKE '%สูบ%'
+            ))) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptdiag sd
+          WHERE sd.an = periodized.an
+            AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'Z716'
+          UNION
+          SELECT 1
+          FROM opdscreen scr
+          JOIN ovst v ON v.vn = scr.vn
+          WHERE v.an = periodized.an
+            AND (
+              scr.advice1 = 'Y' OR scr.advice2 = 'Y' OR scr.advice3 = 'Y'
+              OR scr.advice4 = 'Y' OR scr.advice5 = 'Y' OR scr.advice6 = 'Y'
+              OR scr.advice7 = 'Y' OR scr.advice8 = 'Y'
+              OR scr.advice7_note ILIKE '%smoke%' OR scr.advice7_note ILIKE '%สูบ%'
+            ))) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE 
+      age_y >= 18 AND LEFT(pdx, 3) = 'J44'
+      AND (
+        EXISTS (
+          SELECT 1 FROM iptdiag sd
+          WHERE sd.an = periodized.an
+            AND (LEFT(REPLACE(UPPER(TRIM(sd.icd10)), '.', ''), 3) = 'F17' OR REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'Z720')
+        )
+        OR EXISTS (
+          SELECT 1 FROM opdscreen scr
+          JOIN ovst v ON v.vn = scr.vn
+          WHERE v.an = periodized.an
+            AND scr.smoking_type_id IN (2, 3)
+        )
+      )
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'CM0104' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        
+        COUNT(*) FILTER (WHERE NOT died AND EXISTS (
+          SELECT 1
+          FROM ipt r
+          WHERE r.hn = periodized.hn
+            AND r.an <> periodized.an
+            AND r.regdate > periodized.dchdate
+            AND r.regdate <= periodized.dchdate + INTERVAL '28 days'
+        )) AS numerator,
+        COUNT(*) FILTER (WHERE NOT died) AS denominator,
+        ROUND((
+        COUNT(*) FILTER (WHERE NOT died AND EXISTS (
+          SELECT 1
+          FROM ipt r
+          WHERE r.hn = periodized.hn
+            AND r.an <> periodized.an
+            AND r.regdate > periodized.dchdate
+            AND r.regdate <= periodized.dchdate + INTERVAL '28 days'
+        )) * 100.0) / NULLIF(COUNT(*) FILTER (WHERE NOT died), 0), 2) AS value
+      FROM periodized
+      WHERE pdx IN ('O820', 'O821', 'O822', 'O828', 'O829', 'O842')
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'CM0107' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (
+        WHERE LEFT(pdx, 3) = 'O72'
+           OR EXISTS (
+             SELECT 1 FROM iptdiag sd
+             WHERE sd.an = periodized.an
+               AND LEFT(REPLACE(UPPER(TRIM(sd.icd10)), '.', ''), 3) = 'O72'
+           )
+           OR EXISTS (
+              SELECT 1 FROM labor lb
+              WHERE lb.an = periodized.an
+                AND COALESCE(lb.placenta_bloodloss, 0) >= 500
+            )
+      ) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE LEFT(pdx, 3) = 'O72' OR EXISTS (SELECT 1 FROM iptdiag sd WHERE sd.an = periodized.an AND LEFT(REPLACE(UPPER(TRIM(sd.icd10)), '.', ''), 3) = 'O72') OR EXISTS (SELECT 1 FROM labor lb WHERE lb.an = periodized.an AND COALESCE(lb.placenta_bloodloss, 0) >= 500)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE (LEFT(pdx, 3) IN ('O80', 'O81', 'O83') OR pdx IN ('O840', 'O841', 'O848', 'O849'))
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'CM0109' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (
+        WHERE LEFT(pdx, 3) = 'O15'
+           OR EXISTS (
+             SELECT 1 FROM iptdiag sd
+             WHERE sd.an = periodized.an
+               AND LEFT(REPLACE(UPPER(TRIM(sd.icd10)), '.', ''), 3) = 'O15'
+           )
+      ) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE LEFT(pdx, 3) = 'O15' OR EXISTS (SELECT 1 FROM iptdiag sd WHERE sd.an = periodized.an AND LEFT(REPLACE(UPPER(TRIM(sd.icd10)), '.', ''), 3) = 'O15')) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE LEFT(pdx, 1) = 'O'
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'CM0110' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (
+        WHERE pdx = 'O244'
+           OR EXISTS (
+             SELECT 1 FROM iptdiag sd
+             WHERE sd.an = periodized.an
+               AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'O244'
+           )
+      ) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE pdx = 'O244' OR EXISTS (SELECT 1 FROM iptdiag sd WHERE sd.an = periodized.an AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'O244')) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE LEFT(pdx, 1) = 'O'
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'CM0116' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptoprt o
+          JOIN opitemrece oi ON oi.an = o.an
+          JOIN drugitems di ON di.icode = oi.icode
+          WHERE o.an = periodized.an
+            AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('683', '684', '686', '6860', '6861', '6862', '6863', '6864', '6865', '6866', '6867', '6868', '6869')
+            AND (di.antibiotic = 'Y' OR di.drugcategory ILIKE '%antibio%')
+            AND EXTRACT(EPOCH FROM (
+              (o.opdate + COALESCE(o.optime, TIME '00:00:00')) -
+              (oi.vstdate + COALESCE(oi.vsttime, TIME '00:00:00'))
+            )) BETWEEN 0 AND 3600)) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptoprt o
+          JOIN opitemrece oi ON oi.an = o.an
+          JOIN drugitems di ON di.icode = oi.icode
+          WHERE o.an = periodized.an
+            AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('683', '684', '686', '6860', '6861', '6862', '6863', '6864', '6865', '6866', '6867', '6868', '6869')
+            AND (di.antibiotic = 'Y' OR di.drugcategory ILIKE '%antibio%')
+            AND EXTRACT(EPOCH FROM (
+              (o.opdate + COALESCE(o.optime, TIME '00:00:00')) -
+              (oi.vstdate + COALESCE(oi.vsttime, TIME '00:00:00'))
+            )) BETWEEN 0 AND 3600)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE EXISTS (
+      SELECT 1 FROM iptoprt o
+      WHERE o.an = periodized.an
+        AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('683', '684', '686', '6860', '6861', '6862', '6863', '6864', '6865', '6866', '6867', '6868', '6869')
+    )
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'CM0117' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptdiag sd
+          WHERE sd.an = periodized.an
+            AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'T814'
+          UNION
+          SELECT 1
+          FROM ipt r
+          JOIN an_stat rs ON rs.an = r.an
+          LEFT JOIN iptdiag rd ON rd.an = r.an
+          WHERE r.hn = periodized.hn
+            AND r.an <> periodized.an
+            AND r.regdate > periodized.dchdate
+            AND r.regdate <= periodized.dchdate + INTERVAL '30 days'
+            AND (
+              REPLACE(UPPER(TRIM(rs.pdx)), '.', '') = 'T814'
+              OR REPLACE(UPPER(TRIM(rd.icd10)), '.', '') = 'T814'
+            ))) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1
+          FROM iptdiag sd
+          WHERE sd.an = periodized.an
+            AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'T814'
+          UNION
+          SELECT 1
+          FROM ipt r
+          JOIN an_stat rs ON rs.an = r.an
+          LEFT JOIN iptdiag rd ON rd.an = r.an
+          WHERE r.hn = periodized.hn
+            AND r.an <> periodized.an
+            AND r.regdate > periodized.dchdate
+            AND r.regdate <= periodized.dchdate + INTERVAL '30 days'
+            AND (
+              REPLACE(UPPER(TRIM(rs.pdx)), '.', '') = 'T814'
+              OR REPLACE(UPPER(TRIM(rd.icd10)), '.', '') = 'T814'
+            ))) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE EXISTS (
+      SELECT 1 FROM iptoprt o
+      WHERE o.an = periodized.an
+        AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('683', '684', '686', '6860', '6861', '6862', '6863', '6864', '6865', '6866', '6867', '6868', '6869')
+    )
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'CM0118' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE (pdx IN ('O820', 'O821', 'O822', 'O828', 'O829', 'O842') OR EXISTS (SELECT 1 FROM iptoprt o WHERE o.an = periodized.an AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('740', '741', '742', '744', '7499'))) AND NOT (EXISTS (SELECT 1 FROM iptdiag sd WHERE sd.an = periodized.an AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'O342'))) AS numerator,
+        COUNT(*) FILTER (WHERE NOT (EXISTS (SELECT 1 FROM iptdiag sd WHERE sd.an = periodized.an AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'O342'))) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE (pdx IN ('O820', 'O821', 'O822', 'O828', 'O829', 'O842') OR EXISTS (SELECT 1 FROM iptoprt o WHERE o.an = periodized.an AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('740', '741', '742', '744', '7499'))) AND NOT (EXISTS (SELECT 1 FROM iptdiag sd WHERE sd.an = periodized.an AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'O342'))) * 100.0) / NULLIF(COUNT(*) FILTER (WHERE NOT (EXISTS (SELECT 1 FROM iptdiag sd WHERE sd.an = periodized.an AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'O342'))), 0), 2) AS value
+      FROM periodized
+      WHERE LEFT(pdx, 3) BETWEEN 'O80' AND 'O84'
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'CM0119' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE pdx IN ('O820', 'O821', 'O822', 'O828', 'O829', 'O842') OR EXISTS (SELECT 1 FROM iptoprt o WHERE o.an = periodized.an AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('740', '741', '742', '744', '7499'))) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE pdx IN ('O820', 'O821', 'O822', 'O828', 'O829', 'O842') OR EXISTS (SELECT 1 FROM iptoprt o WHERE o.an = periodized.an AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('740', '741', '742', '744', '7499'))) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE LEFT(pdx, 3) BETWEEN 'O80' AND 'O84'
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'CM0204' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (
+        WHERE LEFT(pdx, 3) = 'P21'
+           OR EXISTS (SELECT 1 FROM iptdiag sd WHERE sd.an = periodized.an AND LEFT(REPLACE(UPPER(TRIM(sd.icd10)), '.', ''), 3) = 'P21')
+           OR EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND (nb.apgar1 <= 7 OR nb.has_asphyxia = 'Y'))
+      ) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND(
+        COUNT(*) FILTER (
+          WHERE LEFT(pdx, 3) = 'P21'
+             OR EXISTS (SELECT 1 FROM iptdiag sd WHERE sd.an = periodized.an AND LEFT(REPLACE(UPPER(TRIM(sd.icd10)), '.', ''), 3) = 'P21')
+             OR EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND (nb.apgar1 <= 7 OR nb.has_asphyxia = 'Y'))
+        ) * 1000.0 / NULLIF(COUNT(*), 0),
+        2
+      ) AS value
+      FROM periodized
+      WHERE (LEFT(pdx, 3) = 'Z38' OR age_y = 0)
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'CM0205' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (
+        WHERE pdx = 'P210'
+           OR EXISTS (SELECT 1 FROM iptdiag sd WHERE sd.an = periodized.an AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'P210')
+           OR EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND (nb.apgar2 <= 4 OR nb.apgar1 <= 3))
+      ) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND(
+        COUNT(*) FILTER (
+          WHERE pdx = 'P210'
+             OR EXISTS (SELECT 1 FROM iptdiag sd WHERE sd.an = periodized.an AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'P210')
+             OR EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND (nb.apgar2 <= 4 OR nb.apgar1 <= 3))
+        ) * 1000.0 / NULLIF(COUNT(*), 0),
+        2
+      ) AS value
+      FROM periodized
+      WHERE (LEFT(pdx, 3) = 'Z38' OR age_y = 0)
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'CM0206' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (
+        WHERE EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND nb.birth_weight < 2500)
+           OR (periodized.bw > 0 AND periodized.bw < 2500)
+      ) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND nb.birth_weight < 2500) OR (periodized.bw > 0 AND periodized.bw < 2500)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE (LEFT(pdx, 3) = 'Z38' OR age_y = 0)
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'CM0207' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (
+        WHERE died AND (
+          EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND nb.birth_weight < 1000)
+          OR (periodized.bw > 0 AND periodized.bw < 1000)
+        )
+      ) AS numerator,
+        COUNT(*) FILTER (
+        WHERE EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND nb.birth_weight < 1000)
+           OR (periodized.bw > 0 AND periodized.bw < 1000)
+      ) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE died AND (EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND nb.birth_weight < 1000) OR (periodized.bw > 0 AND periodized.bw < 1000))) * 100.0) / NULLIF(COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND nb.birth_weight < 1000) OR (periodized.bw > 0 AND periodized.bw < 1000)), 0), 2) AS value
+      FROM periodized
+      WHERE (LEFT(pdx, 3) = 'Z38' OR age_y = 0)
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'CM0208' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (
+        WHERE died AND (
+          EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND nb.birth_weight BETWEEN 1000 AND 1499)
+          OR (periodized.bw > 0 AND periodized.bw BETWEEN 1000 AND 1499)
+        )
+      ) AS numerator,
+        COUNT(*) FILTER (
+        WHERE EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND nb.birth_weight BETWEEN 1000 AND 1499)
+           OR (periodized.bw > 0 AND periodized.bw BETWEEN 1000 AND 1499)
+      ) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE died AND (EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND nb.birth_weight BETWEEN 1000 AND 1499) OR (periodized.bw > 0 AND periodized.bw BETWEEN 1000 AND 1499))) * 100.0) / NULLIF(COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND nb.birth_weight BETWEEN 1000 AND 1499) OR (periodized.bw > 0 AND periodized.bw BETWEEN 1000 AND 1499)), 0), 2) AS value
+      FROM periodized
+      WHERE (LEFT(pdx, 3) = 'Z38' OR age_y = 0)
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'CM0209' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (
+        WHERE died AND (
+          EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND nb.birth_weight BETWEEN 1500 AND 2499)
+          OR (periodized.bw > 0 AND periodized.bw BETWEEN 1500 AND 2499)
+        )
+      ) AS numerator,
+        COUNT(*) FILTER (
+        WHERE EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND nb.birth_weight BETWEEN 1500 AND 2499)
+           OR (periodized.bw > 0 AND periodized.bw BETWEEN 1500 AND 2499)
+      ) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE died AND (EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND nb.birth_weight BETWEEN 1500 AND 2499) OR (periodized.bw > 0 AND periodized.bw BETWEEN 1500 AND 2499))) * 100.0) / NULLIF(COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND nb.birth_weight BETWEEN 1500 AND 2499) OR (periodized.bw > 0 AND periodized.bw BETWEEN 1500 AND 2499)), 0), 2) AS value
+      FROM periodized
+      WHERE (LEFT(pdx, 3) = 'Z38' OR age_y = 0)
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'DC0103' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(DISTINCT periodized.hn) FILTER (
+        WHERE EXISTS (
+          SELECT 1 FROM iptoprt o
+          WHERE o.an = periodized.an
+            AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('9502', '9503', '9512')
+        )
+        OR EXISTS (
+          SELECT 1 FROM ovstdiag od
+          JOIN ovst ov ON ov.vn = od.vn
+          WHERE ov.hn = periodized.hn
+            AND REPLACE(UPPER(TRIM(od.icd10)), '.', '') IN ('Z010', 'Z135')
+            AND ov.vstdate >= :start_date AND ov.vstdate < :end_date
+        )
+      ) AS numerator,
+        COUNT(DISTINCT periodized.hn) AS denominator,
+        ROUND((COUNT(DISTINCT periodized.hn) FILTER (WHERE EXISTS (SELECT 1 FROM iptoprt o WHERE o.an = periodized.an AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('9502', '9503', '9512')) OR EXISTS (SELECT 1 FROM ovstdiag od JOIN ovst ov ON ov.vn = od.vn WHERE ov.hn = periodized.hn AND REPLACE(UPPER(TRIM(od.icd10)), '.', '') IN ('Z010', 'Z135') AND ov.vstdate >= :start_date AND ov.vstdate < :end_date)) * 100.0) / NULLIF(COUNT(DISTINCT periodized.hn), 0), 2) AS value
+      FROM periodized
+      WHERE LEFT(pdx, 3) IN ('E10', 'E11', 'E12', 'E13', 'E14')
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'DC0107' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (
+        WHERE EXISTS (
+          SELECT 1 FROM iptoprt o
+          WHERE o.an = periodized.an
+            AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('8410', '8411', '8412', '8413', '8414', '8415', '8416', '8417', '8418', '8419')
+        )
+      ) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM iptoprt o WHERE o.an = periodized.an AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('8410', '8411', '8412', '8413', '8414', '8415', '8416', '8417', '8418', '8419'))) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE LEFT(pdx, 3) IN ('E10', 'E11', 'E12', 'E13', 'E14')
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'DC0108' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (
+        WHERE ((age_y < 60 AND EXISTS (
+          SELECT 1 FROM lab_order lo
+          JOIN lab_head lh ON lh.lab_order_number = lo.lab_order_number
+          JOIN lab_items li ON li.lab_items_code = lo.lab_items_code
+          WHERE lh.hn = periodized.hn
+            AND li.lab_items_name ILIKE '%hba1c%'
+            AND lh.order_date >= periodized.period_start - INTERVAL '6 months'
+            AND lh.order_date <= periodized.period_start
+            AND CASE WHEN REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') ~ '^[0-9]*[.]?[0-9]+$' THEN CAST(REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') AS numeric) ELSE NULL END <= 7.0))
+            OR (age_y >= 60 AND EXISTS (
+          SELECT 1 FROM lab_order lo
+          JOIN lab_head lh ON lh.lab_order_number = lo.lab_order_number
+          JOIN lab_items li ON li.lab_items_code = lo.lab_items_code
+          WHERE lh.hn = periodized.hn
+            AND li.lab_items_name ILIKE '%hba1c%'
+            AND lh.order_date >= periodized.period_start - INTERVAL '6 months'
+            AND lh.order_date <= periodized.period_start
+            AND CASE WHEN REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') ~ '^[0-9]*[.]?[0-9]+$' THEN CAST(REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') AS numeric) ELSE NULL END <= 8.0)))
+      ) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE ((age_y < 60 AND EXISTS (
+          SELECT 1 FROM lab_order lo
+          JOIN lab_head lh ON lh.lab_order_number = lo.lab_order_number
+          JOIN lab_items li ON li.lab_items_code = lo.lab_items_code
+          WHERE lh.hn = periodized.hn
+            AND li.lab_items_name ILIKE '%hba1c%'
+            AND lh.order_date >= periodized.period_start - INTERVAL '6 months'
+            AND lh.order_date <= periodized.period_start
+            AND CASE WHEN REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') ~ '^[0-9]*[.]?[0-9]+$' THEN CAST(REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') AS numeric) ELSE NULL END <= 7.0)) OR (age_y >= 60 AND EXISTS (
+          SELECT 1 FROM lab_order lo
+          JOIN lab_head lh ON lh.lab_order_number = lo.lab_order_number
+          JOIN lab_items li ON li.lab_items_code = lo.lab_items_code
+          WHERE lh.hn = periodized.hn
+            AND li.lab_items_name ILIKE '%hba1c%'
+            AND lh.order_date >= periodized.period_start - INTERVAL '6 months'
+            AND lh.order_date <= periodized.period_start
+            AND CASE WHEN REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') ~ '^[0-9]*[.]?[0-9]+$' THEN CAST(REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') AS numeric) ELSE NULL END <= 8.0)))) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE age_y >= 18 AND LEFT(pdx, 3) IN ('E10', 'E11', 'E12', 'E13', 'E14')
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'DC0108.1' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1 FROM lab_order lo
+          JOIN lab_head lh ON lh.lab_order_number = lo.lab_order_number
+          JOIN lab_items li ON li.lab_items_code = lo.lab_items_code
+          WHERE lh.hn = periodized.hn
+            AND li.lab_items_name ILIKE '%hba1c%'
+            AND lh.order_date >= periodized.period_start - INTERVAL '6 months'
+            AND lh.order_date <= periodized.period_start
+            AND CASE WHEN REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') ~ '^[0-9]*[.]?[0-9]+$' THEN CAST(REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') AS numeric) ELSE NULL END <= 8.0)) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1 FROM lab_order lo
+          JOIN lab_head lh ON lh.lab_order_number = lo.lab_order_number
+          JOIN lab_items li ON li.lab_items_code = lo.lab_items_code
+          WHERE lh.hn = periodized.hn
+            AND li.lab_items_name ILIKE '%hba1c%'
+            AND lh.order_date >= periodized.period_start - INTERVAL '6 months'
+            AND lh.order_date <= periodized.period_start
+            AND CASE WHEN REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') ~ '^[0-9]*[.]?[0-9]+$' THEN CAST(REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') AS numeric) ELSE NULL END <= 8.0)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE age_y >= 60 AND LEFT(pdx, 3) IN ('E10', 'E11', 'E12', 'E13', 'E14')
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'DC0108.2' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1 FROM lab_order lo
+          JOIN lab_head lh ON lh.lab_order_number = lo.lab_order_number
+          JOIN lab_items li ON li.lab_items_code = lo.lab_items_code
+          WHERE lh.hn = periodized.hn
+            AND li.lab_items_name ILIKE '%hba1c%'
+            AND lh.order_date >= periodized.period_start - INTERVAL '6 months'
+            AND lh.order_date <= periodized.period_start
+            AND CASE WHEN REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') ~ '^[0-9]*[.]?[0-9]+$' THEN CAST(REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') AS numeric) ELSE NULL END <= 7.0)) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1 FROM lab_order lo
+          JOIN lab_head lh ON lh.lab_order_number = lo.lab_order_number
+          JOIN lab_items li ON li.lab_items_code = lo.lab_items_code
+          WHERE lh.hn = periodized.hn
+            AND li.lab_items_name ILIKE '%hba1c%'
+            AND lh.order_date >= periodized.period_start - INTERVAL '6 months'
+            AND lh.order_date <= periodized.period_start
+            AND CASE WHEN REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') ~ '^[0-9]*[.]?[0-9]+$' THEN CAST(REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') AS numeric) ELSE NULL END <= 7.0)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE age_y >= 18 AND age_y < 60 AND LEFT(pdx, 3) IN ('E10', 'E11', 'E12', 'E13', 'E14')
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'DC0201' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (
+        WHERE ((age_y < 65 AND EXISTS (
+          SELECT 1 FROM opdscreen sc
+          JOIN ovst v ON v.vn = sc.vn
+          WHERE v.an = periodized.an
+            AND sc.bps <= 130 AND sc.bpd <= 80))
+            OR (age_y >= 65 AND EXISTS (
+          SELECT 1 FROM opdscreen sc
+          JOIN ovst v ON v.vn = sc.vn
+          WHERE v.an = periodized.an
+            AND sc.bps <= 140 AND sc.bpd <= 80)))
+      ) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE ((age_y < 65 AND EXISTS (
+          SELECT 1 FROM opdscreen sc
+          JOIN ovst v ON v.vn = sc.vn
+          WHERE v.an = periodized.an
+            AND sc.bps <= 130 AND sc.bpd <= 80)) OR (age_y >= 65 AND EXISTS (
+          SELECT 1 FROM opdscreen sc
+          JOIN ovst v ON v.vn = sc.vn
+          WHERE v.an = periodized.an
+            AND sc.bps <= 140 AND sc.bpd <= 80)))) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE age_y >= 18 AND LEFT(pdx, 3) IN ('I10', 'I11', 'I12', 'I13', 'I14', 'I15')
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'DC0201.1' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1 FROM opdscreen sc
+          JOIN ovst v ON v.vn = sc.vn
+          WHERE v.an = periodized.an
+            AND sc.bps <= 130 AND sc.bpd <= 80)) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1 FROM opdscreen sc
+          JOIN ovst v ON v.vn = sc.vn
+          WHERE v.an = periodized.an
+            AND sc.bps <= 130 AND sc.bpd <= 80)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE age_y >= 18 AND age_y < 65 AND LEFT(pdx, 3) IN ('I10', 'I11', 'I12', 'I13', 'I14', 'I15')
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'DC0201.2' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1 FROM opdscreen sc
+          JOIN ovst v ON v.vn = sc.vn
+          WHERE v.an = periodized.an
+            AND sc.bps <= 140 AND sc.bpd <= 80)) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1 FROM opdscreen sc
+          JOIN ovst v ON v.vn = sc.vn
+          WHERE v.an = periodized.an
+            AND sc.bps <= 140 AND sc.bpd <= 80)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE age_y >= 65 AND LEFT(pdx, 3) IN ('I10', 'I11', 'I12', 'I13', 'I14', 'I15')
+      GROUP BY period_start, calendar_month
+
+  UNION ALL
+
+      SELECT
+        'DP0101' AS indicator_code,
+        period_start,
+        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
+        COUNT(*) FILTER (
+        WHERE EXISTS (
+          SELECT 1 FROM lab_order lo
+          JOIN lab_head lh ON lh.lab_order_number = lo.lab_order_number
+          JOIN lab_items li ON li.lab_items_code = lo.lab_items_code
+          WHERE lh.hn = periodized.hn
+            AND li.lab_items_name ILIKE '%hba1c%'
+            AND lh.order_date >= :start_date AND lh.order_date < :end_date
+            AND CASE WHEN REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') ~ '^[0-9]*[.]?[0-9]+$' THEN CAST(REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') AS numeric) ELSE NULL END < 7.5
+        )
+      ) AS numerator,
+        COUNT(*) AS denominator,
+        ROUND((COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM lab_order lo JOIN lab_head lh ON lh.lab_order_number = lo.lab_order_number JOIN lab_items li ON li.lab_items_code = lo.lab_items_code WHERE lh.hn = periodized.hn AND li.lab_items_name ILIKE '%hba1c%' AND lh.order_date >= :start_date AND lh.order_date < :end_date AND CASE WHEN REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') ~ '^[0-9]*[.]?[0-9]+$' THEN CAST(REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') AS numeric) ELSE NULL END < 7.5)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
+      FROM periodized
+      WHERE age_y < 18 AND (LEFT(pdx, 3) = 'E10' OR pdx IN ('E891', 'P702'))
       GROUP BY period_start, calendar_month
 ),
 expected(indicator_code, fiscal_month) AS (
@@ -2210,11 +3475,11 @@ metadata(
   rule_version, pending_reason, tier
 ) AS (
   VALUES
-    ('AA0101', 'A', 'rate', 'neutral', 'annual', 'Ambulatory care', 'Epilepsy: Hospitalization rate', 'Epilepsy: Hospitalization rate', 'ตัวชี้วัดกลุ่ม ACSC ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100,000', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ovst', 'ovstdiag', 'ipt', 'an_stat', 'iptdiag', 'patient', 'person']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 286', 'pending-local-source-2026.1', 'ต้องยืนยัน population denominator, age band และพื้นที่รับผิดชอบ', 'pending-local-source'),
-    ('AA0102', 'A', 'rate', 'neutral', 'annual', 'Ambulatory care', 'COPD: Hospitalization rate', 'COPD: Hospitalization rate', 'ตัวชี้วัดกลุ่ม ACSC ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100,000', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ovst', 'ovstdiag', 'ipt', 'an_stat', 'iptdiag', 'patient', 'person']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 287', 'pending-local-source-2026.1', 'ต้องยืนยัน population denominator, age band และพื้นที่รับผิดชอบ', 'pending-local-source'),
-    ('AA0103', 'A', 'rate', 'neutral', 'annual', 'Ambulatory care', 'Asthma: Hospitalization rate', 'Asthma: Hospitalization rate', 'ตัวชี้วัดกลุ่ม ACSC ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100,000', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ovst', 'ovstdiag', 'ipt', 'an_stat', 'iptdiag', 'patient', 'person']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 288', 'pending-local-source-2026.1', 'ต้องยืนยัน population denominator, age band และพื้นที่รับผิดชอบ', 'pending-local-source'),
-    ('AA0104', 'A', 'rate', 'neutral', 'annual', 'Ambulatory care', 'Diabetes Mellitus (DM): Hospitalization rate', 'Diabetes Mellitus (DM): Hospitalization rate', 'ตัวชี้วัดกลุ่ม ACSC ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100,000', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ovst', 'ovstdiag', 'ipt', 'an_stat', 'iptdiag', 'patient', 'person']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 289', 'pending-local-source-2026.1', 'ต้องยืนยัน population denominator, age band และพื้นที่รับผิดชอบ', 'pending-local-source'),
-    ('AA0105', 'A', 'rate', 'neutral', 'annual', 'Ambulatory care', 'Hypertension: Hospitalization rate', 'Hypertension: Hospitalization rate', 'ตัวชี้วัดกลุ่ม ACSC ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100,000', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ovst', 'ovstdiag', 'ipt', 'an_stat', 'iptdiag', 'patient', 'person']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 290', 'pending-local-source-2026.1', 'ต้องยืนยัน population denominator, age band และพื้นที่รับผิดชอบ', 'pending-local-source'),
+    ('AA0101', 'A', 'rate', 'neutral', 'annual', 'Ambulatory care', 'Epilepsy: Hospitalization rate', 'Epilepsy: Hospitalization rate', 'ตัวชี้วัดกลุ่ม ACSC ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100,000', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ovst', 'ovstdiag', 'ipt', 'an_stat', 'iptdiag', 'patient', 'person']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 286', 'pending-local-source-2026.1', 'ต้องยืนยัน population denominator รายเขตพื้นที่รับผิดชอบ และเกณฑ์คัดแยก Epilepsy ACSC', 'pending-local-source'),
+    ('AA0102', 'A', 'rate', 'neutral', 'annual', 'Ambulatory care', 'COPD: Hospitalization rate', 'COPD: Hospitalization rate', 'ตัวชี้วัดกลุ่ม ACSC ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100,000', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ovst', 'ovstdiag', 'ipt', 'an_stat', 'iptdiag', 'patient', 'person']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 287', 'pending-local-source-2026.1', 'ต้องยืนยัน population denominator รายเขตพื้นที่รับผิดชอบ และเกณฑ์คัดแยก Asthma ACSC', 'pending-local-source'),
+    ('AA0103', 'A', 'rate', 'neutral', 'annual', 'Ambulatory care', 'Asthma: Hospitalization rate', 'Asthma: Hospitalization rate', 'ตัวชี้วัดกลุ่ม ACSC ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100,000', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ovst', 'ovstdiag', 'ipt', 'an_stat', 'iptdiag', 'patient', 'person']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 288', 'pending-local-source-2026.1', 'ต้องยืนยัน population denominator รายเขตพื้นที่รับผิดชอบ และเกณฑ์คัดแยก COPD ACSC', 'pending-local-source'),
+    ('AA0104', 'A', 'rate', 'neutral', 'annual', 'Ambulatory care', 'Diabetes Mellitus (DM): Hospitalization rate', 'Diabetes Mellitus (DM): Hospitalization rate', 'ตัวชี้วัดกลุ่ม ACSC ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100,000', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ovst', 'ovstdiag', 'ipt', 'an_stat', 'iptdiag', 'patient', 'person']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 289', 'pending-local-source-2026.1', 'ต้องยืนยัน population denominator รายเขตพื้นที่รับผิดชอบ และการคัดแยกภาวะแทรกซ้อน DM ACSC', 'pending-local-source'),
+    ('AA0105', 'A', 'rate', 'neutral', 'annual', 'Ambulatory care', 'Hypertension: Hospitalization rate', 'Hypertension: Hospitalization rate', 'ตัวชี้วัดกลุ่ม ACSC ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100,000', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ovst', 'ovstdiag', 'ipt', 'an_stat', 'iptdiag', 'patient', 'person']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 290', 'pending-local-source-2026.1', 'ต้องยืนยัน population denominator รายเขตพื้นที่รับผิดชอบ และการคัดแยกภาวะแทรกซ้อน HT ACSC', 'pending-local-source'),
     ('CA0101', 'C', 'rate', 'neutral', 'monthly', 'Care process', 'Anesthesia: Intra-operative cardiac arrest ASA physical status I, II', 'Anesthesia: Intra-operative cardiac arrest ASA physical status I, II', 'ตัวชี้วัดกลุ่ม ANESTHESIA ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 10,000', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['operation_list', 'operation_detail', 'ipt', 'an_stat', 'er_regist']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 180', 'pending-local-source-2026.1', 'ต้องยืนยัน ASA, pre-anesthetic, recovery, re-intubation และ capnometry event', 'pending-local-source'),
     ('CA0102', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Anesthesia: Percent of pre-anesthetic visit elective in-patient cases', 'Anesthesia: Percent of pre-anesthetic visit elective in-patient cases', 'ตัวชี้วัดกลุ่ม ANESTHESIA ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['operation_list', 'operation_detail', 'ipt', 'an_stat', 'er_regist']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 181', 'pending-local-source-2026.1', 'ต้องยืนยัน ASA, pre-anesthetic, recovery, re-intubation และ capnometry event', 'pending-local-source'),
     ('CA0103', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Anesthesia: Percent of patients observed in recovery room', 'Anesthesia: Percent of patients observed in recovery room', 'ตัวชี้วัดกลุ่ม ANESTHESIA ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['operation_list', 'operation_detail', 'ipt', 'an_stat', 'er_regist']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 182', 'pending-local-source-2026.1', 'ต้องยืนยัน ASA, pre-anesthetic, recovery, re-intubation และ capnometry event', 'pending-local-source'),
@@ -2223,44 +3488,44 @@ metadata(
     ('CE0101', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Sepsis: Percent of broad-spectrum antibiotic receiving within 3 hours', 'Sepsis: Percent of broad-spectrum antibiotic receiving within 3 hours', 'ตัวชี้วัดกลุ่ม SEPSIS_ER ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 194', 'registered-2026.1', NULL, 'registered'),
     ('CE0102', 'C', 'ratio', 'neutral', 'monthly', 'Care process', 'ER: Average Emergency Department (ED) TIME-IN, TIME-OUT', 'ER: Average Emergency Department (ED) TIME-IN, TIME-OUT', 'ตัวชี้วัดกลุ่ม ED_FLOW ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ovst', 'er_regist', 'ovstdiag']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 195', 'pending-local-source-2026.1', 'ต้องยืนยันความหมาย ER TIME-IN/TIME-OUT และเกณฑ์ emergency', 'pending-local-source'),
     ('CE0103', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'ER: Percent of Emergency patients recieveing emergency service (ED TIME-IN, TIME-OUT) within 60 minutes', 'ER: Percent of Emergency patients recieveing emergency service (ED TIME-IN, TIME-OUT) within 60 minutes', 'ตัวชี้วัดกลุ่ม ED_FLOW ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ovst', 'er_regist', 'ovstdiag']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 197', 'pending-local-source-2026.1', 'ต้องยืนยันความหมาย ER TIME-IN/TIME-OUT และเกณฑ์ emergency', 'pending-local-source'),
-    ('CE0104', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Sepsis: Percent of broad-spectrum antibiotic received within 1 hour in emergency room', 'Sepsis: Percent of broad-spectrum antibiotic received within 1 hour in emergency room', 'ตัวชี้วัดกลุ่ม SEPSIS_ER ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 198', 'pending-local-source-2026.1', 'ยังไม่ยืนยัน local rule/source ของตัวชี้วัดนี้', 'pending-local-source'),
+    ('CE0104', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Sepsis: Percent of broad-spectrum antibiotic received within 1 hour in emergency room', 'Sepsis: Percent of broad-spectrum antibiotic received within 1 hour in emergency room', 'ตัวชี้วัดกลุ่ม SEPSIS_ER ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 198', 'pending-local-source-2026.1', 'ต้องยืนยันเวลา triage, ER order time และเวลาบริหารยา broad-spectrum antibiotic ภายใน 1 ชั่วโมง', 'pending-local-source'),
     ('CG0101', 'C', 'rate', 'neutral', 'monthly', 'Care process', 'Pressure Ulcer/Injury: Rate of Pressure ulcer', 'Pressure Ulcer/Injury: Rate of Pressure ulcer', 'ตัวชี้วัดกลุ่ม PRESSURE_ULCER ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 1,000', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'ipd_nurse_note', 'iptbedmove', 'ward']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 188', 'pending-local-source-2026.1', 'ต้องยืนยัน stage, present-on-admission, risk population และ patient-days', 'pending-local-source'),
     ('CG0102', 'C', 'rate', 'neutral', 'monthly', 'Care process', 'Pressure Ulcer/Injury: Rate of Pressure ulcer in risk patients', 'Pressure Ulcer/Injury: Rate of Pressure ulcer in risk patients', 'ตัวชี้วัดกลุ่ม PRESSURE_ULCER ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 1,000', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'ipd_nurse_note', 'iptbedmove', 'ward']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 190', 'pending-local-source-2026.1', 'ต้องยืนยัน stage, present-on-admission, risk population และ patient-days', 'pending-local-source'),
     ('CG0103', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Pressure Ulcer/Injury: Hospital-acquired pressure ulcer/Injury', 'Pressure Ulcer/Injury: Hospital-acquired pressure ulcer/Injury', 'ตัวชี้วัดกลุ่ม PRESSURE_ULCER ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'ipd_nurse_note', 'iptbedmove', 'ward']::text[], 'ทุก 3 เดือน (รายไตรมาส)', 'THIP KPI Dictionary 2025 · หน้า 191', 'pending-local-source-2026.1', 'ต้องยืนยัน stage, present-on-admission, risk population และ patient-days', 'pending-local-source'),
     ('CG0104', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Pressure Ulcer/Injury: Hospital-acquired pressure ulcer/Injury (HAPI) rate', 'Pressure Ulcer/Injury: Hospital-acquired pressure ulcer/Injury (HAPI) rate', 'ตัวชี้วัดกลุ่ม PRESSURE_ULCER ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'ipd_nurse_note', 'iptbedmove', 'ward']::text[], 'ทุก 3 เดือน (รายไตรมาส)', 'THIP KPI Dictionary 2025 · หน้า 193', 'pending-local-source-2026.1', 'ต้องยืนยัน stage, present-on-admission, risk population และ patient-days', 'pending-local-source'),
     ('CI0101', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Sepsis: Percent of mortality', 'Sepsis: Percent of mortality', 'ตัวชี้วัดกลุ่ม SEPSIS_ER ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 199', 'registered-2026.1', NULL, 'registered'),
-    ('CM0101', 'C', 'rate', 'neutral', 'annual', 'Care process', 'Maternal: Mortality rate of mother from pregnancy and/or labour', 'Maternal: Mortality rate of mother from pregnancy and/or labour', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100,000', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 161', 'pending-local-source-2026.1', 'ต้องยืนยัน mother-child linkage, อายุครรภ์, grain การคลอด และหน้าต่างทารก', 'pending-local-source'),
-    ('CM0104', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Maternal: Percent of unplanned re-admission of caesarean section within 28 days', 'Maternal: Percent of unplanned re-admission of caesarean section within 28 days', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 162', 'pending-local-source-2026.1', 'ต้องยืนยัน mother-child linkage, อายุครรภ์, grain การคลอด และหน้าต่างทารก', 'pending-local-source'),
+    ('CM0101', 'C', 'rate', 'neutral', 'annual', 'Care process', 'Maternal: Mortality rate of mother from pregnancy and/or labour', 'Maternal: Mortality rate of mother from pregnancy and/or labour', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100,000', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 161', 'pending-local-source-2026.1', 'ต้องยืนยัน mother-infant linkage และฐานข้อมูลการเกิดมีชีพ (live births) ในพื้นที่รับผิดชอบ', 'pending-local-source'),
+    ('CM0104', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Maternal: Percent of unplanned re-admission of caesarean section within 28 days', 'Maternal: Percent of unplanned re-admission of caesarean section within 28 days', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 162', 'registered-2026.1', NULL, 'registered'),
     ('CM0105', 'C', 'ratio', 'neutral', 'monthly', 'Care process', 'Maternal: Average length of stay of caesarean section', 'Maternal: Average length of stay of caesarean section', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 163', 'registered-2026.1', NULL, 'registered'),
-    ('CM0107', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Maternal: Percent of immediate postpartum hemorrhage (Vaginal delivery)', 'Maternal: Percent of immediate postpartum hemorrhage (Vaginal delivery)', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 164', 'pending-local-source-2026.1', 'ต้องยืนยัน mother-child linkage, อายุครรภ์, grain การคลอด และหน้าต่างทารก', 'pending-local-source'),
-    ('CM0109', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Maternal: Percent of eclampsia in pregnancy induce Hypertension', 'Maternal: Percent of eclampsia in pregnancy induce Hypertension', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 165', 'pending-local-source-2026.1', 'ต้องยืนยัน mother-child linkage, อายุครรภ์, grain การคลอด และหน้าต่างทารก', 'pending-local-source'),
-    ('CM0110', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Maternal: Percent of gestational DM', 'Maternal: Percent of gestational DM', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 166', 'pending-local-source-2026.1', 'ต้องยืนยัน mother-child linkage, อายุครรภ์, grain การคลอด และหน้าต่างทารก', 'pending-local-source'),
-    ('CM0116', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'hysterectomy Maternal: Percent of patients who received antibiotic prophylaxis in abdominal hysterectomy', 'hysterectomy Maternal: Percent of patients who received antibiotic prophylaxis in abdominal hysterectomy', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 167', 'pending-local-source-2026.1', 'ต้องยืนยัน mother-child linkage, อายุครรภ์, grain การคลอด และหน้าต่างทารก', 'pending-local-source'),
-    ('CM0117', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Maternal: Percent of abdominal hysterectomy associated infection', 'Maternal: Percent of abdominal hysterectomy associated infection', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 168', 'pending-local-source-2026.1', 'ต้องยืนยัน mother-child linkage, อายุครรภ์, grain การคลอด และหน้าต่างทารก', 'pending-local-source'),
-    ('CM0118', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Maternal: Percent of primary cesarean section', 'Maternal: Percent of primary cesarean section', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 169', 'pending-local-source-2026.1', 'ต้องยืนยัน mother-child linkage, อายุครรภ์, grain การคลอด และหน้าต่างทารก', 'pending-local-source'),
-    ('CM0119', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Maternal: Percent of cesarean section with Pdx = O80-O84 and Sdx = O80-O84 (NHSO health service indicator)', 'Maternal: Percent of cesarean section with Pdx = O80-O84 and Sdx = O80-O84 (NHSO health service indicator)', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 170', 'pending-local-source-2026.1', 'ต้องยืนยัน mother-child linkage, อายุครรภ์, grain การคลอด และหน้าต่างทารก', 'pending-local-source'),
-    ('CM0201', 'C', 'rate', 'neutral', 'monthly', 'Care process', 'Child: Perinatal mortality rate (24 weeks)', 'Child: Perinatal mortality rate (24 weeks)', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 1,000', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 171', 'pending-local-source-2026.1', 'ต้องยืนยัน mother-child linkage, อายุครรภ์, grain การคลอด และหน้าต่างทารก', 'pending-local-source'),
-    ('CM0202', 'C', 'rate', 'neutral', 'monthly', 'Care process', 'Child: Perinatal mortality rate (28 weeks)', 'Child: Perinatal mortality rate (28 weeks)', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 1,000', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 172', 'pending-local-source-2026.1', 'ต้องยืนยัน mother-child linkage, อายุครรภ์, grain การคลอด และหน้าต่างทารก', 'pending-local-source'),
-    ('CM0203', 'C', 'rate', 'neutral', 'monthly', 'Care process', 'Child: Neonatal mortality rate', 'Child: Neonatal mortality rate', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 1,000', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 173', 'pending-local-source-2026.1', 'ต้องยืนยัน mother-child linkage, อายุครรภ์, grain การคลอด และหน้าต่างทารก', 'pending-local-source'),
-    ('CM0204', 'C', 'rate', 'neutral', 'monthly', 'Care process', 'Child: Birth asphyxia rate', 'Child: Birth asphyxia rate', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 1,000', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 174', 'pending-local-source-2026.1', 'ต้องยืนยัน mother-child linkage, อายุครรภ์, grain การคลอด และหน้าต่างทารก', 'pending-local-source'),
-    ('CM0205', 'C', 'rate', 'neutral', 'monthly', 'Care process', 'Child: Severe birth asphyxia rate', 'Child: Severe birth asphyxia rate', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 1,000', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 175', 'pending-local-source-2026.1', 'ต้องยืนยัน mother-child linkage, อายุครรภ์, grain การคลอด และหน้าต่างทารก', 'pending-local-source'),
-    ('CM0206', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Child: Percent of low birth weight < 2500 grams', 'Child: Percent of low birth weight < 2500 grams', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 176', 'pending-local-source-2026.1', 'ต้องยืนยัน mother-child linkage, อายุครรภ์, grain การคลอด และหน้าต่างทารก', 'pending-local-source'),
-    ('CM0207', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Child: Percent of neonatal mortality with birth weight < 1,000 grams within 28 days', 'Child: Percent of neonatal mortality with birth weight < 1,000 grams within 28 days', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 177', 'pending-local-source-2026.1', 'ต้องยืนยัน mother-child linkage, อายุครรภ์, grain การคลอด และหน้าต่างทารก', 'pending-local-source'),
-    ('CM0208', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Child: Percent of neonatal mortality with birth weight between 1,000 - 1,499 grams within 28 days', 'Child: Percent of neonatal mortality with birth weight between 1,000 - 1,499 grams within 28 days', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 178', 'pending-local-source-2026.1', 'ต้องยืนยัน mother-child linkage, อายุครรภ์, grain การคลอด และหน้าต่างทารก', 'pending-local-source'),
-    ('CM0209', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Child: Percent of neonatal mortality with birth weight between 1,500 - 2,499 grams within 28 days', 'Child: Percent of neonatal mortality with birth weight between 1,500 - 2,499 grams within 28 days', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 179', 'pending-local-source-2026.1', 'ต้องยืนยัน mother-child linkage, อายุครรภ์, grain การคลอด และหน้าต่างทารก', 'pending-local-source'),
+    ('CM0107', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Maternal: Percent of immediate postpartum hemorrhage (Vaginal delivery)', 'Maternal: Percent of immediate postpartum hemorrhage (Vaginal delivery)', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 164', 'registered-2026.1', NULL, 'registered'),
+    ('CM0109', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Maternal: Percent of eclampsia in pregnancy induce Hypertension', 'Maternal: Percent of eclampsia in pregnancy induce Hypertension', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 165', 'registered-2026.1', NULL, 'registered'),
+    ('CM0110', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Maternal: Percent of gestational DM', 'Maternal: Percent of gestational DM', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 166', 'registered-2026.1', NULL, 'registered'),
+    ('CM0116', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'hysterectomy Maternal: Percent of patients who received antibiotic prophylaxis in abdominal hysterectomy', 'hysterectomy Maternal: Percent of patients who received antibiotic prophylaxis in abdominal hysterectomy', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 167', 'registered-2026.1', NULL, 'registered'),
+    ('CM0117', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Maternal: Percent of abdominal hysterectomy associated infection', 'Maternal: Percent of abdominal hysterectomy associated infection', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 168', 'registered-2026.1', NULL, 'registered'),
+    ('CM0118', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Maternal: Percent of primary cesarean section', 'Maternal: Percent of primary cesarean section', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 169', 'registered-2026.1', NULL, 'registered'),
+    ('CM0119', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Maternal: Percent of cesarean section with Pdx = O80-O84 and Sdx = O80-O84 (NHSO health service indicator)', 'Maternal: Percent of cesarean section with Pdx = O80-O84 and Sdx = O80-O84 (NHSO health service indicator)', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 170', 'registered-2026.1', NULL, 'registered'),
+    ('CM0201', 'C', 'rate', 'neutral', 'monthly', 'Care process', 'Child: Perinatal mortality rate (24 weeks)', 'Child: Perinatal mortality rate (24 weeks)', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 1,000', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 171', 'pending-local-source-2026.1', 'ต้องยืนยันการบันทึกอายุครรภ์ >= 24 สัปดาห์ และการจำแนกทารกตายคลอด (stillbirth)', 'pending-local-source'),
+    ('CM0202', 'C', 'rate', 'neutral', 'monthly', 'Care process', 'Child: Perinatal mortality rate (28 weeks)', 'Child: Perinatal mortality rate (28 weeks)', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 1,000', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 172', 'pending-local-source-2026.1', 'ต้องยืนยันการบันทึกอายุครรภ์ >= 28 สัปดาห์ และการเสียชีวิตของทารกภายใน 7 วันหลังคลอด', 'pending-local-source'),
+    ('CM0203', 'C', 'rate', 'neutral', 'monthly', 'Care process', 'Child: Neonatal mortality rate', 'Child: Neonatal mortality rate', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 1,000', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 173', 'pending-local-source-2026.1', 'ต้องยืนยันฐานข้อมูลการเกิดมีชีพ (live births) และการเสียชีวิตของทารกภายใน 28 วันหลังคลอด', 'pending-local-source'),
+    ('CM0204', 'C', 'rate', 'neutral', 'monthly', 'Care process', 'Child: Birth asphyxia rate', 'Child: Birth asphyxia rate', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 1,000', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 174', 'registered-2026.1', NULL, 'registered'),
+    ('CM0205', 'C', 'rate', 'neutral', 'monthly', 'Care process', 'Child: Severe birth asphyxia rate', 'Child: Severe birth asphyxia rate', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 1,000', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 175', 'registered-2026.1', NULL, 'registered'),
+    ('CM0206', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Child: Percent of low birth weight < 2500 grams', 'Child: Percent of low birth weight < 2500 grams', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 176', 'registered-2026.1', NULL, 'registered'),
+    ('CM0207', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Child: Percent of neonatal mortality with birth weight < 1,000 grams within 28 days', 'Child: Percent of neonatal mortality with birth weight < 1,000 grams within 28 days', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 177', 'registered-2026.1', NULL, 'registered'),
+    ('CM0208', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Child: Percent of neonatal mortality with birth weight between 1,000 - 1,499 grams within 28 days', 'Child: Percent of neonatal mortality with birth weight between 1,000 - 1,499 grams within 28 days', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 178', 'registered-2026.1', NULL, 'registered'),
+    ('CM0209', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Child: Percent of neonatal mortality with birth weight between 1,500 - 2,499 grams within 28 days', 'Child: Percent of neonatal mortality with birth weight between 1,500 - 2,499 grams within 28 days', 'ตัวชี้วัดกลุ่ม MATERNAL_CHILD ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 179', 'registered-2026.1', NULL, 'registered'),
     ('CO0101', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Operation: Percent of using surgical safety check list', 'Operation: Percent of using surgical safety check list', 'ตัวชี้วัดกลุ่ม SURGERY ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['operation_list', 'operation_detail', 'operation_item', 'iptoprt', 'ipt', 'an_stat']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 185', 'pending-local-source-2026.1', 'ต้องยืนยัน surgical safety checklist, peri-op window และนิยาม re-operation', 'pending-local-source'),
     ('CO0105', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Operation: Percent of peri-operative mortality within 24 hours', 'Operation: Percent of peri-operative mortality within 24 hours', 'ตัวชี้วัดกลุ่ม SURGERY ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['operation_list', 'operation_detail', 'operation_item', 'iptoprt', 'ipt', 'an_stat']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 186', 'pending-local-source-2026.1', 'ต้องยืนยัน surgical safety checklist, peri-op window และนิยาม re-operation', 'pending-local-source'),
     ('CO0107', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Operation: Percent of re-operation', 'Operation: Percent of re-operation', 'ตัวชี้วัดกลุ่ม SURGERY ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['operation_list', 'operation_detail', 'operation_item', 'iptoprt', 'ipt', 'an_stat']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 187', 'pending-local-source-2026.1', 'ต้องยืนยัน surgical safety checklist, peri-op window และนิยาม re-operation', 'pending-local-source'),
     ('CP0101', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Percent of carers of children with ADHD/LD/MDD having good compliance to treatment', 'Percent of carers of children with ADHD/LD/MDD having good compliance to treatment', 'ตัวชี้วัดกลุ่ม MENTAL_DEVELOPMENT ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['psych_assess_child', 'psych_plan', 'psych_therapy', 'depression_screen', 'person_wbc', 'ovst', 'ovstdiag', 'clinicmember']::text[], 'ทุก 6 เดือน (รายครึ่งปี)', 'THIP KPI Dictionary 2025 · หน้า 200', 'pending-local-source-2026.1', 'ต้องยืนยัน baseline/follow-up score และการติดตาม remission/retention', 'pending-local-source'),
     ('CP0201', 'C', 'percent', 'neutral', 'monthly', 'Care process', 'Percent of children with Neurodevelopmental Disorder being diagnosed within 90 days after registration', 'Percent of children with Neurodevelopmental Disorder being diagnosed within 90 days after registration', 'ตัวชี้วัดกลุ่ม MENTAL_DEVELOPMENT ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['psych_assess_child', 'psych_plan', 'psych_therapy', 'depression_screen', 'person_wbc', 'ovst', 'ovstdiag', 'clinicmember']::text[], 'ทุก 3 เดือน (รายไตรมาส)', 'THIP KPI Dictionary 2025 · หน้า 201', 'pending-local-source-2026.1', 'ต้องยืนยัน baseline/follow-up score และการติดตาม remission/retention', 'pending-local-source'),
-    ('DC0103', 'D', 'percent', 'neutral', 'annual', 'Disease', 'DM: Percent of diabetic retinopathy screening', 'DM: Percent of diabetic retinopathy screening', 'ตัวชี้วัดกลุ่ม DM_HT ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen', 'lab_head', 'lab_order', 'lab_items', 'opitemrece', 'drugitems']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 92', 'pending-local-source-2026.1', 'ต้องยืนยัน good-control threshold, lab ล่าสุดที่ใช้ได้ และช่วงอายุ', 'pending-local-source'),
-    ('DC0107', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'DM: Percent of lower-extremity amputation among patients with diabetes', 'DM: Percent of lower-extremity amputation among patients with diabetes', 'ตัวชี้วัดกลุ่ม DM_HT ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen', 'lab_head', 'lab_order', 'lab_items', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 93', 'pending-local-source-2026.1', 'ต้องยืนยัน good-control threshold, lab ล่าสุดที่ใช้ได้ และช่วงอายุ', 'pending-local-source'),
-    ('DC0108', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'DM: Percent of good controlled of blood sugar in adult', 'DM: Percent of good controlled of blood sugar in adult', 'ตัวชี้วัดกลุ่ม DM_HT ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen', 'lab_head', 'lab_order', 'lab_items', 'opitemrece', 'drugitems']::text[], 'ทุก 6 เดือน (รายครึ่งปี)', 'THIP KPI Dictionary 2025 · หน้า 94', 'pending-local-source-2026.1', 'ต้องยืนยัน good-control threshold, lab ล่าสุดที่ใช้ได้ และช่วงอายุ', 'pending-local-source'),
-    ('DC0108.1', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'DM: Percent of good controlled of blood sugar in adult aged ≥ 60 years old', 'DM: Percent of good controlled of blood sugar in adult aged ≥ 60 years old', 'ตัวชี้วัดกลุ่ม DM_HT ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen', 'lab_head', 'lab_order', 'lab_items', 'opitemrece', 'drugitems']::text[], 'ทุก 6 เดือน (รายครึ่งปี)', 'THIP KPI Dictionary 2025 · หน้า 95', 'pending-local-source-2026.1', 'ต้องยืนยัน good-control threshold, lab ล่าสุดที่ใช้ได้ และช่วงอายุ', 'pending-local-source'),
-    ('DC0108.2', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'DM: Percent of good controlled of blood sugar in adult aged < 60 years old', 'DM: Percent of good controlled of blood sugar in adult aged < 60 years old', 'ตัวชี้วัดกลุ่ม DM_HT ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen', 'lab_head', 'lab_order', 'lab_items', 'opitemrece', 'drugitems']::text[], 'ทุก 6 เดือน (รายครึ่งปี)', 'THIP KPI Dictionary 2025 · หน้า 96', 'pending-local-source-2026.1', 'ต้องยืนยัน good-control threshold, lab ล่าสุดที่ใช้ได้ และช่วงอายุ', 'pending-local-source'),
-    ('DC0201', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'HT: Percent of good controlled of blood pressure', 'HT: Percent of good controlled of blood pressure', 'ตัวชี้วัดกลุ่ม DM_HT ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen', 'lab_head', 'lab_order', 'lab_items', 'opitemrece', 'drugitems']::text[], 'ทุก 6 เดือน (รายครึ่งปี)', 'THIP KPI Dictionary 2025 · หน้า 97', 'pending-local-source-2026.1', 'ต้องยืนยัน good-control threshold, lab ล่าสุดที่ใช้ได้ และช่วงอายุ', 'pending-local-source'),
-    ('DC0201.1', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'HT: Percent of good controlled of blood pressure of patient aged < 65 years old', 'HT: Percent of good controlled of blood pressure of patient aged < 65 years old', 'ตัวชี้วัดกลุ่ม DM_HT ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen', 'lab_head', 'lab_order', 'lab_items', 'opitemrece', 'drugitems']::text[], 'ทุก 6 เดือน (รายครึ่งปี)', 'THIP KPI Dictionary 2025 · หน้า 99', 'pending-local-source-2026.1', 'ต้องยืนยัน good-control threshold, lab ล่าสุดที่ใช้ได้ และช่วงอายุ', 'pending-local-source'),
-    ('DC0201.2', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'HT: Percent of good controlled of blood pressure of patient aged ≥ 65 years old', 'HT: Percent of good controlled of blood pressure of patient aged ≥ 65 years old', 'ตัวชี้วัดกลุ่ม DM_HT ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen', 'lab_head', 'lab_order', 'lab_items', 'opitemrece', 'drugitems']::text[], 'ทุก 6 เดือน (รายครึ่งปี)', 'THIP KPI Dictionary 2025 · หน้า 100', 'pending-local-source-2026.1', 'ต้องยืนยัน good-control threshold, lab ล่าสุดที่ใช้ได้ และช่วงอายุ', 'pending-local-source'),
+    ('DC0103', 'D', 'percent', 'neutral', 'annual', 'Disease', 'DM: Percent of diabetic retinopathy screening', 'DM: Percent of diabetic retinopathy screening', 'ตัวชี้วัดกลุ่ม DM_HT ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen', 'lab_head', 'lab_order', 'lab_items', 'opitemrece', 'drugitems']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 92', 'registered-2026.1', NULL, 'registered'),
+    ('DC0107', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'DM: Percent of lower-extremity amputation among patients with diabetes', 'DM: Percent of lower-extremity amputation among patients with diabetes', 'ตัวชี้วัดกลุ่ม DM_HT ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen', 'lab_head', 'lab_order', 'lab_items', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 93', 'registered-2026.1', NULL, 'registered'),
+    ('DC0108', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'DM: Percent of good controlled of blood sugar in adult', 'DM: Percent of good controlled of blood sugar in adult', 'ตัวชี้วัดกลุ่ม DM_HT ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen', 'lab_head', 'lab_order', 'lab_items', 'opitemrece', 'drugitems']::text[], 'ทุก 6 เดือน (รายครึ่งปี)', 'THIP KPI Dictionary 2025 · หน้า 94', 'registered-2026.1', NULL, 'registered'),
+    ('DC0108.1', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'DM: Percent of good controlled of blood sugar in adult aged ≥ 60 years old', 'DM: Percent of good controlled of blood sugar in adult aged ≥ 60 years old', 'ตัวชี้วัดกลุ่ม DM_HT ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen', 'lab_head', 'lab_order', 'lab_items', 'opitemrece', 'drugitems']::text[], 'ทุก 6 เดือน (รายครึ่งปี)', 'THIP KPI Dictionary 2025 · หน้า 95', 'registered-2026.1', NULL, 'registered'),
+    ('DC0108.2', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'DM: Percent of good controlled of blood sugar in adult aged < 60 years old', 'DM: Percent of good controlled of blood sugar in adult aged < 60 years old', 'ตัวชี้วัดกลุ่ม DM_HT ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen', 'lab_head', 'lab_order', 'lab_items', 'opitemrece', 'drugitems']::text[], 'ทุก 6 เดือน (รายครึ่งปี)', 'THIP KPI Dictionary 2025 · หน้า 96', 'registered-2026.1', NULL, 'registered'),
+    ('DC0201', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'HT: Percent of good controlled of blood pressure', 'HT: Percent of good controlled of blood pressure', 'ตัวชี้วัดกลุ่ม DM_HT ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen', 'lab_head', 'lab_order', 'lab_items', 'opitemrece', 'drugitems']::text[], 'ทุก 6 เดือน (รายครึ่งปี)', 'THIP KPI Dictionary 2025 · หน้า 97', 'registered-2026.1', NULL, 'registered'),
+    ('DC0201.1', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'HT: Percent of good controlled of blood pressure of patient aged < 65 years old', 'HT: Percent of good controlled of blood pressure of patient aged < 65 years old', 'ตัวชี้วัดกลุ่ม DM_HT ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen', 'lab_head', 'lab_order', 'lab_items', 'opitemrece', 'drugitems']::text[], 'ทุก 6 เดือน (รายครึ่งปี)', 'THIP KPI Dictionary 2025 · หน้า 99', 'registered-2026.1', NULL, 'registered'),
+    ('DC0201.2', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'HT: Percent of good controlled of blood pressure of patient aged ≥ 65 years old', 'HT: Percent of good controlled of blood pressure of patient aged ≥ 65 years old', 'ตัวชี้วัดกลุ่ม DM_HT ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen', 'lab_head', 'lab_order', 'lab_items', 'opitemrece', 'drugitems']::text[], 'ทุก 6 เดือน (รายครึ่งปี)', 'THIP KPI Dictionary 2025 · หน้า 100', 'registered-2026.1', NULL, 'registered'),
     ('DC0301', 'D', 'percent', 'neutral', 'annual', 'Disease', 'HIV: Percent of people living with HIV with at least one test viral load (VL) after ARV treatment', 'HIV: Percent of people living with HIV with at least one test viral load (VL) after ARV treatment', 'ตัวชี้วัดกลุ่ม HIV_TB ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['clinicmember', 'clinic_visit', 'clinicmember_tb', 'tb_register', 'tb_register_visit', 'tb_lab_examination_sputum', 'arv_tx', 'arv_lab', 'ovstdiag']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 101', 'pending-local-source-2026.1', 'ต้องยืนยันวันลงทะเบียน cohort, หน้าต่าง 12 เดือน และความหมาย test/result', 'pending-local-source'),
     ('DC0302', 'D', 'percent', 'neutral', 'annual', 'Disease', 'HIV: Percent of people living with HIV with viral load (VL) < 50 copies/ml after ARV treatment 12 months ago', 'HIV: Percent of people living with HIV with viral load (VL) < 50 copies/ml after ARV treatment 12 months ago', 'ตัวชี้วัดกลุ่ม HIV_TB ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['clinicmember', 'clinic_visit', 'clinicmember_tb', 'tb_register', 'tb_register_visit', 'tb_lab_examination_sputum', 'arv_tx', 'arv_lab', 'ovstdiag']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 102', 'pending-local-source-2026.1', 'ต้องยืนยันวันลงทะเบียน cohort, หน้าต่าง 12 เดือน และความหมาย test/result', 'pending-local-source'),
     ('DC0306', 'D', 'percent', 'neutral', 'annual', 'Disease', 'HIV: Percent of people living with HIV screening PAP smear', 'HIV: Percent of people living with HIV screening PAP smear', 'ตัวชี้วัดกลุ่ม HIV_TB ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['clinicmember', 'clinic_visit', 'clinicmember_tb', 'tb_register', 'tb_register_visit', 'tb_lab_examination_sputum', 'arv_tx', 'arv_lab', 'ovstdiag']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 103', 'pending-local-source-2026.1', 'ต้องยืนยันวันลงทะเบียน cohort, หน้าต่าง 12 เดือน และความหมาย test/result', 'pending-local-source'),
@@ -2289,7 +3554,7 @@ metadata(
     ('DE1403', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Non-variceal Upper Gastrointestinal Hemorrhage (UGIH): Percent of hemostatic success by endoscopic approach', 'Non-variceal Upper Gastrointestinal Hemorrhage (UGIH): Percent of hemostatic success by endoscopic approach', 'ตัวชี้วัดกลุ่ม UGIH ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'operation_list', 'operation_detail', 'operation_item', 'lab_head', 'lab_order', 'lab_items']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 145', 'pending-local-source-2026.1', 'ต้องยืนยัน EGD/hemostasis event และ risk status', 'pending-local-source'),
     ('DE1404', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Upper Gastrointestinal Hemorrhage (UGIH): Recurrent rates of UGIH after upper endoscopic treatment', 'Upper Gastrointestinal Hemorrhage (UGIH): Recurrent rates of UGIH after upper endoscopic treatment', 'ตัวชี้วัดกลุ่ม UGIH ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'operation_list', 'operation_detail', 'operation_item', 'lab_head', 'lab_order', 'lab_items']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 147', 'pending-local-source-2026.1', 'ต้องยืนยัน EGD/hemostasis event และ risk status', 'pending-local-source'),
     ('DE1405', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Upper Gastrointestinal Hemorrhage (UGIH): Complication rates of upper endoscopic treatment', 'Upper Gastrointestinal Hemorrhage (UGIH): Complication rates of upper endoscopic treatment', 'ตัวชี้วัดกลุ่ม UGIH ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'operation_list', 'operation_detail', 'operation_item', 'lab_head', 'lab_order', 'lab_items']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 149', 'pending-local-source-2026.1', 'ต้องยืนยัน EGD/hemostasis event และ risk status', 'pending-local-source'),
-    ('DE1601', 'D', 'percent', 'neutral', 'annual', 'Disease', 'New born: Percent of hearing screening within 30 days', 'New born: Percent of hearing screening within 30 days', 'ตัวชี้วัดกลุ่ม NEWBORN ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt_newborn', 'ipt_pregnancy', 'ipt_pregnancy_vital_sign', 'ipt_labour_infant', 'ipt_labour_child', 'labor', 'person_wbc', 'person_anc']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 150', 'pending-local-source-2026.1', 'ต้องยืนยัน hearing screening ภายใน 30 วัน และตัวตนทารก', 'pending-local-source'),
+    ('DE1601', 'D', 'percent', 'neutral', 'annual', 'Disease', 'New born: Percent of hearing screening within 30 days', 'New born: Percent of hearing screening within 30 days', 'ตัวชี้วัดกลุ่ม NEWBORN ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt_newborn', 'ipt_pregnancy', 'ipt_pregnancy_vital_sign', 'ipt_labour_infant', 'ipt_labour_child', 'labor', 'person_wbc', 'person_anc']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 150', 'pending-local-source-2026.1', 'ต้องยืนยันเครื่องมือตรวจคัดกรองการได้ยิน (OAE/AABR) และบันทึกผลภายใน 30 วันหลังเกิด', 'pending-local-source'),
     ('DG0101', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Upper Gastrointestinal Hemorrhage (UGIH): Percent of unplanned re-admission into the hospital within 28 days after last discharge', 'Upper Gastrointestinal Hemorrhage (UGIH): Percent of unplanned re-admission into the hospital within 28 days after last discharge', 'ตัวชี้วัดกลุ่ม UGIH ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'operation_list', 'operation_detail', 'operation_item', 'lab_head', 'lab_order', 'lab_items']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 120', 'registered-2026.1', NULL, 'registered'),
     ('DG0102', 'D', 'ratio', 'neutral', 'monthly', 'Disease', 'Upper Gastrointestinal Hemorrhage (UGIH): Average length of stay', 'Upper Gastrointestinal Hemorrhage (UGIH): Average length of stay', 'ตัวชี้วัดกลุ่ม UGIH ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'operation_list', 'operation_detail', 'operation_item', 'lab_head', 'lab_order', 'lab_items']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 121', 'registered-2026.1', NULL, 'registered'),
     ('DG0201', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Acute Appendicitis: Percent of abruption', 'Acute Appendicitis: Percent of abruption', 'ตัวชี้วัดกลุ่ม APPENDICITIS ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'operation_list', 'operation_detail', 'operation_item']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 122', 'registered-2026.1', NULL, 'registered'),
@@ -2298,23 +3563,23 @@ metadata(
     ('DH0101.1', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Acute coronary syndrome (STEMI): Percent of mortality', 'Acute coronary syndrome (STEMI): Percent of mortality', 'ตัวชี้วัดกลุ่ม ACS ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 40', 'registered-2026.1', NULL, 'registered'),
     ('DH0101.2', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Acute coronary syndrome (NSTE-ACS): Percent of mortality', 'Acute coronary syndrome (NSTE-ACS): Percent of mortality', 'ตัวชี้วัดกลุ่ม ACS ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 41', 'registered-2026.1', NULL, 'registered'),
     ('DH0102', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of patient receiving Aspirin within', 'Acute coronary syndrome: Percent of patient receiving Aspirin within', 'ตัวชี้วัดกลุ่ม ACS ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 42', 'registered-2026.1', NULL, 'registered'),
-    ('DH0103', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of Aspirin prescribed at discharge', 'Acute coronary syndrome: Percent of Aspirin prescribed at discharge', 'ตัวชี้วัดกลุ่ม ACS ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 43', 'pending-local-source-2026.1', 'ยังไม่ยืนยัน local rule/source ของตัวชี้วัดนี้', 'pending-local-source'),
-    ('DH0104', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of ACE inhibitors or ARB received for patient who have LVSD', 'Acute coronary syndrome: Percent of ACE inhibitors or ARB received for patient who have LVSD', 'ตัวชี้วัดกลุ่ม ACS ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 44', 'pending-local-source-2026.1', 'ยังไม่ยืนยัน local rule/source ของตัวชี้วัดนี้', 'pending-local-source'),
-    ('DH0105', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of smoking cessation advice given', 'Acute coronary syndrome: Percent of smoking cessation advice given', 'ตัวชี้วัดกลุ่ม ACS ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 46', 'pending-local-source-2026.1', 'ยังไม่ยืนยัน local rule/source ของตัวชี้วัดนี้', 'pending-local-source'),
-    ('DH0106', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of Beta-blocker receiving during hospital admitted', 'Acute coronary syndrome: Percent of Beta-blocker receiving during hospital admitted', 'ตัวชี้วัดกลุ่ม ACS ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 47', 'pending-local-source-2026.1', 'ยังไม่ยืนยัน local rule/source ของตัวชี้วัดนี้', 'pending-local-source'),
-    ('DH0107', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of Beta-blocker prescribed at discharge', 'Acute coronary syndrome: Percent of Beta-blocker prescribed at discharge', 'ตัวชี้วัดกลุ่ม ACS ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 48', 'pending-local-source-2026.1', 'ยังไม่ยืนยัน local rule/source ของตัวชี้วัดนี้', 'pending-local-source'),
-    ('DH0108', 'D', 'ratio', 'neutral', 'monthly', 'Disease', 'Acute coronary syndrome: Average door to EKG time', 'Acute coronary syndrome: Average door to EKG time', 'ตัวชี้วัดกลุ่ม ACS ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 49', 'pending-local-source-2026.1', 'ยังไม่ยืนยัน local rule/source ของตัวชี้วัดนี้', 'pending-local-source'),
-    ('DH0109', 'D', 'ratio', 'neutral', 'monthly', 'Disease', 'Acute coronary syndrome: Average door to refer time', 'Acute coronary syndrome: Average door to refer time', 'ตัวชี้วัดกลุ่ม ACS ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 50', 'pending-local-source-2026.1', 'ยังไม่ยืนยัน local rule/source ของตัวชี้วัดนี้', 'pending-local-source'),
-    ('DH0110', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of Primary Percutaneous Coronary Intervention (PCI) given within 120 minutes or received Fibrinolytic agent within 30 minutes of arrival', 'Acute coronary syndrome: Percent of Primary Percutaneous Coronary Intervention (PCI) given within 120 minutes or received Fibrinolytic agent within 30 minutes of arrival', 'ตัวชี้วัดกลุ่ม ACS ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุก 3 เดือน (รายไตรมาส)', 'THIP KPI Dictionary 2025 · หน้า 51', 'pending-local-source-2026.1', 'ยังไม่ยืนยัน local rule/source ของตัวชี้วัดนี้', 'pending-local-source'),
+    ('DH0103', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of Aspirin prescribed at discharge', 'Acute coronary syndrome: Percent of Aspirin prescribed at discharge', 'ตัวชี้วัดกลุ่ม ACS ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 43', 'pending-local-source-2026.1', 'ต้องยืนยันรายการยา Aspirin ที่สั่งจ่าย ณ วันจำหน่าย (discharge prescription)', 'pending-local-source'),
+    ('DH0104', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of ACE inhibitors or ARB received for patient who have LVSD', 'Acute coronary syndrome: Percent of ACE inhibitors or ARB received for patient who have LVSD', 'ตัวชี้วัดกลุ่ม ACS ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 44', 'pending-local-source-2026.1', 'ต้องยืนยันผลตรวจ LVEF < 40% (LVSD) และรายการยา ACEI/ARB ที่ได้รับ', 'pending-local-source'),
+    ('DH0105', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of smoking cessation advice given', 'Acute coronary syndrome: Percent of smoking cessation advice given', 'ตัวชี้วัดกลุ่ม ACS ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 46', 'pending-local-source-2026.1', 'ต้องยืนยันแบบบันทึกคำแนะนำการเลิกบุหรี่ (smoking cessation counseling) ในผู้ป่วย ACS', 'pending-local-source'),
+    ('DH0106', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of Beta-blocker receiving during hospital admitted', 'Acute coronary syndrome: Percent of Beta-blocker receiving during hospital admitted', 'ตัวชี้วัดกลุ่ม ACS ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 47', 'pending-local-source-2026.1', 'ต้องยืนยันการบริหารยากลุ่ม Beta-blocker ระหว่างรับไว้รักษาในโรงพยาบาล', 'pending-local-source'),
+    ('DH0107', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of Beta-blocker prescribed at discharge', 'Acute coronary syndrome: Percent of Beta-blocker prescribed at discharge', 'ตัวชี้วัดกลุ่ม ACS ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 48', 'pending-local-source-2026.1', 'ต้องยืนยันรายการยา Beta-blocker ที่สั่งจ่าย ณ วันจำหน่าย', 'pending-local-source'),
+    ('DH0108', 'D', 'ratio', 'neutral', 'monthly', 'Disease', 'Acute coronary syndrome: Average door to EKG time', 'Acute coronary syndrome: Average door to EKG time', 'ตัวชี้วัดกลุ่ม ACS ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 49', 'pending-local-source-2026.1', 'ต้องยืนยัน timestamp เวลาถึงโรงพยาบาล (door time) และเวลาทำ EKG 12-lead แผ่นแรก', 'pending-local-source'),
+    ('DH0109', 'D', 'ratio', 'neutral', 'monthly', 'Disease', 'Acute coronary syndrome: Average door to refer time', 'Acute coronary syndrome: Average door to refer time', 'ตัวชี้วัดกลุ่ม ACS ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 50', 'pending-local-source-2026.1', 'ต้องยืนยัน door-to-refer timestamp และเวลาส่งตัวผู้ป่วย ACS', 'pending-local-source'),
+    ('DH0110', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of Primary Percutaneous Coronary Intervention (PCI) given within 120 minutes or received Fibrinolytic agent within 30 minutes of arrival', 'Acute coronary syndrome: Percent of Primary Percutaneous Coronary Intervention (PCI) given within 120 minutes or received Fibrinolytic agent within 30 minutes of arrival', 'ตัวชี้วัดกลุ่ม ACS ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุก 3 เดือน (รายไตรมาส)', 'THIP KPI Dictionary 2025 · หน้า 51', 'pending-local-source-2026.1', 'ต้องยืนยัน door-to-balloon time ภายใน 120 นาที หรือ door-to-needle time ภายใน 30 นาที', 'pending-local-source'),
     ('DH0111', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of unplanned re-admission within', 'Acute coronary syndrome: Percent of unplanned re-admission within', 'ตัวชี้วัดกลุ่ม ACS ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 53', 'registered-2026.1', NULL, 'registered'),
     ('DH0112', 'D', 'ratio', 'neutral', 'monthly', 'Disease', 'Acute coronary syndrome: Average length of stay', 'Acute coronary syndrome: Average length of stay', 'ตัวชี้วัดกลุ่ม ACS ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 54', 'registered-2026.1', NULL, 'registered'),
-    ('DH0113', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of time to Fibrinolytic administration agents within 30 minutes of arrival', 'Acute coronary syndrome: Percent of time to Fibrinolytic administration agents within 30 minutes of arrival', 'ตัวชี้วัดกลุ่ม ACS ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 55', 'pending-local-source-2026.1', 'ยังไม่ยืนยัน local rule/source ของตัวชี้วัดนี้', 'pending-local-source'),
-    ('DH0201', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Coronary Artery Bypass Graft (CABG): Percent of mortality', 'Coronary Artery Bypass Graft (CABG): Percent of mortality', 'ตัวชี้วัดกลุ่ม CABG ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 57', 'pending-local-source-2026.1', 'ต้องยืนยันการระบุหัตถการ CABG และหน้าต่าง 30 วัน', 'pending-local-source'),
-    ('DH0202', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Coronary Artery Bypass Graft (CABG): Percent of patient who received antibiotic prophylaxis', 'Coronary Artery Bypass Graft (CABG): Percent of patient who received antibiotic prophylaxis', 'ตัวชี้วัดกลุ่ม CABG ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 58', 'pending-local-source-2026.1', 'ต้องยืนยันการระบุหัตถการ CABG และหน้าต่าง 30 วัน', 'pending-local-source'),
-    ('DH0203', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Coronary Artery Bypass Graft (CABG): Percent of surgical site Infection', 'Coronary Artery Bypass Graft (CABG): Percent of surgical site Infection', 'ตัวชี้วัดกลุ่ม CABG ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 59', 'pending-local-source-2026.1', 'ต้องยืนยันการระบุหัตถการ CABG และหน้าต่าง 30 วัน', 'pending-local-source'),
-    ('DH0204', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Coronary Artery Bypass Graft (CABG): percent of 30-days hospital mortality', 'Coronary Artery Bypass Graft (CABG): percent of 30-days hospital mortality', 'ตัวชี้วัดกลุ่ม CABG ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 60', 'pending-local-source-2026.1', 'ต้องยืนยันการระบุหัตถการ CABG และหน้าต่าง 30 วัน', 'pending-local-source'),
-    ('DH0301', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Fraction (HFREF) received Angiotensin II Converting Enzyme inhibitors (ACEIs) or Angiotensin II Receptor Blockers (ARBs) or Mineralocorticoid Receptor Antagonists (MRA)', 'Fraction (HFREF) received Angiotensin II Converting Enzyme inhibitors (ACEIs) or Angiotensin II Receptor Blockers (ARBs) or Mineralocorticoid Receptor Antagonists (MRA)', 'ตัวชี้วัดกลุ่ม HEART_FAILURE ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'clinicmember', 'ovstdiag', 'opitemrece', 'drugitems', 'lab_head', 'lab_order', 'lab_items']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 61', 'pending-local-source-2026.1', 'ต้องยืนยันหลักฐาน LVSD/HFREF และ ACEI/ARB/MRA', 'pending-local-source'),
-    ('DH0302', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Heart failure: Percent of smoking cessation advice given', 'Heart failure: Percent of smoking cessation advice given', 'ตัวชี้วัดกลุ่ม HEART_FAILURE ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'clinicmember', 'ovstdiag', 'opitemrece', 'drugitems', 'lab_head', 'lab_order', 'lab_items']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 63', 'pending-local-source-2026.1', 'ต้องยืนยันหลักฐาน LVSD/HFREF และ ACEI/ARB/MRA', 'pending-local-source'),
+    ('DH0113', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of time to Fibrinolytic administration agents within 30 minutes of arrival', 'Acute coronary syndrome: Percent of time to Fibrinolytic administration agents within 30 minutes of arrival', 'ตัวชี้วัดกลุ่ม ACS ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 55', 'pending-local-source-2026.1', 'ต้องยืนยัน door-to-needle timestamp ในการให้ยาละลายลิ่มเลือด (Fibrinolytic) ภายใน 30 นาที', 'pending-local-source'),
+    ('DH0201', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Coronary Artery Bypass Graft (CABG): Percent of mortality', 'Coronary Artery Bypass Graft (CABG): Percent of mortality', 'ตัวชี้วัดกลุ่ม CABG ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 57', 'registered-2026.1', NULL, 'registered'),
+    ('DH0202', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Coronary Artery Bypass Graft (CABG): Percent of patient who received antibiotic prophylaxis', 'Coronary Artery Bypass Graft (CABG): Percent of patient who received antibiotic prophylaxis', 'ตัวชี้วัดกลุ่ม CABG ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 58', 'registered-2026.1', NULL, 'registered'),
+    ('DH0203', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Coronary Artery Bypass Graft (CABG): Percent of surgical site Infection', 'Coronary Artery Bypass Graft (CABG): Percent of surgical site Infection', 'ตัวชี้วัดกลุ่ม CABG ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 59', 'registered-2026.1', NULL, 'registered'),
+    ('DH0204', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Coronary Artery Bypass Graft (CABG): percent of 30-days hospital mortality', 'Coronary Artery Bypass Graft (CABG): percent of 30-days hospital mortality', 'ตัวชี้วัดกลุ่ม CABG ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 60', 'registered-2026.1', NULL, 'registered'),
+    ('DH0301', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Fraction (HFREF) received Angiotensin II Converting Enzyme inhibitors (ACEIs) or Angiotensin II Receptor Blockers (ARBs) or Mineralocorticoid Receptor Antagonists (MRA)', 'Fraction (HFREF) received Angiotensin II Converting Enzyme inhibitors (ACEIs) or Angiotensin II Receptor Blockers (ARBs) or Mineralocorticoid Receptor Antagonists (MRA)', 'ตัวชี้วัดกลุ่ม HEART_FAILURE ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'clinicmember', 'ovstdiag', 'opitemrece', 'drugitems', 'lab_head', 'lab_order', 'lab_items']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 61', 'registered-2026.1', NULL, 'registered'),
+    ('DH0302', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Heart failure: Percent of smoking cessation advice given', 'Heart failure: Percent of smoking cessation advice given', 'ตัวชี้วัดกลุ่ม HEART_FAILURE ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'clinicmember', 'ovstdiag', 'opitemrece', 'drugitems', 'lab_head', 'lab_order', 'lab_items']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 63', 'registered-2026.1', NULL, 'registered'),
     ('DH0401', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Atrial fibrillation: Percent of patient received Warfarin within target', 'Atrial fibrillation: Percent of patient received Warfarin within target', 'ตัวชี้วัดกลุ่ม ATRIAL_FIBRILLATION ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'clinicmember', 'ovstdiag', 'opitemrece', 'drugitems', 'lab_head', 'lab_order', 'lab_items']::text[], 'ทุก 3 เดือน (รายไตรมาส)', 'THIP KPI Dictionary 2025 · หน้า 64', 'pending-local-source-2026.1', 'ต้องยืนยัน anticoagulant target และนิยาม intracranial bleed', 'pending-local-source'),
     ('DH0402', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Atrial Fibrillation: Percent of major bleeding (intracranial hemorrhage)', 'Atrial Fibrillation: Percent of major bleeding (intracranial hemorrhage)', 'ตัวชี้วัดกลุ่ม ATRIAL_FIBRILLATION ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'clinicmember', 'ovstdiag', 'opitemrece', 'drugitems', 'lab_head', 'lab_order', 'lab_items']::text[], 'ทุก 3 เดือน (รายไตรมาส)', 'THIP KPI Dictionary 2025 · หน้า 66', 'pending-local-source-2026.1', 'ต้องยืนยัน anticoagulant target และนิยาม intracranial bleed', 'pending-local-source'),
     ('DM0101', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'GDD: Percent of children with global development delay that improved after intervented', 'GDD: Percent of children with global development delay that improved after intervented', 'ตัวชี้วัดกลุ่ม MENTAL_DEVELOPMENT ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['psych_assess_child', 'psych_plan', 'psych_therapy', 'depression_screen', 'person_wbc', 'ovst', 'ovstdiag', 'clinicmember']::text[], 'ทุก 6 เดือน (รายครึ่งปี)', 'THIP KPI Dictionary 2025 · หน้า 151', 'pending-local-source-2026.1', 'ต้องยืนยัน baseline/follow-up score และการติดตาม remission/retention', 'pending-local-source'),
@@ -2328,43 +3593,43 @@ metadata(
     ('DM0401', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Child and adolescent psychiatry: Percent of children with Attention- Deficit Hyperactivity Disorder (ADHD) improved after intervented for 6', 'Child and adolescent psychiatry: Percent of children with Attention- Deficit Hyperactivity Disorder (ADHD) improved after intervented for 6', 'ตัวชี้วัดกลุ่ม MENTAL_DEVELOPMENT ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['psych_assess_child', 'psych_plan', 'psych_therapy', 'depression_screen', 'person_wbc', 'ovst', 'ovstdiag', 'clinicmember']::text[], 'ทุก 6 เดือน (รายครึ่งปี)', 'THIP KPI Dictionary 2025 · หน้า 159', 'pending-local-source-2026.1', 'ต้องยืนยัน baseline/follow-up score และการติดตาม remission/retention', 'pending-local-source'),
     ('DM0402', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Child and adolescent psychiatry: Percent of children and adolescents with Major Depressive Disorder (MDD) improved after intervented for', 'Child and adolescent psychiatry: Percent of children and adolescents with Major Depressive Disorder (MDD) improved after intervented for', 'ตัวชี้วัดกลุ่ม MENTAL_DEVELOPMENT ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['psych_assess_child', 'psych_plan', 'psych_therapy', 'depression_screen', 'person_wbc', 'ovst', 'ovstdiag', 'clinicmember']::text[], 'ทุก 6 เดือน (รายครึ่งปี)', 'THIP KPI Dictionary 2025 · หน้า 160', 'pending-local-source-2026.1', 'ต้องยืนยัน baseline/follow-up score และการติดตาม remission/retention', 'pending-local-source'),
     ('DN0101', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Stroke: Percent of mortality', 'Stroke: Percent of mortality', 'ตัวชี้วัดกลุ่ม STROKE ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 67', 'registered-2026.1', NULL, 'registered'),
-    ('DN0102', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Ischemic stroke: Percent of patient receiving Antiplatelet within 2 days of hospital admission', 'Ischemic stroke: Percent of patient receiving Antiplatelet within 2 days of hospital admission', 'ตัวชี้วัดกลุ่ม STROKE ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 68', 'pending-local-source-2026.1', 'ยังไม่ยืนยัน local rule/source ของตัวชี้วัดนี้', 'pending-local-source'),
-    ('DN0103', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Ischemic stroke: Percent of Antiplatelet or Anticoagulant therapy prescribed at discharge', 'Ischemic stroke: Percent of Antiplatelet or Anticoagulant therapy prescribed at discharge', 'ตัวชี้วัดกลุ่ม STROKE ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 69', 'pending-local-source-2026.1', 'ยังไม่ยืนยัน local rule/source ของตัวชี้วัดนี้', 'pending-local-source'),
-    ('DN0104', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Ischemic stroke: Percent of patient with Atrial fibrillation/Flutter receiving Anticoagulation therapy', 'Ischemic stroke: Percent of patient with Atrial fibrillation/Flutter receiving Anticoagulation therapy', 'ตัวชี้วัดกลุ่ม STROKE ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 70', 'pending-local-source-2026.1', 'ยังไม่ยืนยัน local rule/source ของตัวชี้วัดนี้', 'pending-local-source'),
-    ('DN0105', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Stroke: Percent of patients who were given stroke education during their hospital stay', 'Stroke: Percent of patients who were given stroke education during their hospital stay', 'ตัวชี้วัดกลุ่ม STROKE ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 71', 'pending-local-source-2026.1', 'ยังไม่ยืนยัน local rule/source ของตัวชี้วัดนี้', 'pending-local-source'),
-    ('DN0106', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Stroke: Percent of treatment, physiotherapy or rehabilitation in stroke or paralytic syndrome within 72 hours', 'Stroke: Percent of treatment, physiotherapy or rehabilitation in stroke or paralytic syndrome within 72 hours', 'ตัวชี้วัดกลุ่ม STROKE ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 72', 'pending-local-source-2026.1', 'ยังไม่ยืนยัน local rule/source ของตัวชี้วัดนี้', 'pending-local-source'),
+    ('DN0102', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Ischemic stroke: Percent of patient receiving Antiplatelet within 2 days of hospital admission', 'Ischemic stroke: Percent of patient receiving Antiplatelet within 2 days of hospital admission', 'ตัวชี้วัดกลุ่ม STROKE ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 68', 'pending-local-source-2026.1', 'ต้องยืนยันการบริหารยา Antiplatelet ภายใน 2 วัน (48 ชั่วโมง) แรกหลังรับไว้รักษา', 'pending-local-source'),
+    ('DN0103', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Ischemic stroke: Percent of Antiplatelet or Anticoagulant therapy prescribed at discharge', 'Ischemic stroke: Percent of Antiplatelet or Anticoagulant therapy prescribed at discharge', 'ตัวชี้วัดกลุ่ม STROKE ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 69', 'pending-local-source-2026.1', 'ต้องยืนยันรายการยา Antiplatelet หรือ Anticoagulant ที่สั่งจ่าย ณ วันจำหน่าย', 'pending-local-source'),
+    ('DN0104', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Ischemic stroke: Percent of patient with Atrial fibrillation/Flutter receiving Anticoagulation therapy', 'Ischemic stroke: Percent of patient with Atrial fibrillation/Flutter receiving Anticoagulation therapy', 'ตัวชี้วัดกลุ่ม STROKE ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 70', 'pending-local-source-2026.1', 'ต้องยืนยันผล EKG ภาวะ Atrial Fibrillation/Flutter และการสั่งจ่ายยา Anticoagulation', 'pending-local-source'),
+    ('DN0105', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Stroke: Percent of patients who were given stroke education during their hospital stay', 'Stroke: Percent of patients who were given stroke education during their hospital stay', 'ตัวชี้วัดกลุ่ม STROKE ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 71', 'pending-local-source-2026.1', 'ต้องยืนยันแบบประเมินและบันทึกการให้สุขศึกษาโรคหลอดเลือดสมอง (Stroke education)', 'pending-local-source'),
+    ('DN0106', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Stroke: Percent of treatment, physiotherapy or rehabilitation in stroke or paralytic syndrome within 72 hours', 'Stroke: Percent of treatment, physiotherapy or rehabilitation in stroke or paralytic syndrome within 72 hours', 'ตัวชี้วัดกลุ่ม STROKE ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 72', 'pending-local-source-2026.1', 'ต้องยืนยันบันทึกการเริ่มทำกายภาพบำบัดหรือเวชศาสตร์ฟื้นฟูภายใน 72 ชั่วโมงหลังรับไว้รักษา', 'pending-local-source'),
     ('DN0107', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Stroke: Percent of unplanned re-admission of stroke within 28 days', 'Stroke: Percent of unplanned re-admission of stroke within 28 days', 'ตัวชี้วัดกลุ่ม STROKE ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 73', 'registered-2026.1', NULL, 'registered'),
     ('DN0109', 'D', 'ratio', 'neutral', 'monthly', 'Disease', 'Stroke: Average length of stay', 'Stroke: Average length of stay', 'ตัวชี้วัดกลุ่ม STROKE ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 74', 'registered-2026.1', NULL, 'registered'),
-    ('DN0110', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Ischemic Stroke: Percent of time to Thrombolytic administration agents within 60 minutes of arrival', 'Ischemic Stroke: Percent of time to Thrombolytic administration agents within 60 minutes of arrival', 'ตัวชี้วัดกลุ่ม STROKE ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 75', 'pending-local-source-2026.1', 'ยังไม่ยืนยัน local rule/source ของตัวชี้วัดนี้', 'pending-local-source'),
+    ('DN0110', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Ischemic Stroke: Percent of time to Thrombolytic administration agents within 60 minutes of arrival', 'Ischemic Stroke: Percent of time to Thrombolytic administration agents within 60 minutes of arrival', 'ตัวชี้วัดกลุ่ม STROKE ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 75', 'pending-local-source-2026.1', 'ต้องยืนยัน door-to-needle timestamp ในการให้ยา Thrombolytic (rtPA) ภายใน 60 นาที', 'pending-local-source'),
     ('DN0301', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Head Injury: Percent of unplanned re-admission of Craniotomy within', 'Head Injury: Percent of unplanned re-admission of Craniotomy within', 'ตัวชี้วัดกลุ่ม HEAD_INJURY ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'operation_list', 'operation_detail', 'operation_item']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 76', 'pending-local-source-2026.1', 'ต้องยืนยัน craniotomy และหน้าต่าง 48 ชั่วโมง', 'pending-local-source'),
     ('DN0302', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Head Injury: Percent of mortality within 48 hours', 'Head Injury: Percent of mortality within 48 hours', 'ตัวชี้วัดกลุ่ม HEAD_INJURY ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'operation_list', 'operation_detail', 'operation_item']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 77', 'registered-2026.1', NULL, 'registered'),
     ('DN0303', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Head Injury: Percent of patient underwent craniotomy for Intracranial', 'Head Injury: Percent of patient underwent craniotomy for Intracranial', 'ตัวชี้วัดกลุ่ม HEAD_INJURY ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'operation_list', 'operation_detail', 'operation_item']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 78', 'pending-local-source-2026.1', 'ต้องยืนยัน craniotomy และหน้าต่าง 48 ชั่วโมง', 'pending-local-source'),
-    ('DO0202', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Hip arthroplasty: Percent of patients who received antibiotic prophylaxis in Hip arthroplasty', 'Hip arthroplasty: Percent of patients who received antibiotic prophylaxis in Hip arthroplasty', 'ตัวชี้วัดกลุ่ม ARTHROPLASTY ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 114', 'pending-local-source-2026.1', 'ต้องยืนยัน hip/knee procedure, prophylaxis และ 90-day/1-year infection', 'pending-local-source'),
-    ('DO0204', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Hip arthroplasty: Percent of hip arthroplasty associated infection within 1 Year', 'Hip arthroplasty: Percent of hip arthroplasty associated infection within 1 Year', 'ตัวชี้วัดกลุ่ม ARTHROPLASTY ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 115', 'pending-local-source-2026.1', 'ต้องยืนยัน hip/knee procedure, prophylaxis และ 90-day/1-year infection', 'pending-local-source'),
-    ('DO0205', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Hip arthroplasty: Percent of hip arthroplasty associated infection within 90 days', 'Hip arthroplasty: Percent of hip arthroplasty associated infection within 90 days', 'ตัวชี้วัดกลุ่ม ARTHROPLASTY ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 116', 'pending-local-source-2026.1', 'ต้องยืนยัน hip/knee procedure, prophylaxis และ 90-day/1-year infection', 'pending-local-source'),
-    ('DO0302', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Knee Arthroplasty: Percent of patients who received antibiotic prophylaxis', 'Knee Arthroplasty: Percent of patients who received antibiotic prophylaxis', 'ตัวชี้วัดกลุ่ม ARTHROPLASTY ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 117', 'pending-local-source-2026.1', 'ต้องยืนยัน hip/knee procedure, prophylaxis และ 90-day/1-year infection', 'pending-local-source'),
-    ('DO0303', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Knee Arthroplasty: Percent of surgical infection within 1 year', 'Knee Arthroplasty: Percent of surgical infection within 1 year', 'ตัวชี้วัดกลุ่ม ARTHROPLASTY ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 118', 'pending-local-source-2026.1', 'ต้องยืนยัน hip/knee procedure, prophylaxis และ 90-day/1-year infection', 'pending-local-source'),
-    ('DO0304', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Knee Arthroplasty: Percent of surgical infection within 90 days', 'Knee Arthroplasty: Percent of surgical infection within 90 days', 'ตัวชี้วัดกลุ่ม ARTHROPLASTY ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 119', 'pending-local-source-2026.1', 'ต้องยืนยัน hip/knee procedure, prophylaxis และ 90-day/1-year infection', 'pending-local-source'),
-    ('DP0101', 'D', 'percent', 'neutral', 'annual', 'Disease', 'Diabetes in child and adolescent: Percent of good controlled of blood sugar (age < 18 years)', 'Diabetes in child and adolescent: Percent of good controlled of blood sugar (age < 18 years)', 'ตัวชี้วัดกลุ่ม PEDIATRIC_DM ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person', 'clinicmember', 'ovst', 'ovstdiag', 'opdscreen', 'lab_head', 'lab_order', 'lab_items']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 124', 'pending-local-source-2026.1', 'ต้องยืนยันอายุเด็ก, control threshold และช่วง visit', 'pending-local-source'),
+    ('DO0202', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Hip arthroplasty: Percent of patients who received antibiotic prophylaxis in Hip arthroplasty', 'Hip arthroplasty: Percent of patients who received antibiotic prophylaxis in Hip arthroplasty', 'ตัวชี้วัดกลุ่ม ARTHROPLASTY ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 114', 'registered-2026.1', NULL, 'registered'),
+    ('DO0204', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Hip arthroplasty: Percent of hip arthroplasty associated infection within 1 Year', 'Hip arthroplasty: Percent of hip arthroplasty associated infection within 1 Year', 'ตัวชี้วัดกลุ่ม ARTHROPLASTY ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 115', 'registered-2026.1', NULL, 'registered'),
+    ('DO0205', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Hip arthroplasty: Percent of hip arthroplasty associated infection within 90 days', 'Hip arthroplasty: Percent of hip arthroplasty associated infection within 90 days', 'ตัวชี้วัดกลุ่ม ARTHROPLASTY ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 116', 'registered-2026.1', NULL, 'registered'),
+    ('DO0302', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Knee Arthroplasty: Percent of patients who received antibiotic prophylaxis', 'Knee Arthroplasty: Percent of patients who received antibiotic prophylaxis', 'ตัวชี้วัดกลุ่ม ARTHROPLASTY ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 117', 'registered-2026.1', NULL, 'registered'),
+    ('DO0303', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Knee Arthroplasty: Percent of surgical infection within 1 year', 'Knee Arthroplasty: Percent of surgical infection within 1 year', 'ตัวชี้วัดกลุ่ม ARTHROPLASTY ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 118', 'registered-2026.1', NULL, 'registered'),
+    ('DO0304', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Knee Arthroplasty: Percent of surgical infection within 90 days', 'Knee Arthroplasty: Percent of surgical infection within 90 days', 'ตัวชี้วัดกลุ่ม ARTHROPLASTY ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 119', 'registered-2026.1', NULL, 'registered'),
+    ('DP0101', 'D', 'percent', 'neutral', 'annual', 'Disease', 'Diabetes in child and adolescent: Percent of good controlled of blood sugar (age < 18 years)', 'Diabetes in child and adolescent: Percent of good controlled of blood sugar (age < 18 years)', 'ตัวชี้วัดกลุ่ม PEDIATRIC_DM ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['person', 'clinicmember', 'ovst', 'ovstdiag', 'opdscreen', 'lab_head', 'lab_order', 'lab_items']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 124', 'registered-2026.1', NULL, 'registered'),
     ('DR0101', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Pneumonia: Percent of mortality after hospital admission', 'Pneumonia: Percent of mortality after hospital admission', 'ตัวชี้วัดกลุ่ม PNEUMONIA ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 79', 'registered-2026.1', NULL, 'registered'),
     ('DR0102', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Pneumonia: Percent of unplanned re-admission within 28 days after last discharge', 'Pneumonia: Percent of unplanned re-admission within 28 days after last discharge', 'ตัวชี้วัดกลุ่ม PNEUMONIA ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 80', 'registered-2026.1', NULL, 'registered'),
-    ('DR0103', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Pneumonia: Percent of smoking cessation advice given', 'Pneumonia: Percent of smoking cessation advice given', 'ตัวชี้วัดกลุ่ม PNEUMONIA ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 81', 'pending-local-source-2026.1', 'ต้องยืนยัน Pdx/Sdx และ 28-day readmission', 'pending-local-source'),
+    ('DR0103', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Pneumonia: Percent of smoking cessation advice given', 'Pneumonia: Percent of smoking cessation advice given', 'ตัวชี้วัดกลุ่ม PNEUMONIA ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 81', 'pending-local-source-2026.1', 'ต้องยืนยันแบบบันทึกคำแนะนำการเลิกบุหรี่ (smoking cessation counseling) ในผู้ป่วยปอดอักเสบ', 'pending-local-source'),
     ('DR0201', 'D', 'percent', 'neutral', 'annual', 'Disease', 'TB: Percent of mortality during 12 months', 'TB: Percent of mortality during 12 months', 'ตัวชี้วัดกลุ่ม HIV_TB ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['clinicmember', 'clinic_visit', 'clinicmember_tb', 'tb_register', 'tb_register_visit', 'tb_lab_examination_sputum', 'arv_tx', 'arv_lab', 'ovstdiag']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 82', 'registered-2026.1', NULL, 'registered'),
     ('DR0202', 'D', 'percent', 'neutral', 'annual', 'Disease', 'TB: Percentage of people living with HIV having a TB screening', 'TB: Percentage of people living with HIV having a TB screening', 'ตัวชี้วัดกลุ่ม HIV_TB ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['clinicmember', 'clinic_visit', 'clinicmember_tb', 'tb_register', 'tb_register_visit', 'tb_lab_examination_sputum', 'arv_tx', 'arv_lab', 'ovstdiag']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 83', 'pending-local-source-2026.1', 'ต้องยืนยันวันลงทะเบียน cohort, หน้าต่าง 12 เดือน และความหมาย test/result', 'pending-local-source'),
     ('DR0203', 'D', 'percent', 'neutral', 'annual', 'Disease', 'TB: Percent of treatment success', 'TB: Percent of treatment success', 'ตัวชี้วัดกลุ่ม HIV_TB ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['clinicmember', 'clinic_visit', 'clinicmember_tb', 'tb_register', 'tb_register_visit', 'tb_lab_examination_sputum', 'arv_tx', 'arv_lab', 'ovstdiag']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 84', 'pending-local-source-2026.1', 'ต้องยืนยันวันลงทะเบียน cohort, หน้าต่าง 12 เดือน และความหมาย test/result', 'pending-local-source'),
     ('DR0204', 'D', 'percent', 'neutral', 'annual', 'Disease', 'TB: Percent of TB having a HIV screening', 'TB: Percent of TB having a HIV screening', 'ตัวชี้วัดกลุ่ม HIV_TB ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['clinicmember', 'clinic_visit', 'clinicmember_tb', 'tb_register', 'tb_register_visit', 'tb_lab_examination_sputum', 'arv_tx', 'arv_lab', 'ovstdiag']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 85', 'pending-local-source-2026.1', 'ต้องยืนยันวันลงทะเบียน cohort, หน้าต่าง 12 เดือน และความหมาย test/result', 'pending-local-source'),
     ('DR0205', 'D', 'percent', 'neutral', 'annual', 'Disease', 'Antiretroviral therapy (ART) TB: Percent of HIV-positive TB patients started on Antiretroviral therapy (ART)', 'Antiretroviral therapy (ART) TB: Percent of HIV-positive TB patients started on Antiretroviral therapy (ART)', 'ตัวชี้วัดกลุ่ม HIV_TB ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['clinicmember', 'clinic_visit', 'clinicmember_tb', 'tb_register', 'tb_register_visit', 'tb_lab_examination_sputum', 'arv_tx', 'arv_lab', 'ovstdiag']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 86', 'pending-local-source-2026.1', 'ต้องยืนยันวันลงทะเบียน cohort, หน้าต่าง 12 เดือน และความหมาย test/result', 'pending-local-source'),
     ('DR0301', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Asthma: Percent of unplanned re-admission within 28 days after last discharge', 'Asthma: Percent of unplanned re-admission within 28 days after last discharge', 'ตัวชี้วัดกลุ่ม ASTHMA_COPD ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['patient_asthma_screen', 'patient_copd_screen', 'clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 87', 'registered-2026.1', NULL, 'registered'),
-    ('DR0302', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Asthma: Percent of smoking cessation advice given', 'Asthma: Percent of smoking cessation advice given', 'ตัวชี้วัดกลุ่ม ASTHMA_COPD ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['patient_asthma_screen', 'patient_copd_screen', 'clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 88', 'pending-local-source-2026.1', 'ต้องยืนยัน disease cohort, smoking status และ readmission', 'pending-local-source'),
+    ('DR0302', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Asthma: Percent of smoking cessation advice given', 'Asthma: Percent of smoking cessation advice given', 'ตัวชี้วัดกลุ่ม ASTHMA_COPD ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['patient_asthma_screen', 'patient_copd_screen', 'clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 88', 'registered-2026.1', NULL, 'registered'),
     ('DR0401', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'COPD: Percent of unplanned re-admission into the hospital within 28 days after last discharge', 'COPD: Percent of unplanned re-admission into the hospital within 28 days after last discharge', 'ตัวชี้วัดกลุ่ม ASTHMA_COPD ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['patient_asthma_screen', 'patient_copd_screen', 'clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 89', 'registered-2026.1', NULL, 'registered'),
     ('DR0403', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'COPD: Percent of mortality', 'COPD: Percent of mortality', 'ตัวชี้วัดกลุ่ม ASTHMA_COPD ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['patient_asthma_screen', 'patient_copd_screen', 'clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 90', 'registered-2026.1', NULL, 'registered'),
-    ('DR0404', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'COPD: Percent of patient with ongoing smoking', 'COPD: Percent of patient with ongoing smoking', 'ตัวชี้วัดกลุ่ม ASTHMA_COPD ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['patient_asthma_screen', 'patient_copd_screen', 'clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen']::text[], 'ทุก 3 เดือน (รายไตรมาส)', 'THIP KPI Dictionary 2025 · หน้า 91', 'pending-local-source-2026.1', 'ต้องยืนยัน disease cohort, smoking status และ readmission', 'pending-local-source'),
+    ('DR0404', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'COPD: Percent of patient with ongoing smoking', 'COPD: Percent of patient with ongoing smoking', 'ตัวชี้วัดกลุ่ม ASTHMA_COPD ตาม THIP KPI Dictionary 2025; มี registered query และต้องยืนยัน local clinical rule', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['patient_asthma_screen', 'patient_copd_screen', 'clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen']::text[], 'ทุก 3 เดือน (รายไตรมาส)', 'THIP KPI Dictionary 2025 · หน้า 91', 'registered-2026.1', NULL, 'registered'),
     ('DS0101', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Methamphetamine Group: 3 months total remission rate', 'Methamphetamine Group: 3 months total remission rate', 'ตัวชี้วัดกลุ่ม MENTAL_DEVELOPMENT ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['psych_assess_child', 'psych_plan', 'psych_therapy', 'depression_screen', 'person_wbc', 'ovst', 'ovstdiag', 'clinicmember']::text[], 'ทุก 3 เดือน (รายไตรมาส)', 'THIP KPI Dictionary 2025 · หน้า 126', 'pending-local-source-2026.1', 'ต้องยืนยัน baseline/follow-up score และการติดตาม remission/retention', 'pending-local-source'),
     ('DS0201', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Alcohol Group: 3 months total remission rate', 'Alcohol Group: 3 months total remission rate', 'ตัวชี้วัดกลุ่ม MENTAL_DEVELOPMENT ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['psych_assess_child', 'psych_plan', 'psych_therapy', 'depression_screen', 'person_wbc', 'ovst', 'ovstdiag', 'clinicmember']::text[], 'ทุก 3 เดือน (รายไตรมาส)', 'THIP KPI Dictionary 2025 · หน้า 127', 'pending-local-source-2026.1', 'ต้องยืนยัน baseline/follow-up score และการติดตาม remission/retention', 'pending-local-source'),
     ('DS0301', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Tobacco Group: 3 months total remission rate', 'Tobacco Group: 3 months total remission rate', 'ตัวชี้วัดกลุ่ม MENTAL_DEVELOPMENT ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['psych_assess_child', 'psych_plan', 'psych_therapy', 'depression_screen', 'person_wbc', 'ovst', 'ovstdiag', 'clinicmember']::text[], 'ทุก 3 เดือน (รายไตรมาส)', 'THIP KPI Dictionary 2025 · หน้า 128', 'pending-local-source-2026.1', 'ต้องยืนยัน baseline/follow-up score และการติดตาม remission/retention', 'pending-local-source'),
     ('DS0401', 'D', 'percent', 'neutral', 'monthly', 'Disease', 'Opioid Group: 1 year retention rate of opioid in methadone maintenance program', 'Opioid Group: 1 year retention rate of opioid in methadone maintenance program', 'ตัวชี้วัดกลุ่ม MENTAL_DEVELOPMENT ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['psych_assess_child', 'psych_plan', 'psych_therapy', 'depression_screen', 'person_wbc', 'ovst', 'ovstdiag', 'clinicmember']::text[], 'ทุก 3 เดือน (รายไตรมาส)', 'THIP KPI Dictionary 2025 · หน้า 129', 'pending-local-source-2026.1', 'ต้องยืนยัน baseline/follow-up score และการติดตาม remission/retention', 'pending-local-source'),
-    ('HC0101', 'H', 'ratio', 'neutral', 'annual', 'Health promotion', 'Customer: Asthma patients or their relative(s) who are able to care for the patient''s needs', 'Customer: Asthma patients or their relative(s) who are able to care for the patient''s needs', 'ตัวชี้วัดกลุ่ม CHRONIC_ED ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['patient_asthma_screen', 'patient_copd_screen', 'clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 270', 'pending-local-source-2026.1', 'ต้องยืนยันเครื่องมือประเมิน self-care', 'pending-local-source'),
-    ('HC0102', 'H', 'percent', 'neutral', 'annual', 'Health promotion', 'Customer: COPD patients or their relative(s) who are able to care for the patient''s needs', 'Customer: COPD patients or their relative(s) who are able to care for the patient''s needs', 'ตัวชี้วัดกลุ่ม CHRONIC_ED ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['patient_asthma_screen', 'patient_copd_screen', 'clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 271', 'pending-local-source-2026.1', 'ต้องยืนยันเครื่องมือประเมิน self-care', 'pending-local-source'),
+    ('HC0101', 'H', 'ratio', 'neutral', 'annual', 'Health promotion', 'Customer: Asthma patients or their relative(s) who are able to care for the patient''s needs', 'Customer: Asthma patients or their relative(s) who are able to care for the patient''s needs', 'ตัวชี้วัดกลุ่ม CHRONIC_ED ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['patient_asthma_screen', 'patient_copd_screen', 'clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 270', 'pending-local-source-2026.1', 'ต้องยืนยันระดับความเร่งด่วน triage ของห้องฉุกเฉิน (Non-urgent triage) และเกณฑ์ Asthma/COPD', 'pending-local-source'),
+    ('HC0102', 'H', 'percent', 'neutral', 'annual', 'Health promotion', 'Customer: COPD patients or their relative(s) who are able to care for the patient''s needs', 'Customer: COPD patients or their relative(s) who are able to care for the patient''s needs', 'ตัวชี้วัดกลุ่ม CHRONIC_ED ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['patient_asthma_screen', 'patient_copd_screen', 'clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 271', 'pending-local-source-2026.1', 'ต้องยืนยันนัดตรวจติดตาม OPD follow-up ภายใน 30 วันหลังจำหน่าย', 'pending-local-source'),
     ('HE0101', 'H', 'percent', 'neutral', 'annual', 'Health promotion', 'Employee: Percent of employee check-up', 'Employee: Percent of employee check-up', 'ตัวชี้วัดกลุ่ม EMPLOYEE ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['emp', 'emp_history', 'emp_stat', 'emp_work_status', 'emp_work_summary', 'emp_work_schedule', 'emp_position', 'emp_department']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 264', 'pending-local-source-2026.1', 'ต้องยืนยัน employee denominator, check-up, BMI และ influenza vaccine', 'pending-local-source'),
     ('HE0102', 'H', 'percent', 'neutral', 'annual', 'Health promotion', 'Employee: Percent of employee have exceeding BMI', 'Employee: Percent of employee have exceeding BMI', 'ตัวชี้วัดกลุ่ม EMPLOYEE ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['emp', 'emp_history', 'emp_stat', 'emp_work_status', 'emp_work_summary', 'emp_work_schedule', 'emp_position', 'emp_department']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 265', 'pending-local-source-2026.1', 'ต้องยืนยัน employee denominator, check-up, BMI และ influenza vaccine', 'pending-local-source'),
     ('HE0103', 'H', 'percent', 'neutral', 'annual', 'Health promotion', 'Employee: Percent of employee have behavior-smoky', 'Employee: Percent of employee have behavior-smoky', 'ตัวชี้วัดกลุ่ม EMPLOYEE ตาม THIP KPI Dictionary 2025; ยังต้องทำ local mapping และ source view', 'a/b x 100', 'ต้องยืนยันตามนิยาม PDF และ local rule', 'ต้องยืนยันตามนิยาม PDF และ local rule', ARRAY['emp', 'emp_history', 'emp_stat', 'emp_work_status', 'emp_work_summary', 'emp_work_schedule', 'emp_position', 'emp_department']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 266', 'pending-local-source-2026.1', 'ต้องยืนยัน employee denominator, check-up, BMI และ influenza vaccine', 'pending-local-source'),

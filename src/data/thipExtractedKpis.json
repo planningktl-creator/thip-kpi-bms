@@ -1,0 +1,1394 @@
+{
+  "DH0101": {
+    "code": "DH0101",
+    "page": 48,
+    "titleTh": "ร้อยละการเสียชีวิตของผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน",
+    "title": "Acute coronary syndrome: Percent of mortality"
+  },
+  "DH0101.1": {
+    "code": "DH0101.1",
+    "page": 49,
+    "titleTh": "ร้อยละการเสียชีวิตของผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ยกขึ้น (STEMI)",
+    "title": "Acute coronary syndrome: Percent of mortality (STEMI)"
+  },
+  "DH0101.2": {
+    "code": "DH0101.2",
+    "page": 50,
+    "titleTh": "ร้อยละการเสียชีวิตของผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ไม่ยกขึ้น (NSTE-ACS)",
+    "title": "Acute coronary syndrome : Percent of mortality (NSTE-ACS)"
+  },
+  "DH0102": {
+    "code": "DH0102",
+    "page": 51,
+    "titleTh": "ร้อยละผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันที่ได้รับยา Aspirin ภายใน 24 ชั่วโมงเมื่อมาถึง โรงพยาบาล",
+    "title": "Acute coronary syndrome: Percent of patient receiving Aspirin within 24 hours of arrival"
+  },
+  "DH0103": {
+    "code": "DH0103",
+    "page": 52,
+    "titleTh": "ร้อยละผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน ที่ได้รับการสั่งยา Aspirin เมื่อจำหน่ายออก จากโรงพยาบาล",
+    "title": "Acute Coronary Syndrome: Percent of Aspirin prescribed at discharge"
+  },
+  "DH0104": {
+    "code": "DH0104",
+    "page": 53,
+    "titleTh": "ร้อยละผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน ที่มี LVSD และได้รับยา ACE inhibitors หรือ ARBs",
+    "title": "Acute coronary syndrome: Percent of ACE inhibitors or ARBs received for patient who have LVSD"
+  },
+  "DH0105": {
+    "code": "DH0105",
+    "page": 55,
+    "titleTh": "ร้อยละผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน ที่สูบบุหรี่และได้รับการแนะนำให้งดบุหรี่ ระหว่างการอยู่โรงพยาบาล",
+    "title": "Acute coronary syndrome: Percent of smoking cessation advice given"
+  },
+  "DH0106": {
+    "code": "DH0106",
+    "page": 56,
+    "titleTh": "ร้อยละผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน ที่ได้รับยา Beta-blocker ระหว่างรับไว้รักษา ในโรงพยาบาล",
+    "title": "Acute coronary syndrome: Percent of Beta-blocker receiving during hospital admitted"
+  },
+  "DH0107": {
+    "code": "DH0107",
+    "page": 57,
+    "titleTh": "ร้อยละผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน ที่ได้รับการสั่งยา Beta-blocker เมื่อจำหน่าย จากโรงพยาบาล",
+    "title": "Acute coronary syndrome: Percent of Beta-blocker prescribed at discharge"
+  },
+  "DH0108": {
+    "code": "DH0108",
+    "page": 58,
+    "titleTh": "ระยะเวลาเฉลี่ยที่ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน ที่ได้รับการทำ EKG เมื่อมาถึง โรงพยาบาล",
+    "title": "Acute coronary syndrome: Average door to EKG time"
+  },
+  "DH0109": {
+    "code": "DH0109",
+    "page": 59,
+    "titleTh": "ระยะเวลาเฉลี่ยที่ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน มาถึงโรงพยาบาลจนได้รับการส่งต่อ",
+    "title": "Acute coronary syndrome: Average door to refer time"
+  },
+  "DH0110": {
+    "code": "DH0110",
+    "page": 60,
+    "titleTh": "ร้อยละผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน ชนิด ST segment ยกขึ้น (STEMI) ที่ได้รับ Primary Percutaneous Coronary Intervention (PPCI) ภายใน 120 นาที หรือ Fibrinolytic Agent ภายใน 30 นาทีเมื่อแรกรับ",
+    "title": "Acute coronary syndrome (STEMI): Percent of Primary Percutaneous Coronary Intervention (PCI) given within 120 minutes or received Fibrinolytic agent within 30 minutes of arrival"
+  },
+  "DH0111": {
+    "code": "DH0111",
+    "page": 62,
+    "titleTh": "ร้อยละการรับกลับเข้าโรงพยาบาลของผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน ภายใน 28 วัน โดยไม่ได้วางแผน",
+    "title": "Acute coronary syndrome: Percent of unplanned re-admission within 28 days after last discharge"
+  },
+  "DH0112": {
+    "code": "DH0112",
+    "page": 63,
+    "titleTh": "ระยะเวลาวันนอนเฉลี่ยผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน",
+    "title": "Acute coronary syndrome: Average length of stay"
+  },
+  "DH0113": {
+    "code": "DH0113",
+    "page": 64,
+    "titleTh": "ร้อยละผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน ชนิด ST segment ยกขึ้น (STEMI) ที่ได้รับ Fibrinolytic agent ภายใน 30 นาทีเมื่อมาถึงโรงพยาบาล",
+    "title": "Acute coronary syndrome (STEMI) : Percent of time to Fibrinolytic administration agents within 30 minutes of arrival"
+  },
+  "DH0201": {
+    "code": "DH0201",
+    "page": 66,
+    "titleTh": "ร้อยละการเสียชีวิตของผู้ป่วยที่ทำ Coronary Artery Bypass Graft (CABG)",
+    "title": "Coronary Artery Bypass Graft (CABG): Percent of mortality"
+  },
+  "DH0202": {
+    "code": "DH0202",
+    "page": 67,
+    "titleTh": "ร้อยละการได้รับยาปฏิชีวนะแบบป้องกันในการผ่าตัด Coronary Artery Bypass Graft (CABG)",
+    "title": "Coronary Artery Bypass Graft (CABG): Percent of patient who received antibiotic prophylaxis"
+  },
+  "DH0203": {
+    "code": "DH0203",
+    "page": 68,
+    "titleTh": "ร้อยละการติดเชื้อแผลผ่าตัด Coronary Artery Bypass Graft (CABG)",
+    "title": "Coronary Artery Bypass Graft (CABG): Percent of surgical site Infection"
+  },
+  "DH0204": {
+    "code": "DH0204",
+    "page": 69,
+    "titleTh": "ร้อยละการเสียชีวิตของผู้ป่วยที่ทำCABG ภายใน30 วันหลังรับการรักษาแบบผู้ป่วยในวันแรก",
+    "title": "Coronary Artery Bypass Graft (CABG): percent of 30 - day hospital mortality"
+  },
+  "DH0301": {
+    "code": "DH0301",
+    "page": 70,
+    "titleTh": "ร้อยละผู้ป่วยในที่มีหัวใจล้มเหลวที่เป็น Heart Failure Reduced Ejection Fraction (HFREF) ได้รับยา Angiotensin II Converting Enzyme inhibitors (ACEIs) หรือ Angiotensin II Receptor Blockers (ARBs) หรือ Mineralocorticoid Receptor Antagonists (MRA)",
+    "title": "Heart failure: Percent of patient with Heart Failure Reduced Ejection Fraction (HFREF) received Angiotensin II Converting Enzyme inhibitors (ACEIs) or Angiotensin II Receptor Blockers (ARBs) or Mineralocorticoid Receptor Antagonists (MRA)"
+  },
+  "DH0302": {
+    "code": "DH0302",
+    "page": 72,
+    "titleTh": "ร้อยละของผู้ป่วยที่มีภาวะหัวใจล้มเหลว ที่สูบบุหรี่ ได้รับการแนะนำให้งดบุหรี่ ระหว่างการ อยู่โรงพยาบาล",
+    "title": "Heart failure: Percent of smoking cessation advice given"
+  },
+  "DH0401": {
+    "code": "DH0401",
+    "page": 73,
+    "titleTh": "ร้อยละของผู้ป่วย AF ได้รับยา Warfarin มีระดับ INR ตามเป้าหมายการรักษา",
+    "title": "Atrial fibrillation (AF): Percent of patient received Warfarin within target dose"
+  },
+  "DH0402": {
+    "code": "DH0402",
+    "page": 75,
+    "titleTh": "ร้อยละของการเกิด adverse event (major bleeding) ของผู้ป่วย AF ที่ได้รับยา Warfarin",
+    "title": "Atrial fibrillation (AF): Percent of major bleeding (intracranial hemorrhage and hemorrhage need blood transfusion)"
+  },
+  "DN0101": {
+    "code": "DN0101",
+    "page": 76,
+    "titleTh": "ร้อยละการเสียชีวิตของผู้ป่วย Stroke",
+    "title": "Stroke: Percent of mortality"
+  },
+  "DN0102": {
+    "code": "DN0102",
+    "page": 77,
+    "titleTh": "ร้อยละผู้ป่วยโรคสมองขาดเลือดที่ได้รับยาต้านเกล็ดเลือด (Antiplatelet) ภายใน 2 วัน หลังเข้ารับการรักษาในโรงพยาบาล",
+    "title": "Ischemic Stroke: Percent of patient receiving Antiplatelet within 2 days of hospital admission"
+  },
+  "DN0103": {
+    "code": "DN0103",
+    "page": 78,
+    "titleTh": "ร้อยละผู้ป่วยโรคหลอดเลือดสมองขาดเลือดที่ได้รับการสั่งยาต้านเกล็ดเลือด (Antiplatelet) หรือยาต้านภาวะแข็งตัวของเลือด (Anticoagulant) ขณะจำหน่ายออกจากโรงพยาบาล",
+    "title": "Ischemic Stroke: Percent of Antiplatelet or Anticoagulant therapy prescribed at discharge"
+  },
+  "DN0104": {
+    "code": "DN0104",
+    "page": 79,
+    "titleTh": "ร้อยละผู้ป่วยโรคหลอดเลือดสมองขาดเลือดที่มีภาวะหัวใจห้องบนเต้นระริกหรือหัวใจห้อง บนเต้นระรัวได้รับยาต้านภาวะแข็งตัวของเลือด (Anticoagulant)",
+    "title": "Ischemic Stroke: Percent of patient with Atrial fibrillation/flutter receiving Anticoagulation therapy"
+  },
+  "DN0105": {
+    "code": "DN0105",
+    "page": 80,
+    "titleTh": "ร้อยละผู้ป่วยโรคหลอดเลือดสมองได้รับความรู้ในขณะอยู่ที่โรงพยาบาล",
+    "title": "Stroke: Percent of patients who were given stroke education during their hospital stay"
+  },
+  "DN0106": {
+    "code": "DN0106",
+    "page": 81,
+    "titleTh": "ร้อยละผู้ป่วยโรคหลอดเลือดสมองได้รับการประเมินและได้รับการรักษาด้านเวชศาสตร์ ฟื้นฟูเพื่อฟื้นฟูสมรรถภาพภายใน 72 ชั่วโมง",
+    "title": "Stroke: Percent of treatment, physiotherapy or rehabilitation in stroke or paralytic syndrome within 72 hours"
+  },
+  "DN0107": {
+    "code": "DN0107",
+    "page": 82,
+    "titleTh": "ร้อยละการรับกลับเข้าโรงพยาบาลของผู้ป่วย Stroke ด้วยโรคหลอดเลือดสมองเดิม ภายใน 28 วัน โดยไม่ได้วางแผน",
+    "title": "Stroke: Percent of unplanned re-admission of stroke within 28 days"
+  },
+  "DN0109": {
+    "code": "DN0109",
+    "page": 83,
+    "titleTh": "ระยะเวลาวันนอนเฉลี่ยของผู้ป่วย Stroke",
+    "title": "Stroke: Average length of stay"
+  },
+  "DN0110": {
+    "code": "DN0110",
+    "page": 84,
+    "titleTh": "ร้อยละผู้ป่วย Ischemic stroke ที่ได้รับ Thrombolytic agents ภายใน 60 นาที เมื่อ มาถึงโรงพยาบาล",
+    "title": "Ischemic Stroke: Percent of time to thrombolytic administration agents within 60 minutes of arrival"
+  },
+  "DN0301": {
+    "code": "DN0301",
+    "page": 85,
+    "titleTh": "ร้อยละการรับกลับเข้าโรงพยาบาลของผู้ป่วยที่ทำ Craniotomy โดยมีสาเหตุจากการ บาดเจ็บที่ศีรษะ ภายใน 28 วัน โดยไม่ได้วางแผน",
+    "title": "Head Injury: Percent of unplanned re-admission of Craniotomy within 28 days"
+  },
+  "DN0302": {
+    "code": "DN0302",
+    "page": 86,
+    "titleTh": "ร้อยละของผู้ป่วยบาดเจ็บที่ศีรษะที่เสียชีวิตภายใน 48 ชั่วโมง ภายหลังการบาดเจ็บ (เฉพาะผู้ป่วยบาดเจ็บต่อสมอง)",
+    "title": "Head Injury: Percent of mortality within 48 hours"
+  },
+  "DN0303": {
+    "code": "DN0303",
+    "page": 87,
+    "titleTh": "ร้อยละการผ่าตัดสมองในผู้ป่วยบาดเจ็บที่ศีรษะที่มี Intracranial injury",
+    "title": "Head Injury: Percent of patient underwent craniotomy for Intracranial injury"
+  },
+  "DR0101": {
+    "code": "DR0101",
+    "page": 88,
+    "titleTh": "ร้อยละการเสียชีวิตหลังจากเข้ารับการรักษาของผู้ป่วยโรคปอดบวม",
+    "title": "Pneumonia: Percent of mortality after hospital admission"
+  },
+  "DR0102": {
+    "code": "DR0102",
+    "page": 89,
+    "titleTh": "ร้อยละการรับกลับเข้าโรงพยาบาลของผู้ป่วยโรคปอดบวมภายใน 28 วัน โดยไม่ได้วางแผน",
+    "title": "Pneumonia: Percent of unplanned re-admission within 28 days after last discharge"
+  },
+  "DR0103": {
+    "code": "DR0103",
+    "page": 90,
+    "titleTh": "ร้อยละผู้ป่วยโรคปอดบวมได้รับคำแนะนำให้อดหรือเลิกบุหรี่ ระหว่างอยู่ในโรงพยาบาล",
+    "title": "Pneumonia: Percent of smoking cessation advice given"
+  },
+  "DR0201": {
+    "code": "DR0201",
+    "page": 91,
+    "titleTh": "ร้อยละการเสียชีวิตของผู้ป่วยวัณโรคปอดในช่วง 12 เดือน",
+    "title": "TB: Percent of mortality during 12 months"
+  },
+  "DR0202": {
+    "code": "DR0202",
+    "page": 92,
+    "titleTh": "ร้อยละของผู้ติดเชื้อเอชไอวี ได้รับการคัดกรองวัณโรคปอด",
+    "title": "TB: Percentage of people living with HIV having a TB screening"
+  },
+  "DR0203": {
+    "code": "DR0203",
+    "page": 93,
+    "titleTh": "ร้อยละความสำเร็จการรักษาวัณโรค",
+    "title": "TB: Percent of treatment success"
+  },
+  "DR0204": {
+    "code": "DR0204",
+    "page": 94,
+    "titleTh": "ร้อยละผู้ป่วยวัณโรคได้รับการตรวจคัดกรอง HIV",
+    "title": "TB: Percent of TB having a HIV screening"
+  },
+  "DR0205": {
+    "code": "DR0205",
+    "page": 95,
+    "titleTh": "ร้อยละผู้ป่วยวัณโรคที่มีผลเลือดเอชไอวีบวกได้รับการรักษาด้วย Antiretroviral therapy (ART)",
+    "title": "TB: Percent of HIV-positive TB patients started on Antiretroviral therapy (ART)"
+  },
+  "DR0301": {
+    "code": "DR0301",
+    "page": 96,
+    "titleTh": "ร้อยละการรับกลับเข้าโรงพยาบาลของผู้ป่วย Asthma ภายใน 28 วัน โดยไม่ได้วางแผน",
+    "title": "Asthma: Percent of unplanned re-admission within 28 days after last discharge"
+  },
+  "DR0302": {
+    "code": "DR0302",
+    "page": 97,
+    "titleTh": "ร้อยละผู้ป่วย Asthma ได้รับคำแนะนำให้อดหรือเลิกบุหรี่ ระหว่างอยู่ในโรงพยาบาล",
+    "title": "Asthma: Percent of smoking cessation advice given"
+  },
+  "DR0401": {
+    "code": "DR0401",
+    "page": 98,
+    "titleTh": "ร้อยละการรับกลับเข้าโรงพยาบาลของผู้ป่วย COPD ภายใน 28 วัน โดยไม่ได้วางแผน",
+    "title": "COPD: Percent of unplanned re-admission into the hospital within 28 days after last discharge"
+  },
+  "DR0403": {
+    "code": "DR0403",
+    "page": 99,
+    "titleTh": "ร้อยละการเสียชีวิตจากโรคปอดอุดกั้นเรื้อรัง",
+    "title": "COPD: Percent of mortality"
+  },
+  "DR0404": {
+    "code": "DR0404",
+    "page": 100,
+    "titleTh": "ร้อยละของผู้ป่วยโรคปอดอุดกั้นเรื้อรังที่ยังสูบบุหรี่",
+    "title": "COPD: Percent of patient with ongoing smoking"
+  },
+  "DC0103": {
+    "code": "DC0103",
+    "page": 101,
+    "titleTh": "ร้อยละของผู้ป่วยเบาหวานได้รับการคัดกรองเบาหวานเข้าจอประสาทตา",
+    "title": "DM: Percent of diabetic retinopathy screening"
+  },
+  "DC0107": {
+    "code": "DC0107",
+    "page": 102,
+    "titleTh": "ร้อยละผู้ป่วยเบาหวานได้รับการตัดขาจากภาวะแทรกซ้อนของโรคเบาหวาน",
+    "title": "DM: Percent of lower-extremity amputation among patients with diabetes"
+  },
+  "DC0108": {
+    "code": "DC0108",
+    "page": 103,
+    "titleTh": "ร้อยละของผู้ป่วยเบาหวานผู้ใหญ่ที่ควบคุมระดับน้ำตาลในเลือดได้ดี",
+    "title": "DM: Percent of good controlled of blood sugar in adult"
+  },
+  "DC0108.1": {
+    "code": "DC0108.1",
+    "page": 104,
+    "titleTh": "ร้อยละของผู้ป่วยเบาหวานผู้ใหญ่อายุเกินกว่า 60 ปี ที่ควบคุมระดับน้ำตาลในเลือดได้ดี",
+    "title": "DM: Percent of good controlled of blood sugar in adult aged ≥ 60 years old"
+  },
+  "DC0108.2": {
+    "code": "DC0108.2",
+    "page": 105,
+    "titleTh": "ร้อยละของผู้ป่วยเบาหวานผู้ใหญ่อายุน้อยกว่า 60 ปี ที่ควบคุมระดับน้ำตาลในเลือดได้ดี",
+    "title": "DM: Percent of good controlled of blood sugar in adult aged < 60 years old"
+  },
+  "DC0201": {
+    "code": "DC0201",
+    "page": 106,
+    "titleTh": "ร้อยละผู้ป่วยความดันโลหิตสูงที่ควบคุมความดันโลหิตได้ดี",
+    "title": "HT: Percent of good controlled of blood pressure"
+  },
+  "DC0201.1": {
+    "code": "DC0201.1",
+    "page": 108,
+    "titleTh": "ร้อยละผู้ป่วยความดันโลหิตสูงอายุน้อยกว่า 65 ปี ที่ควบคุมความดันโลหิตได้ดี",
+    "title": "HT: Percent of good controlled of blood pressure of patient aged < 65 years old"
+  },
+  "DC0201.2": {
+    "code": "DC0201.2",
+    "page": 109,
+    "titleTh": "ร้อยละผู้ป่วยความดันโลหิตสูงอายุเกินกว่า 65 ปี ที่ควบคุมความดันโลหิตได้ดี",
+    "title": "HT: Percent of good controlled of blood pressure of patient aged ≥ 65 years old"
+  },
+  "DC0301": {
+    "code": "DC0301",
+    "page": 110,
+    "titleTh": "ร้อยละของผู้ติดเชื้อเอชไอวีที่กินยาต้านไวรัส ได้รับการตรวจ Viral load (VL) อย่างน้อย 1 ครั้งต่อปี",
+    "title": "HIV: Percent of people living with HIV with at least one test viral load (VL) after ARV treatment"
+  },
+  "DC0302": {
+    "code": "DC0302",
+    "page": 111,
+    "titleTh": "ร้อยละของผู้ติดเชื้อเอชไอวีที่มี Viral load (VL) < 50 copies/ml หลังจากกินยาต้านไวรัส มาแล้ว 12 เดือน",
+    "title": "HIV: Percent of people living with HIV with viral load (VL) < 50 copies/ml after ARV treatment 12 months ago"
+  },
+  "DC0306": {
+    "code": "DC0306",
+    "page": 112,
+    "titleTh": "ร้อยละของผู้ติดเชื้อเอชไอวีเพศหญิงได้รับการคัดกรองมะเร็งปากมดลูก",
+    "title": "HIV: Percent of people living with HIV screening PAP smear"
+  },
+  "DC0307": {
+    "code": "DC0307",
+    "page": 113,
+    "titleTh": "ร้อยละของผู้ติดเชื้อเอชไอวีรายใหม่ที่ได้รับการตรวจคัดกรองโรคซิฟิลิส",
+    "title": "HIV: Percent of people living with HIV newly registered who were tested for syphilis"
+  },
+  "DC0308": {
+    "code": "DC0308",
+    "page": 114,
+    "titleTh": "ร้อยละของผู้ติดเชื้อเอชไอวี/เอดส์ที่ได้รับการรักษาด้วยยาต้านไวรัส ณ ปัจจุบัน",
+    "title": "HIV: Percentage of people living with HIV who were currently receiving antiretroviral therapy"
+  },
+  "DC0309": {
+    "code": "DC0309",
+    "page": 115,
+    "titleTh": "ร้อยละของผู้ติดเชื้อเอชไอวีรายใหม่ที่มีข้อบ่งชี้ในการรับยาป้องกันวัณโรค (Tuberculosis preventive therapy, TPT) ได้รับยา TPT",
+    "title": "HIV: Percentage of newly diagnosed people living with HIV were receiving tuberculosis preventive therapy"
+  },
+  "DC0401": {
+    "code": "DC0401",
+    "page": 116,
+    "titleTh": "ร้อยละการเสียชีวิตของผู้ป่วยโรคมะเร็ง",
+    "title": "Cancer: Percent of mortality"
+  },
+  "DC0402": {
+    "code": "DC0402",
+    "page": 117,
+    "titleTh": "ร้อยละการรับกลับเข้าโรงพยาบาลก่อนวันนัดโดยไม่ได้วางแผนของผู้ป่วยมะเร็ง",
+    "title": "Cancer: Percent of unplanned re-admission"
+  },
+  "DC0403": {
+    "code": "DC0403",
+    "page": 118,
+    "titleTh": "ร้อยละการเสียชีวิตด้วยโรคมะเร็งตับ",
+    "title": "Liver Cancer: Percent of mortality"
+  },
+  "DC0501": {
+    "code": "DC0501",
+    "page": 119,
+    "titleTh": "ร้อยละของผู้ป่วยโรคไตเรื้อรังที่สามารถชะลอความเสื่อมของไตได้ตามเป้าหมาย",
+    "title": "CKD: Percent of patients who achieve the kidney function deterioration delayed target"
+  },
+  "DC0502": {
+    "code": "DC0502",
+    "page": 121,
+    "titleTh": "ร้อยละของผู้ป่วยโรคไตเรื้อรังที่ได้รับยา ACEIs หรือ ARBs",
+    "title": "CKD: Percent of patients who are receiving ACEIs or ARBs"
+  },
+  "DO0202": {
+    "code": "DO0202",
+    "page": 123,
+    "titleTh": "ร้อยละของผู้ป่วยผ่าตัดเปลี่ยนข้อสะโพก ได้รับ prophylactic antibiotic",
+    "title": "Hip arthroplasty: Percent of patients who received antibiotic prophylaxis in Hip arthroplasty"
+  },
+  "DO0204": {
+    "code": "DO0204",
+    "page": 124,
+    "titleTh": "ร้อยละการติดเชื้อแผลผ่าตัดเปลี่ยนข้อสะโพกภายใน 1 ปี",
+    "title": "Hip arthroplasty: Percent of Hip arthroplasty associated infection within 1 Year"
+  },
+  "DO0205": {
+    "code": "DO0205",
+    "page": 125,
+    "titleTh": "ร้อยละการติดเชื้อแผลผ่าตัดเปลี่ยนข้อสะโพกภายใน 90 วัน",
+    "title": "Hip arthroplasty: Percent of Hip arthroplasty associated infection within 90 days"
+  },
+  "DO0302": {
+    "code": "DO0302",
+    "page": 126,
+    "titleTh": "ร้อยละของผู้ป่วยผ่าตัดเปลี่ยนข้อเข่า ได้รับ prophylactic antibiotic",
+    "title": "Knee arthroplasty: Percent of patients who received antibiotic prophylaxis"
+  },
+  "DO0303": {
+    "code": "DO0303",
+    "page": 127,
+    "titleTh": "ร้อยละการติดเชื้อในข้อเข่าหลังการผ่าตัดเปลี่ยนข้อเข่าภายใน 1 ปี",
+    "title": "Knee artrhoplasty: Percent of surgical infection within 1 year"
+  },
+  "DO0304": {
+    "code": "DO0304",
+    "page": 128,
+    "titleTh": "ร้อยละการติดเชื้อในข้อเข่าหลังการผ่าตัดเปลี่ยนข้อเข่าภายใน 90 วัน",
+    "title": "Knee artrhoplasty: Percent of surgical infection within 90 days"
+  },
+  "DG0101": {
+    "code": "DG0101",
+    "page": 129,
+    "titleTh": "ร้อยละการรับกลับเข้าโรงพยาบาลของผู้ป่วย Upper GI Hemorrhage ภายใน 28 วัน โดย ไม่ได้วางแผน",
+    "title": "Upper gastrointestinal hemorrhage (UGIH): Percent of unplanned re-admission into the hospital within 28 days after last discharge"
+  },
+  "DG0102": {
+    "code": "DG0102",
+    "page": 130,
+    "titleTh": "ระยะเวลาวันนอนเฉลี่ยผู้ป่วย Upper GI hemorrhage (UGIH)",
+    "title": "Upper gastrointestinal hemorrhage (UGIH): Average length of stay"
+  },
+  "DG0201": {
+    "code": "DG0201",
+    "page": 131,
+    "titleTh": "ร้อยละการเกิดไส้ติ่งทะลุในผู้ป่วยโรคไส้ติ่งอักเสบ",
+    "title": "Acute appendicitis: Percent of abruption"
+  },
+  "DG0202": {
+    "code": "DG0202",
+    "page": 132,
+    "titleTh": "ร้อยละการเสียชีวิตจากไส้ติ่งอักเสบ",
+    "title": "Acute appendicitis: Percent of mortality"
+  },
+  "DP0101": {
+    "code": "DP0101",
+    "page": 133,
+    "titleTh": "ร้อยละของผู้ป่วยเบาหวานชนิดที่ 1 ในเด็กและวัยรุ่นอายุน้อยกว่า 18 ปีที่ควบคุมระดับ น้ำตาลได้ดี",
+    "title": "Diabetes in child and adolescent: Percent of good controlled of blood sugar (age < 18 years)"
+  },
+  "DS0101": {
+    "code": "DS0101",
+    "page": 135,
+    "titleTh": "ร้อยละของผู้ติดยาเสพติดกลุ่ม Methamphetamine โดยรวมที่หยุดเสพต่อเนื่อง 3 เดือน",
+    "title": "Methamphetamine group: 3 months total remission rate"
+  },
+  "DS0201": {
+    "code": "DS0201",
+    "page": 136,
+    "titleTh": "ร้อยละของผู้ติดสุราโดยรวม ที่หยุดเสพต่อเนื่อง 3 เดือน",
+    "title": "Alcohol group: 3 months total remission rate"
+  },
+  "DS0301": {
+    "code": "DS0301",
+    "page": 137,
+    "titleTh": "ร้อยละของผู้ติดยาสูบโดยรวม ที่หยุดเสพต่อเนื่อง 3 เดือน",
+    "title": "Tobacco group: 3 months total remission rate"
+  },
+  "DS0401": {
+    "code": "DS0401",
+    "page": 138,
+    "titleTh": "อัตราคงอยู่ในการบำบัดรักษา 1 ปีด้วยเมทาโดนระยะยาว ของผู้ติดสารเสพติดในกลุ่ม opioid",
+    "title": "Opioid group: 1 year retention rate of opioid in methadone maintenance program"
+  },
+  "DE0101": {
+    "code": "DE0101",
+    "page": 139,
+    "titleTh": "ระยะเวลาการรอตรวจภายหลังการส่งปรึกษาของผู้ป่วยที่มีผลเมมโมแกรมตั้งแต่ BI-RADS 4 ขึ้นไป",
+    "title": "Breast cancer: Consultation time in patient with BIRADS 4 or greater mammography result"
+  },
+  "DE0103": {
+    "code": "DE0103",
+    "page": 140,
+    "titleTh": "ร้อยละการตรวจพบผู้ป่วยมะเร็งเต้านมระยะแรก Stage 1, 2",
+    "title": "Breast Cancer: Percent of early diagnosis of stage 1, 2"
+  },
+  "DE0501": {
+    "code": "DE0501",
+    "page": 141,
+    "titleTh": "อัตราการปลูกถ่ายติด (engraftment) ของผู้ป่วย Stem cell transplantation ภายใน 45 วัน หลังการปลูกถ่ายไขกระดูก",
+    "title": "Stem cell transplantation: Engraftment rate within 45 days"
+  },
+  "DE0801": {
+    "code": "DE0801",
+    "page": 142,
+    "titleTh": "ร้อยละของผู้ป่วย transfusion dependent thalassemia (TDT) ที่อายุมากกว่า 2 ปี และถึง 15 ปี มีภาวะธาตุเหล็กเกิน (Serum ferritin > 1000 ug/L) ที่ได้รับยาขับธาตุเหล็ก",
+    "title": "TDT in Pediatrics Patient: Percent of received iron chelator in patient with iron overload (serum ferrous > 1000 ug/L)"
+  },
+  "DE1201": {
+    "code": "DE1201",
+    "page": 143,
+    "titleTh": "ร้อยละผู้ป่วยที่เข้ารับการผ่าตัดซ่อมแซมปากแหว่งตามเกณฑ์ช่วงอายุไม่เกิน 6 เดือน",
+    "title": "Cleft lip: Percent of patients who had cleft lip repair with under 6 months of age"
+  },
+  "DE1202": {
+    "code": "DE1202",
+    "page": 144,
+    "titleTh": "ร้อยละผู้ป่วยที่เข้ารับการผ่าตัดซ่อมแซมเพดานโหว่ตามช่วงอายุไม่เกิน 18 เดือน",
+    "title": "Cleft palate: Percent of patients who had cleft Palate repair with under 18 months of age"
+  },
+  "DE1301": {
+    "code": "DE1301",
+    "page": 145,
+    "titleTh": "อัตราการตั้งครรภ์ต่อรอบการใส่ตัวอ่อนของผู้รับบริการทำเด็กหลอดแก้วและย้ายตัวอ่อน รอบสด (กลุ่มอายุน้อยกว่า 34 ปี)",
+    "title": "Infertility: Clinical pregnancy rate per embryo transfer following IVF/ICSI and fresh embryo transfer (age < 34 years)"
+  },
+  "DE1302": {
+    "code": "DE1302",
+    "page": 146,
+    "titleTh": "อัตราการตั้งครรภ์ต่อรอบการใส่ตัวอ่อนของผู้รับบริการทำเด็กหลอดแก้วและย้ายตัวอ่อน รอบสด (กลุ่มอายุ 34 - 39 ปี)",
+    "title": "Infertility: Clinical pregnancy rate per embryo transfer following IVF/ICSI and fresh embryo transfer (age 34 - 39 Years)"
+  },
+  "DE1303": {
+    "code": "DE1303",
+    "page": 147,
+    "titleTh": "อัตราการตั้งครรภ์ต่อรอบการใส่ตัวอ่อนของผู้รับบริการทำเด็กหลอดแก้วและย้ายตัวอ่อน รอบสด (กลุ่มอายุ 40 ปีขึ้นไป)",
+    "title": "Infertility: Clinical pregnancy rate per embryo transfer following IVF/ICSI and fresh embryo transfer (age > 40 years)"
+  },
+  "DE1304": {
+    "code": "DE1304",
+    "page": 148,
+    "titleTh": "อัตราการตั้งครรภ์ต่อรอบการใส่ตัวอ่อนของผู้รับบริการทำเด็กหลอดแก้วและย้ายตัวอ่อน รอบแช่แข็ง (กลุ่มอายุน้อยกว่า 34 ปี)",
+    "title": "Infertility: Clinical pregnancy rate per embryo transfer following IVF/ICSI and frozen embryo transfer (age < 34 years)"
+  },
+  "DE1305": {
+    "code": "DE1305",
+    "page": 149,
+    "titleTh": "อัตราการตั้งครรภ์ต่อรอบการใส่ตัวอ่อนของผู้รับบริการทำเด็กหลอดแก้วและย้ายตัวอ่อน รอบแช่แข็ง (กลุ่มอายุ 34 - 39 ปี)",
+    "title": "Infertility: Clinical pregnancy rate per embryo transfer following IVF/ICSI and frozen embryo transfer (age 34 - 39 years)"
+  },
+  "DE1306": {
+    "code": "DE1306",
+    "page": 150,
+    "titleTh": "อัตราการตั้งครรภ์ต่อรอบการใส่ตัวอ่อนของผู้รับบริการทำเด็กหลอดแก้วและย้ายตัวอ่อน รอบแช่แข็ง (กลุ่มอายุ 40 ปีขึ้นไป)",
+    "title": "Infertility: Clinical pregnancy rate per embryo transfer following IVF/ICSI and frozen embryo transfer (age > 40 years)"
+  },
+  "DE1401": {
+    "code": "DE1401",
+    "page": 151,
+    "titleTh": "ร้อยละผู้ป่วย Upper GI hemorrhage (UGIH) ได้รับการส่องกล้องภายใน 24 ชั่วโมง",
+    "title": "Upper gastrointestinal hemorrhage (UGIH): Percent of patients who had underwent EGD within 24 hours"
+  },
+  "DE1402": {
+    "code": "DE1402",
+    "page": 152,
+    "titleTh": "ร้อยละผู้ป่วย Upper GI hemorrhage (UGIH) กลุ่ม high risk ได้รับการส่องกล้องทางเดิน อาหารส่วนต้น ภายใน 24 ชั่วโมง",
+    "title": "Upper gastrointestinal hemorrhage (UGIH): Percent of high risk patients who had underwent EGD within 24 hours"
+  },
+  "DE1403": {
+    "code": "DE1403",
+    "page": 154,
+    "titleTh": "ร้อยละผู้ป่วย Non-variceal UGIH สามารถหยุดเลือดด้วยวิธีการส่องกล้องได้สำเร็จ",
+    "title": "Non-variceal Upper gastrointestinal hemorrhage (UGIH): Percent of hemostatic success by endoscopic approach"
+  },
+  "DE1404": {
+    "code": "DE1404",
+    "page": 156,
+    "titleTh": "ร้อยละผู้ป่วยที่เกิดภาวะเลือดออกซ้ำจากแผลในระบบทางเดินอาหารส่วนต้นภายหลังจาก การหยุดเลือดด้วยการส่องกล้อง",
+    "title": "Upper gastrointestinal hemorrhage (UGIH): Recurrent rates of UGIH after upper endoscopic treatment"
+  },
+  "DE1405": {
+    "code": "DE1405",
+    "page": 158,
+    "titleTh": "อัตราการเกิดภาวะแทรกซ้อนจากการส่องกล้องทางเดินอาหารส่วนต้นเพื่อรักษา UGIH",
+    "title": "Upper gastrointestinal hemorrhage (UGIH): Complication rates of upper endoscopic treatment"
+  },
+  "DE1601": {
+    "code": "DE1601",
+    "page": 159,
+    "titleTh": "ร้อยละของทารกแรกเกิดที่ได้รับการตรวจคัดกรองการได้ยิน ภายใน 30 วัน",
+    "title": "Newborn: Percent of hearing screening within 30 days"
+  },
+  "DM0101": {
+    "code": "DM0101",
+    "page": 160,
+    "titleTh": "ร้อยละเด็กพัฒนาการล่าช้ารอบด้าน (Global development delay: GDD) มีพัฒนาการดี ขึ้น",
+    "title": "GDD: Percent of children with global development delay that improved after intervented"
+  },
+  "DM0102": {
+    "code": "DM0102",
+    "page": 161,
+    "titleTh": "ร้อยละเด็กพัฒนาการล่าช้ารอบด้าน (Global development delay: GDD) มีพัฒนาการดี ขึ้น จากการประเมินโดยใช้เครื่องมือ TEDA4I",
+    "title": "GDD: Percent of children with Global development delay that improved after intervented with TEDA4I"
+  },
+  "DM0103": {
+    "code": "DM0103",
+    "page": 162,
+    "titleTh": "ร้อยละเด็กพัฒนาการล่าช้ารอบด้าน (Global development delay: GDD) คงอยู่ใน ระบบการศึกษาได้อย่างน้อย 1 ปี",
+    "title": "GDD: Percent of children with Global development delay that are included in educational system for at least 1 year"
+  },
+  "DM0201": {
+    "code": "DM0201",
+    "page": 163,
+    "titleTh": "ร้อยละเด็กออทิสติกมีพัฒนาการด้านภาษาและสังคมดีขึ้น",
+    "title": "ASD: Percent of children with Autism Spectrum Disorder (ASD) with social and communication skills improvement"
+  },
+  "DM0202": {
+    "code": "DM0202",
+    "page": 164,
+    "titleTh": "ร้อยละเด็กออทิสติกมีพัฒนาการด้านภาษาและสังคมดีขึ้น จากการประเมินโดยใช้เครื่องมือ TEDA4I",
+    "title": "ASD: Percent of children with Autism spectrum disorder (ASD) with social and communication skills improvement with TEDA4I"
+  },
+  "DM0203": {
+    "code": "DM0203",
+    "page": 165,
+    "titleTh": "ร้อยละเด็กออทิสติกคงอยู่ในระบบการศึกษาได้อย่างน้อย 1 ปี",
+    "title": "ASD: Percent of children with Autism spectrum disorder (ASD) that are included in educational system for at least 1 year"
+  },
+  "DM0301": {
+    "code": "DM0301",
+    "page": 166,
+    "titleTh": "ร้อยละผู้ป่วยเด็กสมองพิการ (Cerebral palsy) มีพัฒนาการดีขึ้น",
+    "title": "Cerebral palsy: Percent of children with Cerebral palsy that improved after intervented"
+  },
+  "DM0302": {
+    "code": "DM0302",
+    "page": 167,
+    "titleTh": "ร้อยละผู้ป่วยเด็กสมองพิการ (Cerebral palsy) มีพัฒนาการดีขึ้น จากการประเมินโดยใช้ เครื่องมือ TEDA4I",
+    "title": "Cerebral palsy: Percent of children with Cerebral palsy that improved after intervented"
+  },
+  "DM0401": {
+    "code": "DM0401",
+    "page": 168,
+    "titleTh": "ร้อยละผู้ป่วยเด็กสมาธิสั้นรายใหม่อาการดีขึ้นภายใน 6 เดือน",
+    "title": "Child and adolescent psychiatry: Percent of children with Attention-Deficit Hyperactivity Disorder (ADHD) improved after intervented for 6 months"
+  },
+  "DM0402": {
+    "code": "DM0402",
+    "page": 169,
+    "titleTh": "ร้อยละผู้ป่วยเด็กซึมเศร้าอาการดีขึ้นภายใน 6 เดือน",
+    "title": "Child and adolescent psychiatry: Percent of children and adolescents with Major depressive disorder (MDD) improved after intervented for 6 months"
+  },
+  "CM0101": {
+    "code": "CM0101",
+    "page": 170,
+    "titleTh": "สัดส่วนการตายของมารดาจากการตั้งครรภ์ และ/หรือการคลอด (ต่อแสนทารกเกิดมีชีพ)",
+    "title": "Maternal: Mortality rate of mother from pregnancy and/or labour (1:100,000)"
+  },
+  "CM0104": {
+    "code": "CM0104",
+    "page": 171,
+    "titleTh": "ร้อยละการรับกลับเข้าโรงพยาบาลของผู้คลอด Caesarean section ภายใน 28 วัน โดย ไม่ได้วางแผน",
+    "title": "Maternal: Percent of unplanned re-admission of Caesarean section within 28 days"
+  },
+  "CM0105": {
+    "code": "CM0105",
+    "page": 172,
+    "titleTh": "ระยะเวลาวันนอนเฉลี่ยของผู้คลอดโดยการผ่าตัดคลอดทางหน้าท้อง",
+    "title": "Maternal: Average length of stay of Caesarean section"
+  },
+  "CM0107": {
+    "code": "CM0107",
+    "page": 173,
+    "titleTh": "ร้อยละการตกเลือดหลังคลอดเฉียบพลันกรณีคลอดทางช่องคลอด",
+    "title": "Maternal: Percent of Immediate postpartum hemorrhage (vaginal delivery)"
+  },
+  "CM0109": {
+    "code": "CM0109",
+    "page": 174,
+    "titleTh": "ร้อยละการชักขณะตั้งครรภ์ คลอดหรือหลังคลอด",
+    "title": "Maternal: Percent of eclampsia in pregnancy induce hypertension"
+  },
+  "CM0110": {
+    "code": "CM0110",
+    "page": 175,
+    "titleTh": "อัตราหญิงตั้งครรภ์ที่มีภาวะเบาหวาน",
+    "title": "Maternal: Percent of gestational DM"
+  },
+  "CM0116": {
+    "code": "CM0116",
+    "page": 176,
+    "titleTh": "ร้อยละการได้รับ prophylactic antibiotic ในการผ่าตัด abdominal hysterectomy",
+    "title": "Maternal: Percent of receiving antibiotic prophylaxis in abdominal hysterectomy"
+  },
+  "CM0117": {
+    "code": "CM0117",
+    "page": 177,
+    "titleTh": "ร้อยละการติดเชื้อแผลผ่าตัด Abdominal hysterectomy",
+    "title": "Maternal: Percent of abdominal hysterectomy associated infection"
+  },
+  "CM0118": {
+    "code": "CM0118",
+    "page": 178,
+    "titleTh": "ร้อยละการผ่าตัดคลอดบุตรปฐมภูมิของโรงพยาบาล",
+    "title": "Maternal: Percent of primary cesarean section"
+  },
+  "CM0119": {
+    "code": "CM0119",
+    "page": 179,
+    "titleTh": "ร้อยละการผ่าตัดคลอดบุตรทั้งหมดของโรงพยาบาล",
+    "title": "Maternal: Percent of overall cesarean section"
+  },
+  "CM0201": {
+    "code": "CM0201",
+    "page": 180,
+    "titleTh": "อัตราการตายปริกำเนิด (อายุครรภ์ตั้งแต่ 24 สัปดาห์)",
+    "title": "Child: Perinatal mortality rate (24 weeks)"
+  },
+  "CM0202": {
+    "code": "CM0202",
+    "page": 181,
+    "titleTh": "อัตราการตายปริกำเนิด (อายุครรภ์ตั้งแต่ 28 สัปดาห์)",
+    "title": "Child: Perinatal mortality rate (28 weeks)"
+  },
+  "CM0203": {
+    "code": "CM0203",
+    "page": 182,
+    "titleTh": "อัตราการตายของทารกแรกเกิด",
+    "title": "Child: Neonatal mortality rate"
+  },
+  "CM0204": {
+    "code": "CM0204",
+    "page": 183,
+    "titleTh": "อัตราการขาดออกซิเจนในทารกแรกเกิด",
+    "title": "Child: Birth asphyxia rate"
+  },
+  "CM0205": {
+    "code": "CM0205",
+    "page": 184,
+    "titleTh": "อัตราการขาดออกซิเจนรุนแรงในทารกแรกเกิด",
+    "title": "Child: Severe birth asphyxia rate"
+  },
+  "CM0206": {
+    "code": "CM0206",
+    "page": 185,
+    "titleTh": "ร้อยละทารกแรกเกิดน้ำหนักต่ำกว่า 2,500 กรัม",
+    "title": "Child: Percent of low birth weight < 2500 grams"
+  },
+  "CM0207": {
+    "code": "CM0207",
+    "page": 186,
+    "titleTh": "ร้อยละการเสียชีวิตในโรงพยาบาลของทารกแรกเกิดน้ำหนักต่ำกว่า 1,000 กรัมภายใน 28 วัน",
+    "title": "Child: Percent of neonatal mortality with birth weight < 1,000 grams within 28 days"
+  },
+  "CM0208": {
+    "code": "CM0208",
+    "page": 187,
+    "titleTh": "ร้อยละการเสียชีวิตในโรงพยาบาลของทารกแรกเกิดน้ำหนัก 1,000-1,499 กรัม ภายใน 28 วัน",
+    "title": "Child: Percent of neonatal mortality with birth weight between 1,000 - 1,499 grams within 28 days"
+  },
+  "CM0209": {
+    "code": "CM0209",
+    "page": 188,
+    "titleTh": "ร้อยละการเสียชีวิตในโรงพยาบาลของทารกแรกเกิดน้ำหนัก 1,500 - 2,499 กรัมภายใน 28 วัน",
+    "title": "Child: Percent of neonatal mortality with birth weight between 1,500 - 2,499 grams within 28 days"
+  },
+  "CA0101": {
+    "code": "CA0101",
+    "page": 189,
+    "titleTh": "อัตราการเกิดภาวะหัวใจหยุดเต้นระหว่างผ่าตัดในผู้ป่วยที่มีระดับ ASA physical status I, II ก่อนผ่าตัด",
+    "title": "Anesthesia: Intra-operative cardiac arrest ASA physical status I, II"
+  },
+  "CA0102": {
+    "code": "CA0102",
+    "page": 190,
+    "titleTh": "ร้อยละของการเยี่ยมผู้ป่วยก่อนการให้ยาระงับความรู้สึกในผู้ป่วยในที่รับการผ่าตัดแบบไม่ ฉุกเฉิน",
+    "title": "Anesthesia: Percent of pre-anesthetic visit elective in-patient cases"
+  },
+  "CA0103": {
+    "code": "CA0103",
+    "page": 191,
+    "titleTh": "ร้อยละของผู้ป่วยที่รับการให้ยาระงับความรู้สึกที่ได้รับการดูแลในห้องพักฟื้น",
+    "title": "Anesthesia: Percent of patients observed in recovery room"
+  },
+  "CA0104": {
+    "code": "CA0104",
+    "page": 192,
+    "titleTh": "ร้อยละของผู้ป่วยได้รับการใส่ท่อหายใจซ้ำภายใน 2 ชั่วโมงหลังการถอดท่อหายใจ",
+    "title": "Anesthesia: Percent of re-intubation within 2 hours after extubation"
+  },
+  "CA0105": {
+    "code": "CA0105",
+    "page": 193,
+    "titleTh": "ร้อยละของผู้ป่วยที่ดมยาสลบได้รับการเฝ้าระวังระดับก๊าซคาร์บอนไดออกไซด์ ในลมหายใจออก",
+    "title": "Anesthesia: Percent of using capnometry during general anesthesia"
+  },
+  "CO0101": {
+    "code": "CO0101",
+    "page": 194,
+    "titleTh": "ร้อยละของการใช้แบบตรวจสอบเพื่อความปลอดภัยของผู้ป่วยเมื่อมารับการตรวจรักษา ในห้องผ่าตัด",
+    "title": "Operation: Percent of using surgical safety check list"
+  },
+  "CO0105": {
+    "code": "CO0105",
+    "page": 195,
+    "titleTh": "ร้อยละการเสียชีวิตของผู้ป่วยผ่าตัดใน 24 ชั่วโมง",
+    "title": "Operation: Percent of peri-operative mortality within 24 hours"
+  },
+  "CO0107": {
+    "code": "CO0107",
+    "page": 196,
+    "titleTh": "ร้อยละการผ่าตัดซ้ำ",
+    "title": "Operation: Percent of re-operation"
+  },
+  "CG0101": {
+    "code": "CG0101",
+    "page": 197,
+    "titleTh": "อัตราการเกิดแผลกดทับในโรงพยาบาล",
+    "title": "Pressure ulcer/injury: Rate of pressure ulcer"
+  },
+  "CG0102": {
+    "code": "CG0102",
+    "page": 199,
+    "titleTh": "อัตราการเกิดแผลกดทับในโรงพยาบาลในผู้ป่วยกลุ่มเสี่ยง",
+    "title": "Pressure ulcer/injury: Rate of pressure ulcer in risk patients"
+  },
+  "CG0103": {
+    "code": "CG0103",
+    "page": 200,
+    "titleTh": "อัตราความชุกของแผลกดทับ",
+    "title": "Pressure ulcer/injury: Hospital-acquired pressure ulcer/injury"
+  },
+  "CG0104": {
+    "code": "CG0104",
+    "page": 202,
+    "titleTh": "อัตราความชุกของแผลกดทับที่เกิดในโรงพยาบาล",
+    "title": "Pressure ulcer/injury: Hospital acquired pressure ulcer/Injury (HAPI) rate"
+  },
+  "CE0101": {
+    "code": "CE0101",
+    "page": 203,
+    "titleTh": "ร้อยละผู้ป่วยห้องฉุกเฉินที่มีภาวะติดเชื้อในกระแสโลหิตได้รับยาต้านจุลชีพ ภายใน 3 ชั่วโมง",
+    "title": "Sepsis: Percent of broad-spectrum antibiotic receiving within 3 hours"
+  },
+  "CE0102": {
+    "code": "CE0102",
+    "page": 204,
+    "titleTh": "ค่าเฉลี่ยระยะเวลาการเข้ารับ-ออกจากบริการของผู้ป่วยที่มารับบริการที่ห้องฉุกเฉิน",
+    "title": "ER: Average dmergency department (ED) TIME-IN, TIME-OUT"
+  },
+  "CE0103": {
+    "code": "CE0103",
+    "page": 206,
+    "titleTh": "ร้อยละของผู้ป่วยฉุกเฉินมากที่ได้รับบริการที่ห้องฉุกเฉินระยะเวลาภายใน 60 นาที",
+    "title": "ER: Percent of emergency patients recieveing emergency service (ED TIME-IN, TIME-OUT) within 60 minutes"
+  },
+  "CE0104": {
+    "code": "CE0104",
+    "page": 207,
+    "titleTh": "ร้อยละผู้ป่วยห้องฉุกเฉิน ที่มีภาวะติดเชื้อในกระแสโลหิตได้รับยาต้านจุลชีพภายใน 1 ชั่วโมง",
+    "title": "Sepsis: Percent of broad-spectrum antibiotic received within 1 hour in emergency room"
+  },
+  "CI0101": {
+    "code": "CI0101",
+    "page": 208,
+    "titleTh": "ร้อยละการเสียชีวิตของผู้ป่วยในจากภาวะติดเชื้อในกระแสโลหิต",
+    "title": "Sepsis: Percent of mortality"
+  },
+  "CP0101": {
+    "code": "CP0101",
+    "page": 209,
+    "titleTh": "ร้อยละผู้ปกครองของเด็กสมาธิสั้น/LD/MDD รายใหม่ที่มารับการบำบัดรักษาในรอบ 6 เดือน และมารับการรักษาตามนัด",
+    "title": "Percent of carers of children with ADHD/LD/MDD having good compliance to treatment"
+  },
+  "CP0201": {
+    "code": "CP0201",
+    "page": 210,
+    "titleTh": "ร้อยละเด็กที่สงสัยโรคในกลุ่มพัฒนาการได้รับการวินิจฉัยภายใน 90 วัน",
+    "title": "Percent of children with neurodevelopmental disorder being diagnosed within 90 days after registration"
+  },
+  "SI0101": {
+    "code": "SI0101",
+    "page": 211,
+    "titleTh": "อัตราการติดเชื้อปอดอักเสบจากการใช้เครื่องช่วยหายใจ (ภาพรวม)",
+    "title": "VAP: Rate of ventilator-associated pneumonia (All)"
+  },
+  "SI0102": {
+    "code": "SI0102",
+    "page": 212,
+    "titleTh": "อัตราการติดเชื้อปอดอักเสบจากการใช้เครื่องช่วยหายใจ ของผู้ป่วยที่นอนรักษาใน ICU",
+    "title": "VAP: Rate of ventilator-associated pneumonia in ICU"
+  },
+  "SI0103": {
+    "code": "SI0103",
+    "page": 213,
+    "titleTh": "อัตราการติดเชื้อปอดอักเสบจากการใช้เครื่องช่วยหายใจ ของผู้ป่วยที่นอนรักษานอก ICU ของโรงพยาบาล",
+    "title": "VAP: Rate of Ventilator-associated pneumonia outside ICU"
+  },
+  "SI0201": {
+    "code": "SI0201",
+    "page": 214,
+    "titleTh": "อัตราการติดเชื้อในกระแสเลือดจากการคาสายสวนหลอดเลือดส่วนกลาง (ภาพรวม)",
+    "title": "BSI: Rate of CABSI (All)"
+  },
+  "SI0202": {
+    "code": "SI0202",
+    "page": 215,
+    "titleTh": "อัตราการติดเชื้อในกระแสเลือดจากการคาสายสวนหลอดเลือดส่วนกลาง ของผู้ป่วยที่นอน รักษาใน ICU",
+    "title": "BSI: Rate of CABSI in ICU"
+  },
+  "SI0203": {
+    "code": "SI0203",
+    "page": 216,
+    "titleTh": "อัตราการติดเชื้อในกระแสเลือดจากการคาสายสวนหลอดเลือดส่วนกลาง ของผู้ป่วยที่นอน รักษานอก ICU ของโรงพยาบาล",
+    "title": "BSI: Rate of CABSI outside ICU"
+  },
+  "SI0301": {
+    "code": "SI0301",
+    "page": 217,
+    "titleTh": "อัตราการติดเชื้อระบบทางเดินปัสสาวะจากการคาสายสวนปัสสาวะ (ภาพรวม)",
+    "title": "CAUTI: Rate of CAUTI (All)"
+  },
+  "SI0302": {
+    "code": "SI0302",
+    "page": 218,
+    "titleTh": "อัตราการติดเชื้อระบบทางเดินปัสสาวะจากการคาสายสวนปัสสาวะ ของผู้ป่วยที่นอนรักษา ใน ICU",
+    "title": "CAUTI: Rate of CAUTI in ICU"
+  },
+  "SI0303": {
+    "code": "SI0303",
+    "page": 219,
+    "titleTh": "อัตราการติดเชื้อระบบทางเดินปัสสาวะจากการคาสายสวนปัสสาวะ ของผู้ป่วยที่นอนรักษา นอก ICU ของโรงพยาบาล",
+    "title": "CAUTI: Rate of CAUTI outside ICU"
+  },
+  "SL0101": {
+    "code": "SL0101",
+    "page": 220,
+    "titleTh": "อัตราส่วนการขอใช้โลหิตต่อการใช้โลหิตจริงในกลุ่มผู้ป่วยผ่าตัดประเภทต่าง ๆ",
+    "title": "Crossmatch-to-Transfusion ratios (C:T) in elective surgery cases"
+  },
+  "SH0101": {
+    "code": "SH0101",
+    "page": 221,
+    "titleTh": "อัตราการลาออกของบุคลากร",
+    "title": "HRM: Turnover tate"
+  },
+  "SH0102": {
+    "code": "SH0102",
+    "page": 222,
+    "titleTh": "ร้อยละบุคลากรที่บาดเจ็บจากการทำงาน",
+    "title": "HRM: Percent of employee work-related Injury"
+  },
+  "SH0103": {
+    "code": "SH0103",
+    "page": 223,
+    "titleTh": "ร้อยละบุคลากรที่เจ็บป่วยจากการทำงาน",
+    "title": "HRM: Percent of employee work-related Illness"
+  },
+  "SH0104": {
+    "code": "SH0104",
+    "page": 224,
+    "titleTh": "อัตราการลาออก ของแพทย์/ทันตแพทย์",
+    "title": "HRM: Turnover rate of physician and dentist"
+  },
+  "SH0105": {
+    "code": "SH0105",
+    "page": 225,
+    "titleTh": "อัตราการลาออก ของพยาบาลวิชาชีพ",
+    "title": "HRM: Turnover rate of nurses"
+  },
+  "SH0106": {
+    "code": "SH0106",
+    "page": 226,
+    "titleTh": "อัตราการลาออก ของบุคลากรสาย allied health",
+    "title": "HRM: Turnover rate of allied health personnel"
+  },
+  "SH0107": {
+    "code": "SH0107",
+    "page": 227,
+    "titleTh": "อัตราการลาออก ของบุคลากรสายสนับสนุน",
+    "title": "HRM : Turnover rate of back office personnel"
+  },
+  "SH0201": {
+    "code": "SH0201",
+    "page": 228,
+    "titleTh": "ร้อยละความพึงพอใจของบุคลากรในองค์กรในภาพรวมของแพทย์/ทันตแพทย์ (ระดับ 4-5)",
+    "title": "HRD: Percent of physician/dentist satisfaction (level 4-5)"
+  },
+  "SH0202": {
+    "code": "SH0202",
+    "page": 229,
+    "titleTh": "ร้อยละความพึงพอใจ ของบุคลากรในองค์กรในภาพรวมของพยาบาลวิชาชีพ (ระดับ 4-5)",
+    "title": "HRD: Percent of nurse satisfaction (level 4-5)"
+  },
+  "SH0203": {
+    "code": "SH0203",
+    "page": 230,
+    "titleTh": "ร้อยละความพึงพอใจ ของบุคลากรในองค์กรในภาพรวมของบุคลากรสาย Allied Health (ระดับ 4-5)",
+    "title": "HRD: Percent of allied health personel satisfaction (level 4-5)"
+  },
+  "SH0204": {
+    "code": "SH0204",
+    "page": 231,
+    "titleTh": "สัดส่วนชั่วโมงการฝึกอบรมต่อคนต่อปีของแพทย์/ ทันตแพทย์",
+    "title": "HRD: Training hour per person per year of physician/dentist"
+  },
+  "SH0205": {
+    "code": "SH0205",
+    "page": 232,
+    "titleTh": "สัดส่วนชั่วโมงการฝึกอบรมต่อคนต่อปีของพยาบาลวิชาชีพ",
+    "title": "HRD: Training hour per person per year of nurse"
+  },
+  "SH0206": {
+    "code": "SH0206",
+    "page": 233,
+    "titleTh": "ร้อยละความพึงพอใจของบุคลากรในองค์กรในภาพรวมของแพทย์/ทันตแพทย์ (ค่าเฉลี่ย)",
+    "title": "HRD: Percent of physician/dentist satisfaction (average)"
+  },
+  "SH0207": {
+    "code": "SH0207",
+    "page": 234,
+    "titleTh": "ร้อยละความพึงพอใจของบุคลากรในองค์กรในภาพรวมของแพทย์/ทันตแพทย์(ระดับ 1-2)",
+    "title": "HRD: Percent of physician/dentist satisfaction (level 1-2)"
+  },
+  "SH0208": {
+    "code": "SH0208",
+    "page": 235,
+    "titleTh": "ร้อยละความพึงพอใจของบุคลากรในองค์กรในภาพรวมของพยาบาลวิชาชีพ (ค่าเฉลี่ย)",
+    "title": "HRD: Percentage of nurse satisfaction (average)"
+  },
+  "SH0209": {
+    "code": "SH0209",
+    "page": 236,
+    "titleTh": "ร้อยละความพึงพอใจของบุคลากรในองค์กรในภาพรวมของพยาบาลวิชาชีพ (ระดับ 1-2)",
+    "title": "HRD: Percentage of nurse satisfaction (level 1-2)"
+  },
+  "SH0210": {
+    "code": "SH0210",
+    "page": 237,
+    "titleTh": "ร้อยละความพึงพอใจของบุคลากรในองค์กรในภาพรวมของบุคลากรสาย allied health (ค่าเฉลี่ย)",
+    "title": "HRD: Percentage of allied health personel satisfaction (average)"
+  },
+  "SH0211": {
+    "code": "SH0211",
+    "page": 238,
+    "titleTh": "ร้อยละความพึงพอใจของบุคลากรในองค์กรในภาพรวมของบุคลากรสาย allied health (ระดับ 1-2)",
+    "title": "HRD: Percentage of allied health personel satisfaction (level 1-2)"
+  },
+  "SH0212": {
+    "code": "SH0212",
+    "page": 239,
+    "titleTh": "ร้อยละความพึงพอใจของบุคลากรในองค์กรในภาพรวมของบุคลากรสายสนับสนุน(ค่าเฉลี่ย)",
+    "title": "HRD: Percentage of back office personel satisfaction (average)"
+  },
+  "SH0213": {
+    "code": "SH0213",
+    "page": 240,
+    "titleTh": "ร้อยละความพึงพอใจของบุคลากรในองค์กรในภาพรวมของบุคลากรสายสนับสนุน (ระดับ 4-5)",
+    "title": "HRD: Percentage of back office personel satisfaction (level 4-5)"
+  },
+  "SH0214": {
+    "code": "SH0214",
+    "page": 241,
+    "titleTh": "ร้อยละความพึงพอใจของบุคลากรในองค์กรในภาพรวมของบุคลากรสายสนับสนุน (ระดับ 1-2)",
+    "title": "HRD: Percentage of back office personel satisfaction (level 1-2)"
+  },
+  "SH0215": {
+    "code": "SH0215",
+    "page": 242,
+    "titleTh": "สัดส่วนชั่วโมงการฝึกอบรมต่อคนต่อปีของบุคลากรสาย allied health",
+    "title": "HRD: Training hour per person per year of allied health personel"
+  },
+  "SH0216": {
+    "code": "SH0216",
+    "page": 243,
+    "titleTh": "สัดส่วนชั่วโมงการฝึกอบรมต่อคนต่อปีของบุคลากรสายสนับสนุน",
+    "title": "HRD: Training hour per person per year of back office personel"
+  },
+  "SH0301": {
+    "code": "SH0301",
+    "page": 244,
+    "titleTh": "อัตราความถี่การบาดเจ็บ/ เจ็บป่วยของบุคลากรที่เกี่ยวเนื่องจากงาน",
+    "title": "HRH: Injury (illnesses) frequency rate : IFR"
+  },
+  "SH0302": {
+    "code": "SH0302",
+    "page": 245,
+    "titleTh": "อัตราความรุนแรงของการบาดเจ็บของบุคลากรกลุ่มสัมผัสผู้ป่วยโดยตรง",
+    "title": "HRH: Injury severity rate (ISR) of direct contact with patients"
+  },
+  "SH0303": {
+    "code": "SH0303",
+    "page": 247,
+    "titleTh": "อัตราความรุนแรงของการบาดเจ็บของบุคลากรกลุ่มที่ไม่ได้สัมผัสผู้ป่วยโดยตรง",
+    "title": "HRH: Injury severity rate (ISR) of non direct contact with patients"
+  },
+  "SH0306": {
+    "code": "SH0306",
+    "page": 249,
+    "titleTh": "อัตราความถี่การบาดเจ็บ/เจ็บป่วยของบุคลากรที่เกี่ยวเนื่องจากงาน ของบุคลากรกลุ่ม สัมผัสผู้ป่วยโดยตรง",
+    "title": "HRH: Injury (illnesses) frequency rate (IFR) of direct contact with patients"
+  },
+  "SH0307": {
+    "code": "SH0307",
+    "page": 251,
+    "titleTh": "อัตราความถี่การบาดเจ็บ/เจ็บป่วยของบุคลากรที่เกี่ยวเนื่องจากงานของบุคลากรกลุ่มที่ ไม่ได้สัมผัสผู้ป่วยโดยตรง",
+    "title": "HRH: Injury (illnesses) frequency rate (IFR) of non-direct contact with patients"
+  },
+  "SF0101": {
+    "code": "SF0101",
+    "page": 253,
+    "titleTh": "อัตราส่วนทุนหมุนเวียน",
+    "title": "Financial: Current ratio"
+  },
+  "SF0102": {
+    "code": "SF0102",
+    "page": 254,
+    "titleTh": "อัตราส่วนทุนหมุนเวียนเร็ว (อัตราส่วนสินทรัพย์สภาพคล่อง)",
+    "title": "Financial: Quick ratio"
+  },
+  "SF0103": {
+    "code": "SF0103",
+    "page": 255,
+    "titleTh": "อัตราหมุนเวียนของสินทรัพย์ถาวร",
+    "title": "Financial: Fixed asset turnover"
+  },
+  "SF0104": {
+    "code": "SF0104",
+    "page": 256,
+    "titleTh": "ระยะเวลาถัวเฉลี่ยในการเรียกเก็บลูกหนี้ค่ารักษาสุทธิ",
+    "title": "Financial: Day in account receivable (average collection period for account receivables)"
+  },
+  "SF0105": {
+    "code": "SF0105",
+    "page": 257,
+    "titleTh": "อัตราส่วนระหว่างกำไรสุทธิ กับยอดขายสุทธิ",
+    "title": "Financial: Net profit margin"
+  },
+  "SF0106": {
+    "code": "SF0106",
+    "page": 258,
+    "titleTh": "อัตราผลตอบแทนจากสินทรัพย์รวม",
+    "title": "Financial: Return on asset (ROA)"
+  },
+  "SC0101": {
+    "code": "SC0101",
+    "page": 259,
+    "titleTh": "ร้อยละความพึงพอใจของผู้ป่วยนอก (ภาพรวม)",
+    "title": "Customer: Percent of outpatient satisfaction (overall)"
+  },
+  "SC0102": {
+    "code": "SC0102",
+    "page": 260,
+    "titleTh": "ร้อยละความพึงพอใจของผู้ป่วยใน (ภาพรวม)",
+    "title": "Customer: Percent of inpatient satisfaction (overall)"
+  },
+  "SC0103": {
+    "code": "SC0103",
+    "page": 261,
+    "titleTh": "ร้อยละของผู้ป่วยนอกที่จะกลับมาใช้บริการซ้ำ",
+    "title": "Customer: Percent of outpatients who return to receive care"
+  },
+  "SC0104": {
+    "code": "SC0104",
+    "page": 262,
+    "titleTh": "ร้อยละของผู้ป่วยในที่จะกลับมาใช้บริการซ้ำ",
+    "title": "Customer: Percent of inpatients who return to receive care"
+  },
+  "SC0105": {
+    "code": "SC0105",
+    "page": 263,
+    "titleTh": "ร้อยละผู้ป่วยนอกที่จะแนะนำญาติหรือคนรู้จักมาใช้บริการ",
+    "title": "Customer: Percent of outpatients who would recommend friends or family to receive care at this facility"
+  },
+  "SC0106": {
+    "code": "SC0106",
+    "page": 264,
+    "titleTh": "ร้อยละของผู้ป่วยในที่จะแนะนำญาติหรือคนรู้จักมาใช้บริการ",
+    "title": "Customer: Percent of inpatients who would recommend friends or family to receive care at this facility"
+  },
+  "SG0104": {
+    "code": "SG0104",
+    "page": 265,
+    "titleTh": "สัดส่วนของขยะรีไซเคิล",
+    "title": "Governance: Percent of recycled waste"
+  },
+  "SS0101": {
+    "code": "SS0101",
+    "page": 266,
+    "titleTh": "ร้อยละการตรวจสอบประสิทธิภาพการทำปราศจากเชื้อผ่านเกณฑ์",
+    "title": "CSSD: Percent of examination of effective sterilization"
+  },
+  "SS0102": {
+    "code": "SS0102",
+    "page": 267,
+    "titleTh": "ร้อยละการจัดอุปกรณ์เครื่องมือทางการแพทย์ ถูกต้องครบถ้วน",
+    "title": "CSSD: Percent of exact medical equipment prepared for specific procedures"
+  },
+  "SS0103": {
+    "code": "SS0103",
+    "page": 268,
+    "titleTh": "ร้อยละการจ่ายอุปกรณ์เครื่องมือทางการแพทย์ให้หน่วยงานถูกต้อง",
+    "title": "CSSD: Percent of medical supplies which are accurately provided by the CSSD"
+  },
+  "SM0102": {
+    "code": "SM0102",
+    "page": 269,
+    "titleTh": "ร้อยละการใช้ยาปฏิชีวนะในผู้ป่วยโรคติดเชื้อทางเดินหายใจส่วนบน",
+    "title": "Medication Use: Percent of antibiotic prescribing rate on upper respiratory infection"
+  },
+  "SM0103": {
+    "code": "SM0103",
+    "page": 270,
+    "titleTh": "ร้อยละการใช้ยาปฏิชีวนะในผู้ป่วยอุจจาระร่วงเฉียบพลัน",
+    "title": "Medication Use: Percent of antibiotic prescribing on acute diarrhea"
+  },
+  "SM0201": {
+    "code": "SM0201",
+    "page": 271,
+    "titleTh": "จำนวนเดือนสำรองคลังยา",
+    "title": "Medication Management : Inventory turn"
+  },
+  "HE0101": {
+    "code": "HE0101",
+    "page": 273,
+    "titleTh": "ร้อยละบุคลากรได้รับการตรวจร่างกายประจำปี",
+    "title": "Employee: Percent of employee check-up"
+  },
+  "HE0102": {
+    "code": "HE0102",
+    "page": 274,
+    "titleTh": "ร้อยละบุคลากรที่มีดัชนีมวลกาย (BMI) เกินเกณฑ์มาตรฐาน",
+    "title": "Employee: Percent of employee have exceeding BMI"
+  },
+  "HE0103": {
+    "code": "HE0103",
+    "page": 275,
+    "titleTh": "ร้อยละบุคลากรที่มีพฤติกรรมการสูบบุหรี่",
+    "title": "Employee: Percent of employee have behavior-smoky"
+  },
+  "HE0104": {
+    "code": "HE0104",
+    "page": 276,
+    "titleTh": "ร้อยละบุคลากรเพศชายมีภาวะอ้วนลงพุง",
+    "title": "Employee: Percent of employee (male) obesity"
+  },
+  "HE0105": {
+    "code": "HE0105",
+    "page": 277,
+    "titleTh": "ร้อยละบุคลากรเพศหญิงมีภาวะอ้วนลงพุง",
+    "title": "Employee: Percent of employee (female) obesity"
+  },
+  "HE0106": {
+    "code": "HE0106",
+    "page": 278,
+    "titleTh": "ร้อยละบุคลากรได้รับวัคซีนไข้หวัดใหญ่",
+    "title": "Employee: Percent of employee received Influenza immunization"
+  },
+  "HC0101": {
+    "code": "HC0101",
+    "page": 279,
+    "titleTh": "ความสามารถในการดูแลตนเอง/การดูแลผู้ป่วยของญาติโรค Asthma",
+    "title": "Customer: Asthma patients or their relative(s) who are able to care for the patient's needs"
+  },
+  "HC0102": {
+    "code": "HC0102",
+    "page": 280,
+    "titleTh": "ความสามารถในการดูแลตนเอง/ การดูแลผู้ป่วยของญาติโรค COPD",
+    "title": "Customer: COPD patients or their relative(s) who are able to care for the patient's needs"
+  },
+  "HH0101.1": {
+    "code": "HH0101.1",
+    "page": 281,
+    "titleTh": "ร้อยละการคัดกรองสถานะการบริโภคยาสูบของผู้รับบริการที่มีอายุ 15 ปีขึ้นไปที่มาใช้ บริการผู้ป่วยนอกของสถานพยาบาล",
+    "title": "Tobacco Use: Percent of Tobacco Use Screened of Service Recipients aged ≥ 15 years old at the Outpatient Service."
+  },
+  "HH0101.2": {
+    "code": "HH0101.2",
+    "page": 282,
+    "titleTh": "ร้อยละการคัดกรองสถานะการบริโภคยาสูบของผู้รับบริการที่มีอายุ 15 ปีขึ้นไปที่มาใช้ บริการผู้ป่วยในของสถานพยาบาล",
+    "title": "Tobacco Use: Percent of Tobacco Use Screened of Service Recipients aged ≥ 15 years old at the In-patient Service."
+  },
+  "HH0102": {
+    "code": "HH0102",
+    "page": 283,
+    "titleTh": "ร้อยละของผู้รับบริการที่มีภาวะติดนิโคตินที่ได้รับบริการบำบัดภาวะติดนิโคติน",
+    "title": "Tobacco Use: Percentage of nicotine dependence patients receiving nicotine dependence treatment."
+  },
+  "HH0103.1": {
+    "code": "HH0103.1",
+    "page": 284,
+    "titleTh": "ร้อยละของผู้รับบริการกลุ่มโรคเบาหวานที่มีภาวะติดนิโคตินและได้รับบริการบำบัดภาวะติด นิโคติน",
+    "title": "Tobacco Use: Percentage of nicotine dependence in DM patients receiving nicotine dependence treatment."
+  },
+  "HH0103.2": {
+    "code": "HH0103.2",
+    "page": 285,
+    "titleTh": "ร้อยละของผู้รับบริการกลุ่มโรคความดันโลหิตสูงที่มีภาวะติดนิโคตินและได้รับบริการบำบัด ภาวะติดนิโคติน",
+    "title": "Tobacco Use: Percentage of nicotine dependence in Hypertension patients receiving nicotine dependence treatment."
+  },
+  "HH0103.3": {
+    "code": "HH0103.3",
+    "page": 286,
+    "titleTh": "ร้อยละของผู้รับบริการกลุ่มโรคหืดที่มีภาวะติดนิโคตินและได้รับบริการบำบัดภาวะติด นิโคติน",
+    "title": "Tobacco Use: Percentage of nicotine dependence in Asthma patients receiving nicotine dependence treatment."
+  },
+  "HH0103.4": {
+    "code": "HH0103.4",
+    "page": 287,
+    "titleTh": "ร้อยละของผู้รับบริการกลุ่มโรคถุงลมโป่งพองที่มีภาวะติดนิโคตินและได้รับบริการบำบัด ภาวะติดนิโคติน",
+    "title": "Tobacco Use: Percentage of nicotine dependence in COPD patients receiving nicotine dependence treatment."
+  },
+  "HH0103.5": {
+    "code": "HH0103.5",
+    "page": 288,
+    "titleTh": "ร้อยละของผู้รับบริการกลุ่มหญิงตั้งครรภ์ที่มีภาวะติดนิโคตินและได้รับบริการบำบัดภาวะติด นิโคติน",
+    "title": "Tobacco Use: Percentage of nicotine dependence in Pregnant patients receiving nicotine dependence treatment."
+  },
+  "HH0103.6": {
+    "code": "HH0103.6",
+    "page": 289,
+    "titleTh": "ร้อยละของผู้รับบริการกลุ่มโรคถุงลมโป่งพองที่มีภาวะติดนิโคตินและได้รับบริการบำบัด ภาวะติดนิโคติน",
+    "title": "Tobacco Use: Percentage of nicotine dependence in Asthma patients receiving nicotine dependence treatment."
+  },
+  "HH0104.1": {
+    "code": "HH0104.1",
+    "page": 290,
+    "titleTh": "ร้อยละของผู้ป่วยกลุ่มโรคเบาหวานที่รับบริการบำบัดรักษาภาวะติดนิโคตินและสามารถ หยุดบริโภคยาสูบต่อเนื่อง 6 เดือน",
+    "title": "Tobacco use: continuous abstinence rate (CAR) at 6 months (DM Patients)"
+  },
+  "HH0104.2": {
+    "code": "HH0104.2",
+    "page": 291,
+    "titleTh": "ร้อยละของผู้ป่วยกลุ่มโรคความดันโลหิตสูงที่รับบริการบำบัดรักษาภาวะติดนิโคตินและ สามารถหยุดบริโภคยาสูบต่อเนื่อง 6 เดือน",
+    "title": "Tobacco use: continuous abstinence rate (CAR) at 6 months (Hypertension Patients)"
+  },
+  "HH0104.3": {
+    "code": "HH0104.3",
+    "page": 292,
+    "titleTh": "ร้อยละของผู้ป่วยกลุ่มโรคหืดที่รับบริการบำบัดรักษาภาวะติดนิโคตินและสามารถหยุด บริโภคยาสูบต่อเนื่อง 6 เดือน",
+    "title": "Tobacco use: continuous abstinence rate (CAR) at 6 months (Asthma Patients)"
+  },
+  "HH0104.4": {
+    "code": "HH0104.4",
+    "page": 293,
+    "titleTh": "ร้อยละของผู้ป่วยกลุ่มโรคถุงลมโป่งพองที่รับบริการบำบัดรักษาภาวะติดนิโคตินและสามารถ หยุดบริโภคยาสูบต่อเนื่อง 6 เดือน",
+    "title": "Tobacco use: continuous abstinence rate (CAR) at 6 months (COPD Patients)"
+  },
+  "HH0104.5": {
+    "code": "HH0104.5",
+    "page": 294,
+    "titleTh": "ร้อยละของผู้ป่วยกลุ่มหญิงตั้งครรภ์ที่รับบริการบำบัดรักษาภาวะติดนิโคตินและสามารถ หยุดบริโภคยาสูบต่อเนื่อง 6 เดือน",
+    "title": "Tobacco use: Tobacco use: continuous abstinence rate (CAR) at 6 months (Pregnant Patients)"
+  },
+  "AA0101": {
+    "code": "AA0101",
+    "page": 295,
+    "titleTh": "อัตราการนอนโรงพยาบาลด้วยภาวะที่ควรควบคุมด้วยบริการผู้ป่วยนอก (โรคลมชัก)",
+    "title": "Epilepsy: Hospitalization rate"
+  },
+  "AA0102": {
+    "code": "AA0102",
+    "page": 296,
+    "titleTh": "อัตราการนอนโรงพยาบาลด้วยภาวะที่ควรควบคุมด้วยบริการผู้ป่วยนอก (โรคปอดอุดกั้น เรื้อรัง)",
+    "title": "COPD: Hospitalization rate"
+  },
+  "AA0103": {
+    "code": "AA0103",
+    "page": 297,
+    "titleTh": "อัตราการนอนโรงพยาบาลด้วยภาวะที่ควรควบคุมด้วยบริการผู้ป่วยนอก (โรคหืด)",
+    "title": "Asthma: Hospitalization rate"
+  },
+  "AA0104": {
+    "code": "AA0104",
+    "page": 298,
+    "titleTh": "อัตราการนอนโรงพยาบาลด้วยภาวะที่ควรควบคุมด้วยบริการผู้ป่วยนอก (โรคเบาหวาน)",
+    "title": "Diabetes Mellitus (DM): Hospitalization rate"
+  },
+  "AA0105": {
+    "code": "AA0105",
+    "page": 299,
+    "titleTh": "อัตราการนอนโรงพยาบาลด้วยภาวะที่ควรควบคุมด้วยบริการผู้ป่วยนอก (โรคความดัน โลหิตสูง)",
+    "title": "Hypertension: Hospitalization rate"
+  }
+}
