@@ -975,14 +975,60 @@ export async function loadBmsIndicators(
   if (!sourceView && requiresCompleteSourceView()) {
     throw new BmsRequestError('data', 'config', 'Production BMS build requires VITE_BMS_KPI_SOURCE_VIEW for the complete 232-indicator contract');
   }
-  const query = sourceView ? buildSourceViewQuery(sourceView) : queryRegistry.thipIpdFoundation;
-  let response: BmsSqlResponse;
-  try {
-    response = await executeRegisteredQuery(query, runtime, paramsForFiscalYear(fiscalYear, Boolean(sourceView)), runtime.marketplaceToken, { signal: options?.signal, timeoutMs: options?.timeoutMs });
-  } catch (error) {
-    throw asDataError(error);
+  let rows: RawKpiRow[];
+  if (sourceView) {
+    const query = buildSourceViewQuery(sourceView);
+    let response: BmsSqlResponse;
+    try {
+      response = await executeRegisteredQuery(
+        query,
+        runtime,
+        paramsForFiscalYear(fiscalYear, true),
+        runtime.marketplaceToken,
+        { signal: options?.signal, timeoutMs: options?.timeoutMs },
+      );
+    } catch (error) {
+      throw asDataError(error);
+    }
+    rows = responseRows(response);
+  } else {
+    const periods = getFiscalMonthPeriods(fiscalYear);
+    const quarterRanges = [
+      { start: `${fiscalYear - 1}-10-01`, end: `${fiscalYear}-01-01` },
+      { start: `${fiscalYear}-01-01`, end: `${fiscalYear}-04-01` },
+      { start: `${fiscalYear}-04-01`, end: `${fiscalYear}-07-01` },
+      { start: `${fiscalYear}-07-01`, end: `${fiscalYear}-10-01` },
+    ];
+    const seenCell = new Set<string>();
+    rows = [];
+    for (const q of quarterRanges) {
+      const qParams: Record<string, BmsParam> = {
+        start_date: { value: q.start, value_type: 'date' },
+        end_date: { value: q.end, value_type: 'date' },
+      };
+      let response: BmsSqlResponse;
+      try {
+        response = await executeRegisteredQuery(
+          queryRegistry.thipIpdFoundation,
+          runtime,
+          qParams,
+          runtime.marketplaceToken,
+          { signal: options?.signal, timeoutMs: options?.timeoutMs },
+        );
+      } catch (error) {
+        throw asDataError(error);
+      }
+      for (const row of responseRows(response)) {
+        const code = asString(getValue(row, 'indicator_code'));
+        const month = rowPeriod(row, periods, fiscalYear);
+        const cellKey = `${code}:${month}`;
+        if (!seenCell.has(cellKey)) {
+          seenCell.add(cellKey);
+          rows.push(row);
+        }
+      }
+    }
   }
-  const rows = responseRows(response);
   if (sourceView && rows.length === 0) {
     throw new BmsRequestError('data', 'response', `Normalized THIP source view ${sourceView} returned no rows for fiscal year ${fiscalYear}`);
   }

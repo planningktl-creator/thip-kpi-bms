@@ -308,6 +308,8 @@ const dmWhere = "LEFT(pdx, 3) IN ('E10', 'E11', 'E12', 'E13', 'E14')";
 const htWhere = "LEFT(pdx, 3) IN ('I10', 'I11', 'I12', 'I13', 'I14', 'I15')";
 const ampCodes = "'8410', '8411', '8412', '8413', '8414', '8415', '8416', '8417', '8418', '8419'";
 
+const labNumericResult = `CASE WHEN REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') ~ '^[0-9]*[.]?[0-9]+$' THEN CAST(REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') AS numeric) ELSE NULL END`;
+
 const hba1cYoungSubquery = `
           SELECT 1 FROM lab_order lo
           JOIN lab_head lh ON lh.lab_order_number = lo.lab_order_number
@@ -316,7 +318,7 @@ const hba1cYoungSubquery = `
             AND li.lab_items_name ILIKE '%hba1c%'
             AND lh.order_date >= periodized.period_start - INTERVAL '6 months'
             AND lh.order_date <= periodized.period_start
-            AND CAST(REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') AS numeric) <= 7.0`;
+            AND ${labNumericResult} <= 7.0`;
 
 const hba1cElderlySubquery = `
           SELECT 1 FROM lab_order lo
@@ -326,7 +328,7 @@ const hba1cElderlySubquery = `
             AND li.lab_items_name ILIKE '%hba1c%'
             AND lh.order_date >= periodized.period_start - INTERVAL '6 months'
             AND lh.order_date <= periodized.period_start
-            AND CAST(REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') AS numeric) <= 8.0`;
+            AND ${labNumericResult} <= 8.0`;
 
 const bpYoungSubquery = `
           SELECT 1 FROM opdscreen sc
@@ -542,14 +544,14 @@ const FAMILY_BRANCHES: Readonly<Record<string, readonly string[]>> = {
                AND LEFT(REPLACE(UPPER(TRIM(sd.icd10)), '.', ''), 3) = 'O72'
            )
            OR EXISTS (
-             SELECT 1 FROM labor lb
-             WHERE lb.an = periodized.an
-               AND COALESCE(lb.placenta_loss_blood, lb.total_loss_blood, 0) >= 500
-           )
+              SELECT 1 FROM labor lb
+              WHERE lb.an = periodized.an
+                AND COALESCE(lb.placenta_bloodloss, 0) >= 500
+            )
       )`,
       'COUNT(*)',
       ratioValue(
-        `COUNT(*) FILTER (WHERE LEFT(pdx, 3) = 'O72' OR EXISTS (SELECT 1 FROM iptdiag sd WHERE sd.an = periodized.an AND LEFT(REPLACE(UPPER(TRIM(sd.icd10)), '.', ''), 3) = 'O72') OR EXISTS (SELECT 1 FROM labor lb WHERE lb.an = periodized.an AND COALESCE(lb.placenta_loss_blood, lb.total_loss_blood, 0) >= 500))`,
+        `COUNT(*) FILTER (WHERE LEFT(pdx, 3) = 'O72' OR EXISTS (SELECT 1 FROM iptdiag sd WHERE sd.an = periodized.an AND LEFT(REPLACE(UPPER(TRIM(sd.icd10)), '.', ''), 3) = 'O72') OR EXISTS (SELECT 1 FROM labor lb WHERE lb.an = periodized.an AND COALESCE(lb.placenta_bloodloss, 0) >= 500))`,
         'COUNT(*)'
       ),
       "(LEFT(pdx, 3) IN ('O80', 'O81', 'O83') OR pdx IN ('O840', 'O841', 'O848', 'O849'))"),
@@ -625,14 +627,14 @@ const FAMILY_BRANCHES: Readonly<Record<string, readonly string[]>> = {
       `COUNT(*) FILTER (
         WHERE LEFT(pdx, 3) = 'P21'
            OR EXISTS (SELECT 1 FROM iptdiag sd WHERE sd.an = periodized.an AND LEFT(REPLACE(UPPER(TRIM(sd.icd10)), '.', ''), 3) = 'P21')
-           OR EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND (nb.apgar1 <= 7 OR nb.asphyxia = 'Y'))
+           OR EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND (nb.apgar1 <= 7 OR nb.has_asphyxia = 'Y'))
       )`,
       'COUNT(*)',
       `ROUND(
         COUNT(*) FILTER (
           WHERE LEFT(pdx, 3) = 'P21'
              OR EXISTS (SELECT 1 FROM iptdiag sd WHERE sd.an = periodized.an AND LEFT(REPLACE(UPPER(TRIM(sd.icd10)), '.', ''), 3) = 'P21')
-             OR EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND (nb.apgar1 <= 7 OR nb.asphyxia = 'Y'))
+             OR EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND (nb.apgar1 <= 7 OR nb.has_asphyxia = 'Y'))
         ) * 1000.0 / NULLIF(COUNT(*), 0),
         2
       )`,
@@ -641,14 +643,14 @@ const FAMILY_BRANCHES: Readonly<Record<string, readonly string[]>> = {
       `COUNT(*) FILTER (
         WHERE pdx = 'P210'
            OR EXISTS (SELECT 1 FROM iptdiag sd WHERE sd.an = periodized.an AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'P210')
-           OR EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND (nb.apgar5 <= 4 OR nb.apgar1 <= 3))
+           OR EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND (nb.apgar2 <= 4 OR nb.apgar1 <= 3))
       )`,
       'COUNT(*)',
       `ROUND(
         COUNT(*) FILTER (
           WHERE pdx = 'P210'
              OR EXISTS (SELECT 1 FROM iptdiag sd WHERE sd.an = periodized.an AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'P210')
-             OR EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND (nb.apgar5 <= 4 OR nb.apgar1 <= 3))
+             OR EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND (nb.apgar2 <= 4 OR nb.apgar1 <= 3))
         ) * 1000.0 / NULLIF(COUNT(*), 0),
         2
       )`,
@@ -830,24 +832,24 @@ const FAMILY_BRANCHES: Readonly<Record<string, readonly string[]>> = {
           WHERE lh.hn = periodized.hn
             AND li.lab_items_name ILIKE '%hba1c%'
             AND lh.order_date >= :start_date AND lh.order_date < :end_date
-            AND CAST(REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') AS numeric) < 7.5
+            AND ${labNumericResult} < 7.5
         )
       )`,
       'COUNT(*)',
       ratioValue(
-        `COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM lab_order lo JOIN lab_head lh ON lh.lab_order_number = lo.lab_order_number JOIN lab_items li ON li.lab_items_code = lo.lab_items_code WHERE lh.hn = periodized.hn AND li.lab_items_name ILIKE '%hba1c%' AND lh.order_date >= :start_date AND lh.order_date < :end_date AND CAST(REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') AS numeric) < 7.5))`,
+        `COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM lab_order lo JOIN lab_head lh ON lh.lab_order_number = lo.lab_order_number JOIN lab_items li ON li.lab_items_code = lo.lab_items_code WHERE lh.hn = periodized.hn AND li.lab_items_name ILIKE '%hba1c%' AND lh.order_date >= :start_date AND lh.order_date < :end_date AND ${labNumericResult} < 7.5))`,
         'COUNT(*)'
       ),
       "age_y < 18 AND (LEFT(pdx, 3) = 'E10' OR pdx IN ('E891', 'P702'))"),
     branch('AA0104',
       'COUNT(*)',
-      'NULLIF((SELECT COUNT(DISTINCT p.hn) FROM person p), 0)',
-      'ROUND(COUNT(*) * 100000.0 / NULLIF((SELECT COUNT(DISTINCT p.hn) FROM person p), 0), 2)',
+      'NULLIF((SELECT COUNT(DISTINCT p.hn) FROM patient p), 0)',
+      'ROUND(COUNT(*) * 100000.0 / NULLIF((SELECT COUNT(DISTINCT p.hn) FROM patient p), 0), 2)',
       "pdx IN ('E100', 'E101', 'E106', 'E109', 'E110', 'E111', 'E116', 'E119', 'E130', 'E131', 'E136', 'E139', 'E140', 'E141', 'E146', 'E149')"),
     branch('AA0105',
       'COUNT(*)',
-      'NULLIF((SELECT COUNT(DISTINCT p.hn) FROM person p), 0)',
-      'ROUND(COUNT(*) * 100000.0 / NULLIF((SELECT COUNT(DISTINCT p.hn) FROM person p), 0), 2)',
+      'NULLIF((SELECT COUNT(DISTINCT p.hn) FROM patient p), 0)',
+      'ROUND(COUNT(*) * 100000.0 / NULLIF((SELECT COUNT(DISTINCT p.hn) FROM patient p), 0), 2)',
       "pdx IN ('I10', 'I110', 'I119')"),
   ],
   PEDIATRIC_DM: [
@@ -860,12 +862,12 @@ const FAMILY_BRANCHES: Readonly<Record<string, readonly string[]>> = {
           WHERE lh.hn = periodized.hn
             AND li.lab_items_name ILIKE '%hba1c%'
             AND lh.order_date >= :start_date AND lh.order_date < :end_date
-            AND CAST(REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') AS numeric) < 7.5
+            AND ${labNumericResult} < 7.5
         )
       )`,
       'COUNT(*)',
       ratioValue(
-        `COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM lab_order lo JOIN lab_head lh ON lh.lab_order_number = lo.lab_order_number JOIN lab_items li ON li.lab_items_code = lo.lab_items_code WHERE lh.hn = periodized.hn AND li.lab_items_name ILIKE '%hba1c%' AND lh.order_date >= :start_date AND lh.order_date < :end_date AND CAST(REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') AS numeric) < 7.5))`,
+        `COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM lab_order lo JOIN lab_head lh ON lh.lab_order_number = lo.lab_order_number JOIN lab_items li ON li.lab_items_code = lo.lab_items_code WHERE lh.hn = periodized.hn AND li.lab_items_name ILIKE '%hba1c%' AND lh.order_date >= :start_date AND lh.order_date < :end_date AND ${labNumericResult} < 7.5))`,
         'COUNT(*)'
       ),
       "age_y < 18 AND (LEFT(pdx, 3) = 'E10' OR pdx IN ('E891', 'P702'))"),
@@ -873,13 +875,13 @@ const FAMILY_BRANCHES: Readonly<Record<string, readonly string[]>> = {
   ACSC: [
     branch('AA0104',
       'COUNT(*)',
-      'NULLIF((SELECT COUNT(DISTINCT p.hn) FROM person p), 0)',
-      'ROUND(COUNT(*) * 100000.0 / NULLIF((SELECT COUNT(DISTINCT p.hn) FROM person p), 0), 2)',
+      'NULLIF((SELECT COUNT(DISTINCT p.hn) FROM patient p), 0)',
+      'ROUND(COUNT(*) * 100000.0 / NULLIF((SELECT COUNT(DISTINCT p.hn) FROM patient p), 0), 2)',
       "pdx IN ('E100', 'E101', 'E106', 'E109', 'E110', 'E111', 'E116', 'E119', 'E130', 'E131', 'E136', 'E139', 'E140', 'E141', 'E146', 'E149')"),
     branch('AA0105',
       'COUNT(*)',
-      'NULLIF((SELECT COUNT(DISTINCT p.hn) FROM person p), 0)',
-      'ROUND(COUNT(*) * 100000.0 / NULLIF((SELECT COUNT(DISTINCT p.hn) FROM person p), 0), 2)',
+      'NULLIF((SELECT COUNT(DISTINCT p.hn) FROM patient p), 0)',
+      'ROUND(COUNT(*) * 100000.0 / NULLIF((SELECT COUNT(DISTINCT p.hn) FROM patient p), 0), 2)',
       "pdx IN ('I10', 'I110', 'I119')"),
   ],
 };
