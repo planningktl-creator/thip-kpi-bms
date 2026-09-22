@@ -3,6 +3,7 @@ import { getRuleUnit, thipKpiRulesByCode } from '@/data/thipKpiRules';
 import { getExpectedFiscalMonths, getReportingCadence, reportingCadenceLabels } from '@/data/thipReporting';
 import { getPendingReason, getImplementationTier, pendingLocalSourceCodes, registeredRuleCodes } from '@/data/thipImplementation';
 import { FISCAL_MONTH_GENERATED_EXPR, FISCAL_YEAR_GENERATED_EXPR, ipdBaseCte } from '@/services/thipIpdBase';
+import { extendedBaseCte } from '@/services/thipFamilyBase';
 import { registeredBranches } from '@/services/queryRegistry';
 import { groupMeta } from '@/data/thipMeta';
 
@@ -100,6 +101,24 @@ CREATE TABLE IF NOT EXISTS ${schema}.${table} (
   CHECK (denominator IS NULL OR denominator <> 0 OR value IS NULL),
   CHECK (percentile IS NULL OR percentile BETWEEN 0 AND 100),
   UNIQUE (indicator_code, period_start, fiscal_year, fiscal_month)
+);
+
+-- Hospital-loaded aggregate staging for KPIs whose denominator or source lives
+-- outside HOSxP (population registers, finance, surveys, custom registries).
+-- Load exactly one row per indicator code x reporting-period anchor; rows read
+-- by the thipExternalFoundation query and the refresh above through the
+-- external_facts CTE. Aggregate values only — never patient rows.
+CREATE TABLE IF NOT EXISTS ${schema}.thip_external_facts (
+  indicator_code varchar(10)  NOT NULL,
+  period_start   date         NOT NULL,
+  numerator      numeric(18, 4),
+  denominator    numeric(18, 4),
+  value          numeric(18, 4),
+  source_system  text         NOT NULL,
+  loaded_at      timestamptz  NOT NULL DEFAULT NOW(),
+  CHECK (numerator IS NULL OR numerator >= 0),
+  CHECK (denominator IS NULL OR denominator >= 0),
+  UNIQUE (indicator_code, period_start)
 );`;
 }
 
@@ -126,6 +145,7 @@ INSERT INTO ${schema}.${table} (
   source_tables, frequency, reference, rule_version, pending_reason, tier, refreshed_at
 )
 ${ipdBaseCte('standard')},
+${extendedBaseCte(true)},
 fact_events AS (
 ${registeredBranches.join('\n\n  UNION ALL\n')}
 ),

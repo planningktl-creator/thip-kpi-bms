@@ -1,7 +1,9 @@
 import { BmsRequestError } from '@/services/bmsErrors';
 import { thipKpiRulesByCode } from '@/data/thipKpiRules';
 import { registeredRuleCodes } from '@/data/thipImplementation';
-import { FISCAL_MONTH_EXPR, FISCAL_YEAR_EXPR, ipdBaseCte, type IpdBaseVariant } from '@/services/thipIpdBase';
+import { getExpectedFiscalMonths } from '@/data/thipReporting';
+import { ipdBaseCte, type IpdBaseVariant } from '@/services/thipIpdBase';
+import { branchIpd, extendedBaseCte, isExternalBranch } from '@/services/thipFamilyBase';
 import { recordQueryTelemetry, responseRowCount, type QueryTelemetryOutcome } from '@/services/queryTelemetry';
 
 export type BmsParamType = 'string' | 'integer' | 'float' | 'date' | 'time' | 'datetime' | 'text';
@@ -26,23 +28,12 @@ export type BmsSqlResponse = {
   record_count?: number;
 };
 
-const fiscalMonthExpr = FISCAL_MONTH_EXPR;
-const fiscalYearExpr = FISCAL_YEAR_EXPR;
-
+// Cadence-aware aggregate fact branch over the shared IPD base. The reporting
+// anchor (monthly/quarterly/semiannual/annual) comes from the cadence registry
+// via thipFamilyBase, so a quarterly fact covers its quarter and an annual fact
+// covers the whole fiscal year.
 function branch(code: string, numerator: string, denominator: string, value: string, where: string, options: { groupBy?: string } = {}): string {
-  const groupBy = options.groupBy ?? 'period_start, calendar_month';
-  return `
-      SELECT
-        '${code}' AS indicator_code,
-        period_start,
-        ${fiscalMonthExpr} AS fiscal_month,
-        ${fiscalYearExpr} AS fiscal_year,
-        ${numerator} AS numerator,
-        ${denominator} AS denominator,
-        ${value} AS value
-      FROM periodized
-      WHERE ${where}
-      GROUP BY ${groupBy}`;
+  return branchIpd(code, numerator, denominator, value, where, { groupBy: options.groupBy });
 }
 
 const acsWhere = "age_y >= 18 AND (pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') OR has_acs_sdx)";
@@ -891,18 +882,6 @@ function extractBranchCode(sql: string): string | null {
   return match ? match[1] : null;
 }
 
-/** Codes covered by each family, derived directly from the authored branch definitions. */
-const FAMILY_CODES: Readonly<Record<string, readonly string[]>> = Object.fromEntries(
-  Object.entries(FAMILY_BRANCHES).map(([family, branches]) => [
-    family,
-    branches.map((b) => extractBranchCode(b)).filter((c): c is string => c !== null),
-  ]),
-);
-
-function familyBranches(family: string): readonly string[] {
-  return FAMILY_BRANCHES[family] ?? [];
-}
-
 export const registeredBranches = registeredRuleCodes.flatMap((code) => {
   const family = thipKpiRulesByCode.get(code)?.queryFamily ?? '';
   const branches = (FAMILY_BRANCHES[family] ?? []).filter((sql) => sql.includes(`'${code}' AS indicator_code`));
@@ -912,26 +891,62 @@ export const registeredBranches = registeredRuleCodes.flatMap((code) => {
   );
 });
 
+/** HOSxP-sourced branches only; safe to run against the hospital database. */
+export const hosxpRegisteredBranches = registeredBranches.filter((sql) => !isExternalBranch(sql));
+
+/** Branches that read `reporting.thip_external_facts` (hospital-loaded aggregates). */
+export const externalRegisteredBranches = registeredBranches.filter((sql) => isExternalBranch(sql));
+
+const codesOf = (branches: readonly string[]): string[] =>
+  branches.map((sql) => extractBranchCode(sql)).filter((code): code is string => code !== null);
+
+export const hosxpRegisteredCodes: readonly string[] = codesOf(hosxpRegisteredBranches);
+export const externalRegisteredCodes: readonly string[] = codesOf(externalRegisteredBranches);
+
 function expectedCodeValues(codes: readonly string[]): string {
-  return codes.map((code) => `('${code}')`).join(', ');
+  return codes
+    .flatMap((code) => getExpectedFiscalMonths(code).map((month) => `('${code}', ${month})`))
+    .join(', ');
 }
 
 /**
  * Assembles a registered read-only foundation query from one or more family
- * fact branches. Every query returns one row per indicator x reporting period
- * and never exposes a patient row.
+ * fact branches. Every query returns one row per indicator x applicable
+ * reporting period (the cadence-aware expected grid) and never exposes a
+ * patient row. Empty cohorts stay a measured zero (0 facts, NULL rate).
  */
-function buildFoundationQuery(key: string, description: string, codes: readonly string[], branches: readonly string[], variant: IpdBaseVariant = 'standard'): RegisteredQuery {
+function buildFoundationQuery(
+  key: string,
+  description: string,
+  codes: readonly string[],
+  branches: readonly string[],
+  options: { variant?: IpdBaseVariant; includeExternal?: boolean } = {},
+): RegisteredQuery {
+  const variant = options.variant ?? 'standard';
+  const branchSql = branches.length > 0
+    ? branches.join('\n\n      UNION ALL\n')
+    : `      SELECT
+        NULL::text AS indicator_code,
+        NULL::date AS period_start,
+        NULL::smallint AS fiscal_month,
+        NULL::integer AS fiscal_year,
+        NULL::numeric AS numerator,
+        NULL::numeric AS denominator,
+        NULL::numeric AS value
+      WHERE FALSE`;
+  const expectedGrid = codes.length > 0
+    ? `VALUES\n          ${expectedCodeValues(codes)}`
+    : 'SELECT NULL::text AS indicator_code, NULL::smallint AS fiscal_month WHERE FALSE';
   return {
     key,
     description,
     sql: `
       ${ipdBaseCte(variant)},
+      ${extendedBaseCte(options.includeExternal === true)},
       facts AS (
-      ${branches.join('\n\n      UNION ALL\n')}
-      ), expected_codes(indicator_code) AS (
-        VALUES
-          ${expectedCodeValues(codes)}
+      ${branchSql}
+      ), expected_codes(indicator_code, fiscal_month) AS (
+        ${expectedGrid}
       ), fiscal_periods AS (
         SELECT
           generated.period_start::date AS period_start,
@@ -960,7 +975,8 @@ function buildFoundationQuery(key: string, description: string, codes: readonly 
         COALESCE(facts.denominator, 0) AS denominator,
         facts.value
       FROM expected_codes
-      CROSS JOIN fiscal_periods
+      JOIN fiscal_periods
+        ON fiscal_periods.fiscal_month = expected_codes.fiscal_month
       LEFT JOIN facts
         ON facts.indicator_code = expected_codes.indicator_code
        AND facts.period_start = fiscal_periods.period_start
@@ -972,15 +988,18 @@ function buildFoundationQuery(key: string, description: string, codes: readonly 
 }
 
 export const foundationFamilyQueries: Readonly<Record<string, RegisteredQuery>> = Object.fromEntries(
-  Object.entries(FAMILY_BRANCHES).map(([family]) => [
-    family,
-    buildFoundationQuery(
-      `thip${family.replace(/_/g, '')}Foundation`,
-      `ผลลัพธ์จริงรายเดือนสำหรับตัวชี้วัด THIP กลุ่ม ${family} จาก HOSxP`,
-      FAMILY_CODES[family] ?? [],
-      familyBranches(family),
-    ),
-  ]),
+  Object.entries(FAMILY_BRANCHES)
+    .map(([family, branches]) => [family, branches.filter((sql) => !isExternalBranch(sql))] as const)
+    .filter(([, branches]) => branches.length > 0)
+    .map(([family, branches]) => [
+      family,
+      buildFoundationQuery(
+        `thip${family.replace(/_/g, '')}Foundation`,
+        `ผลลัพธ์จริงรายงวดสำหรับตัวชี้วัด THIP กลุ่ม ${family} จาก HOSxP`,
+        codesOf(branches),
+        branches,
+      ),
+    ]),
 );
 
 export const queryRegistry = {
@@ -1034,7 +1053,17 @@ export const queryRegistry = {
       readmitBranch('DR0102', "LEFT(pdx, 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851') OR LEFT(pdx, 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')"),
       readmitBranch('DG0101', ugihWhere),
     ],
-    'drgResult',
+    { variant: 'drgResult' },
+  ),
+  // Hospital-loaded aggregate facts (population denominators, finance, survey,
+  // custom registries). Only executable where `reporting.thip_external_facts`
+  // is provisioned (reporting-layer refresh or an enabled staging contract).
+  thipExternalFoundation: buildFoundationQuery(
+    'thipExternalFoundation',
+    'ผลลัพธ์จาก aggregate facts ที่โรงพยาบาลโหลดเข้า reporting.thip_external_facts',
+    externalRegisteredCodes,
+    externalRegisteredBranches,
+    { includeExternal: true },
   ),
   ...foundationFamilyQueries,
 } as const satisfies Record<string, RegisteredQuery>;

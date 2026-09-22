@@ -35,6 +35,24 @@ CREATE TABLE IF NOT EXISTS reporting.thip_kpi_monthly (
   UNIQUE (indicator_code, period_start, fiscal_year, fiscal_month)
 );
 
+-- Hospital-loaded aggregate staging for KPIs whose denominator or source lives
+-- outside HOSxP (population registers, finance, surveys, custom registries).
+-- Load exactly one row per indicator code x reporting-period anchor; rows read
+-- by the thipExternalFoundation query and the refresh above through the
+-- external_facts CTE. Aggregate values only — never patient rows.
+CREATE TABLE IF NOT EXISTS reporting.thip_external_facts (
+  indicator_code varchar(10)  NOT NULL,
+  period_start   date         NOT NULL,
+  numerator      numeric(18, 4),
+  denominator    numeric(18, 4),
+  value          numeric(18, 4),
+  source_system  text         NOT NULL,
+  loaded_at      timestamptz  NOT NULL DEFAULT NOW(),
+  CHECK (numerator IS NULL OR numerator >= 0),
+  CHECK (denominator IS NULL OR denominator >= 0),
+  UNIQUE (indicator_code, period_start)
+);
+
 -- Refresh one fiscal year of the normalized THIP source view.
 -- Bind: :fiscal_year (integer), :start_date = YYYY-10-01, :end_date = next YYYY-10-01 (exclusive).
 DELETE FROM reporting.thip_kpi_monthly WHERE fiscal_year = :fiscal_year;
@@ -190,11 +208,139 @@ WITH ipd AS (
       EXTRACT(MONTH FROM dchdate)::integer AS calendar_month
     FROM ipd
   ),
+opd_periodized AS (
+    SELECT
+      v.vn,
+      v.hn,
+      v.an,
+      EXTRACT(YEAR FROM AGE(v.vstdate, pd.birthday))::integer AS age_y,
+      pd.sex,
+      (SELECT REPLACE(UPPER(TRIM(sd.icd10)), '.', '')
+         FROM ovstdiag sd
+        WHERE sd.vn = v.vn AND sd.diagtype = '1'
+        ORDER BY sd.ovst_diag_id
+        LIMIT 1) AS pdx,
+      v.vstdate AS event_date,
+      er.enter_er_time,
+      er.triage_datetime,
+      er.doctor_tx_time,
+      er.finish_time,
+      er.antibiotics_datetime,
+      er.stroke_needle_datetime,
+      er.stemi_balloon_datetime,
+      er.er_emergency_level_id,
+      er.unplanned_return,
+      er.news2_score,
+      DATE_TRUNC('month', v.vstdate)::date AS period_start,
+      EXTRACT(MONTH FROM v.vstdate)::integer AS calendar_month
+    FROM ovst v
+    LEFT JOIN patient pd ON pd.hn = v.hn
+    LEFT JOIN er_regist er ON er.vn = v.vn
+    WHERE v.vstdate >= :start_date
+      AND v.vstdate < :end_date
+  ),
+  chronic_periodized AS (
+    SELECT
+      cm.clinicmember_id,
+      cm.clinic,
+      cm.hn,
+      cm.regdate,
+      cm.lastvisit,
+      cm.dchdate,
+      cm.current_status,
+      cm.clinic_member_status_id,
+      cm.age_y,
+      cm.sex,
+      cm.chronic_type,
+      cm.begin_year,
+      cm.last_hba1c_value,
+      cm.last_hba1c_date,
+      cm.last_bp_bps_value,
+      cm.last_bp_bpd_value,
+      cm.last_bp_date,
+      DATE_TRUNC('month', cm.regdate)::date AS period_start,
+      EXTRACT(MONTH FROM cm.regdate)::integer AS calendar_month
+    FROM clinicmember cm
+    WHERE cm.regdate >= :start_date
+      AND cm.regdate < :end_date
+  ),
+  delivery_periodized AS (
+    SELECT
+      l.laborid,
+      l.an,
+      l.hage AS mother_age_y,
+      l.labor_type,
+      l.mother_method,
+      l.infant_sex,
+      l.infant_weight,
+      l.infant_apgarscore1,
+      l.infant_apgarscore5,
+      l.infant_apgarscore10,
+      l.placenta_bloodloss,
+      l.labour_startdate,
+      l.labour_finishdate,
+      DATE_TRUNC('month', COALESCE(l.labour_startdate, i.regdate))::date AS period_start,
+      EXTRACT(MONTH FROM COALESCE(l.labour_startdate, i.regdate))::integer AS calendar_month
+    FROM labor l
+    LEFT JOIN ipt i ON i.an = l.an
+    WHERE COALESCE(l.labour_startdate, i.regdate) >= :start_date
+      AND COALESCE(l.labour_startdate, i.regdate) < :end_date
+  ),
+  newborn_periodized AS (
+    SELECT
+      nb.an,
+      nb.mother_an,
+      nb.born_date,
+      nb.birth_weight,
+      nb.apgar1,
+      nb.apgar2,
+      nb.dead,
+      nb.has_asphyxia,
+      nb.birthcondition1,
+      nb.birthcondition2,
+      nb.anc_complete,
+      DATE_TRUNC('month', nb.born_date)::date AS period_start,
+      EXTRACT(MONTH FROM nb.born_date)::integer AS calendar_month
+    FROM ipt_newborn nb
+    WHERE nb.born_date >= :start_date
+      AND nb.born_date < :end_date
+  ),
+  emp_periodized AS (
+    SELECT
+      e.emp_id,
+      e.emp_sex_id,
+      e.emp_birthdate,
+      e.emp_status_id,
+      e.emp_type_id,
+      e.emp_dep_id,
+      e.emp_position_main_id,
+      e.emp_work_begindate,
+      e.emp_resign_enddate,
+      e.emp_resign_type_id,
+      DATE_TRUNC('month', e.emp_work_begindate)::date AS period_start,
+      EXTRACT(MONTH FROM e.emp_work_begindate)::integer AS calendar_month
+    FROM emp e
+    WHERE e.emp_work_begindate >= :start_date
+      AND e.emp_work_begindate < :end_date
+  ),
+  external_facts AS (
+    SELECT
+      x.indicator_code,
+      x.period_start,
+      x.numerator,
+      x.denominator,
+      x.value,
+      x.source_system,
+      EXTRACT(MONTH FROM x.period_start)::integer AS calendar_month
+    FROM reporting.thip_external_facts x
+    WHERE x.period_start >= :start_date
+      AND x.period_start < :end_date
+  ),
 fact_events AS (
 
       SELECT
         'DH0101' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE (pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') AND died) OR (has_acs_sdx AND died_from_acs)) AS numerator,
@@ -202,13 +348,13 @@ fact_events AS (
         ROUND((COUNT(*) FILTER (WHERE (pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') AND died) OR (has_acs_sdx AND died_from_acs)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND (pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') OR has_acs_sdx)
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DH0101.1' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE (pdx IN ('I210', 'I211', 'I212', 'I213') AND died) OR (has_stemi_sdx AND died_from_stemi)) AS numerator,
@@ -216,13 +362,13 @@ fact_events AS (
         ROUND((COUNT(*) FILTER (WHERE (pdx IN ('I210', 'I211', 'I212', 'I213') AND died) OR (has_stemi_sdx AND died_from_stemi)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND (pdx IN ('I210', 'I211', 'I212', 'I213') OR has_stemi_sdx)
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DH0101.2' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE (pdx IN ('I214', 'I219') AND died) OR (has_nste_sdx AND died_from_nste)) AS numerator,
@@ -230,13 +376,13 @@ fact_events AS (
         ROUND((COUNT(*) FILTER (WHERE (pdx IN ('I214', 'I219') AND died) OR (has_nste_sdx AND died_from_nste)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND (pdx IN ('I214', 'I219') OR has_nste_sdx)
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DH0102' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE EXISTS (
@@ -256,13 +402,13 @@ fact_events AS (
             AND EXTRACT(EPOCH FROM (oi.vstdate::timestamp + COALESCE(oi.vsttime, TIME '00:00:00') - (periodized.regdate::timestamp + COALESCE(periodized.regtime, TIME '00:00:00')))) <= 86400)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DH0112' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         ROUND(SUM(los)::numeric, 2) AS numerator,
@@ -270,13 +416,13 @@ fact_events AS (
         ROUND(AVG(los), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DN0101' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE died) AS numerator,
@@ -284,13 +430,13 @@ fact_events AS (
         ROUND((COUNT(*) FILTER (WHERE died) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE LEFT(pdx, 3) IN ('I60', 'I61', 'I62', 'I63', 'I64', 'I65', 'I66', 'I67')
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DN0107' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         
@@ -314,13 +460,13 @@ fact_events AS (
         )) * 100.0) / NULLIF(COUNT(*) FILTER (WHERE NOT died), 0), 2) AS value
       FROM periodized
       WHERE LEFT(pdx, 3) IN ('I60', 'I61', 'I62', 'I63', 'I64', 'I65', 'I66', 'I67')
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DN0109' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         ROUND(SUM(los)::numeric, 2) AS numerator,
@@ -328,13 +474,13 @@ fact_events AS (
         ROUND(AVG(los), 2) AS value
       FROM periodized
       WHERE LEFT(pdx, 3) IN ('I60', 'I61', 'I62', 'I63', 'I64', 'I65', 'I66', 'I67')
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DN0302' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE died_within_48h) AS numerator,
@@ -342,13 +488,13 @@ fact_events AS (
         ROUND((COUNT(*) FILTER (WHERE died_within_48h) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE pdx IN ('S060', 'S061', 'S062', 'S063', 'S064', 'S065', 'S066', 'S067', 'S068', 'S069')
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DR0101' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE (LEFT(pdx, 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851') OR LEFT(pdx, 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')) AND died OR (has_pneumonia_sdx AND died_from_pneumonia)) AS numerator,
@@ -356,13 +502,13 @@ fact_events AS (
         ROUND((COUNT(*) FILTER (WHERE (LEFT(pdx, 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851') OR LEFT(pdx, 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')) AND died OR (has_pneumonia_sdx AND died_from_pneumonia)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE LEFT(pdx, 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851') OR LEFT(pdx, 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18') OR has_pneumonia_sdx
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DR0102' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         
@@ -386,13 +532,13 @@ fact_events AS (
         )) * 100.0) / NULLIF(COUNT(*) FILTER (WHERE NOT died), 0), 2) AS value
       FROM periodized
       WHERE LEFT(pdx, 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851') OR LEFT(pdx, 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18') OR has_pneumonia_sdx
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DR0403' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE died) AS numerator,
@@ -400,13 +546,13 @@ fact_events AS (
         ROUND((COUNT(*) FILTER (WHERE died) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND LEFT(pdx, 3) = 'J44'
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'CE0101' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE EXISTS (
@@ -428,13 +574,13 @@ fact_events AS (
             AND EXTRACT(EPOCH FROM (oi.vstdate::timestamp + COALESCE(oi.vsttime, TIME '00:00:00') - (periodized.regdate::timestamp + COALESCE(periodized.regtime, TIME '00:00:00')))) <= 10800)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE pdx IN ('A400', 'A419', 'R572', 'R651') OR has_ce0101_sepsis
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'CI0101' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE died) AS numerator,
@@ -442,13 +588,13 @@ fact_events AS (
         ROUND((COUNT(*) FILTER (WHERE died) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE pdx IN ('A400', 'A409', 'A410', 'A419', 'R572', 'R651') OR has_ci0101_sepsis
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DG0102' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         ROUND(SUM(los)::numeric, 2) AS numerator,
@@ -456,13 +602,13 @@ fact_events AS (
         ROUND(AVG(los), 2) AS value
       FROM periodized
       WHERE pdx IN ('K250', 'K251', 'K252', 'K254', 'K255', 'K256', 'K260', 'K261', 'K262', 'K264', 'K265', 'K266', 'K270', 'K271', 'K272', 'K274', 'K275', 'K276', 'K280', 'K281', 'K282', 'K284', 'K285', 'K286', 'K290', 'K920', 'K921', 'K922')
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DG0202' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE died) AS numerator,
@@ -470,13 +616,13 @@ fact_events AS (
         ROUND((COUNT(*) FILTER (WHERE died) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE LEFT(pdx, 3) = 'K35'
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DC0401' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE died) AS numerator,
@@ -484,27 +630,27 @@ fact_events AS (
         ROUND((COUNT(*) FILTER (WHERE died) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE pdx IN ('C00','C01','C02','C03','C04','C05','C06','C07','C08','C09','C10','C11','C12','C13','C14','C15','C16','C17','C18','C19','C20','C21','C22','C23','C24','C25','C26','C30','C31','C32','C33','C34','C37','C38','C39','C40','C41','C43','C44','C45','C46','C47','C48','C49','C50','C51','C52','C53','C54','C55','C56','C57','C58','C60','C61','C62','C63','C64','C65','C66','C67','C68','C69','C70','C71','C72','C73','C74','C75','C76','C77','C78','C79','C80','C81','C82','C83','C84','C85','C86','C87','C88','C89','C90','C91','C92','C93','C94','C95','C96','C97','D00','D01','D02','D03','D04','D05','D06','D07','D08','D09','Z510','Z511')
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DR0201' AS indicator_code,
-        period_start,
-        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (1)) AS period_start,
+        1 AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE died) AS numerator,
         COUNT(*) AS denominator,
         ROUND((COUNT(*) FILTER (WHERE died) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE pdx IN ('A15', 'A16')
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DG0201' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE pdx = 'K352') AS numerator,
@@ -512,13 +658,13 @@ fact_events AS (
         ROUND((COUNT(*) FILTER (WHERE pdx = 'K352') * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE pdx IN ('K35', 'K352', 'K353', 'K358')
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DH0111' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         
@@ -542,13 +688,13 @@ fact_events AS (
         )) * 100.0) / NULLIF(COUNT(*) FILTER (WHERE NOT died), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DR0301' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         
@@ -572,13 +718,13 @@ fact_events AS (
         )) * 100.0) / NULLIF(COUNT(*) FILTER (WHERE NOT died), 0), 2) AS value
       FROM periodized
       WHERE LEFT(pdx, 3) IN ('J45', 'J46')
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DR0401' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         
@@ -602,13 +748,13 @@ fact_events AS (
         )) * 100.0) / NULLIF(COUNT(*) FILTER (WHERE NOT died), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND LEFT(pdx, 3) = 'J44'
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DG0101' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         
@@ -632,13 +778,13 @@ fact_events AS (
         )) * 100.0) / NULLIF(COUNT(*) FILTER (WHERE NOT died), 0), 2) AS value
       FROM periodized
       WHERE pdx IN ('K250', 'K251', 'K252', 'K254', 'K255', 'K256', 'K260', 'K261', 'K262', 'K264', 'K265', 'K266', 'K270', 'K271', 'K272', 'K274', 'K275', 'K276', 'K280', 'K281', 'K282', 'K284', 'K285', 'K286', 'K290', 'K920', 'K921', 'K922')
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'CM0105' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         ROUND(SUM(los)::numeric, 2) AS numerator,
@@ -646,13 +792,13 @@ fact_events AS (
         ROUND(AVG(los), 2) AS value
       FROM periodized
       WHERE pdx IN ('O820', 'O821', 'O822', 'O828', 'O829', 'O842')
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DH0301' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE EXISTS (
@@ -682,13 +828,13 @@ fact_events AS (
             ))) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND LEFT(pdx, 3) = 'I50' AND NOT EXISTS (SELECT 1 FROM iptdiag sd WHERE sd.an = periodized.an AND LEFT(REPLACE(UPPER(TRIM(sd.icd10)), '.', ''), 3) IN ('J45', 'J46'))
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DH0302' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE EXISTS (
@@ -740,13 +886,13 @@ fact_events AS (
             AND scr.smoking_type_id IN (2, 3)
         )
       )
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DH0201' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE died) AS numerator,
@@ -758,13 +904,13 @@ fact_events AS (
       WHERE o.an = periodized.an
         AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('3610', '3611', '3612', '3613', '3614', '3615', '3616', '3617', '3618', '3619')
     )
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DH0202' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE EXISTS (
@@ -798,13 +944,13 @@ fact_events AS (
       WHERE o.an = periodized.an
         AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('3610', '3611', '3612', '3613', '3614', '3615', '3616', '3617', '3618', '3619')
     )
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DH0203' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE EXISTS (
@@ -850,13 +996,13 @@ fact_events AS (
       WHERE o.an = periodized.an
         AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('3610', '3611', '3612', '3613', '3614', '3615', '3616', '3617', '3618', '3619')
     )
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DH0204' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (
@@ -898,13 +1044,13 @@ fact_events AS (
       WHERE o.an = periodized.an
         AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('3610', '3611', '3612', '3613', '3614', '3615', '3616', '3617', '3618', '3619')
     )
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DO0202' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE EXISTS (
@@ -938,13 +1084,13 @@ fact_events AS (
       WHERE o.an = periodized.an
         AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('8151', '8152', '8153')
     )
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DO0204' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE EXISTS (
@@ -990,13 +1136,13 @@ fact_events AS (
       WHERE o.an = periodized.an
         AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('8151', '8152', '8153')
     )
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DO0205' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE EXISTS (
@@ -1042,13 +1188,13 @@ fact_events AS (
       WHERE o.an = periodized.an
         AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('8151', '8152', '8153')
     )
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DO0302' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE EXISTS (
@@ -1082,13 +1228,13 @@ fact_events AS (
       WHERE o.an = periodized.an
         AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('8154', '8155')
     )
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DO0303' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE EXISTS (
@@ -1134,13 +1280,13 @@ fact_events AS (
       WHERE o.an = periodized.an
         AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('8154', '8155')
     )
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DO0304' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE EXISTS (
@@ -1186,13 +1332,13 @@ fact_events AS (
       WHERE o.an = periodized.an
         AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('8154', '8155')
     )
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DR0302' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE EXISTS (
@@ -1244,14 +1390,14 @@ fact_events AS (
             AND scr.smoking_type_id IN (2, 3)
         )
       )
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DR0404' AS indicator_code,
-        period_start,
-        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) <= 3 THEN 1 WHEN (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) <= 6 THEN 4 WHEN (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) <= 9 THEN 7 ELSE 10 END)) AS period_start,
+        CASE WHEN (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) <= 3 THEN 1 WHEN (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) <= 6 THEN 4 WHEN (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) <= 9 THEN 7 ELSE 10 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE EXISTS (
           SELECT 1
@@ -1302,13 +1448,13 @@ fact_events AS (
             AND scr.smoking_type_id IN (2, 3)
         )
       )
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'CM0104' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         
@@ -1332,13 +1478,13 @@ fact_events AS (
         )) * 100.0) / NULLIF(COUNT(*) FILTER (WHERE NOT died), 0), 2) AS value
       FROM periodized
       WHERE pdx IN ('O820', 'O821', 'O822', 'O828', 'O829', 'O842')
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'CM0107' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (
@@ -1358,13 +1504,13 @@ fact_events AS (
         ROUND((COUNT(*) FILTER (WHERE LEFT(pdx, 3) = 'O72' OR EXISTS (SELECT 1 FROM iptdiag sd WHERE sd.an = periodized.an AND LEFT(REPLACE(UPPER(TRIM(sd.icd10)), '.', ''), 3) = 'O72') OR EXISTS (SELECT 1 FROM labor lb WHERE lb.an = periodized.an AND COALESCE(lb.placenta_bloodloss, 0) >= 500)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE (LEFT(pdx, 3) IN ('O80', 'O81', 'O83') OR pdx IN ('O840', 'O841', 'O848', 'O849'))
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'CM0109' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (
@@ -1379,13 +1525,13 @@ fact_events AS (
         ROUND((COUNT(*) FILTER (WHERE LEFT(pdx, 3) = 'O15' OR EXISTS (SELECT 1 FROM iptdiag sd WHERE sd.an = periodized.an AND LEFT(REPLACE(UPPER(TRIM(sd.icd10)), '.', ''), 3) = 'O15')) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE LEFT(pdx, 1) = 'O'
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'CM0110' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (
@@ -1400,13 +1546,13 @@ fact_events AS (
         ROUND((COUNT(*) FILTER (WHERE pdx = 'O244' OR EXISTS (SELECT 1 FROM iptdiag sd WHERE sd.an = periodized.an AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'O244')) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE LEFT(pdx, 1) = 'O'
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'CM0116' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE EXISTS (
@@ -1440,13 +1586,13 @@ fact_events AS (
       WHERE o.an = periodized.an
         AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('683', '684', '686', '6860', '6861', '6862', '6863', '6864', '6865', '6866', '6867', '6868', '6869')
     )
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'CM0117' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE EXISTS (
@@ -1492,13 +1638,13 @@ fact_events AS (
       WHERE o.an = periodized.an
         AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('683', '684', '686', '6860', '6861', '6862', '6863', '6864', '6865', '6866', '6867', '6868', '6869')
     )
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'CM0118' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE (pdx IN ('O820', 'O821', 'O822', 'O828', 'O829', 'O842') OR EXISTS (SELECT 1 FROM iptoprt o WHERE o.an = periodized.an AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('740', '741', '742', '744', '7499'))) AND NOT (EXISTS (SELECT 1 FROM iptdiag sd WHERE sd.an = periodized.an AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'O342'))) AS numerator,
@@ -1506,13 +1652,13 @@ fact_events AS (
         ROUND((COUNT(*) FILTER (WHERE (pdx IN ('O820', 'O821', 'O822', 'O828', 'O829', 'O842') OR EXISTS (SELECT 1 FROM iptoprt o WHERE o.an = periodized.an AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('740', '741', '742', '744', '7499'))) AND NOT (EXISTS (SELECT 1 FROM iptdiag sd WHERE sd.an = periodized.an AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'O342'))) * 100.0) / NULLIF(COUNT(*) FILTER (WHERE NOT (EXISTS (SELECT 1 FROM iptdiag sd WHERE sd.an = periodized.an AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'O342'))), 0), 2) AS value
       FROM periodized
       WHERE LEFT(pdx, 3) BETWEEN 'O80' AND 'O84'
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'CM0119' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE pdx IN ('O820', 'O821', 'O822', 'O828', 'O829', 'O842') OR EXISTS (SELECT 1 FROM iptoprt o WHERE o.an = periodized.an AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('740', '741', '742', '744', '7499'))) AS numerator,
@@ -1520,13 +1666,13 @@ fact_events AS (
         ROUND((COUNT(*) FILTER (WHERE pdx IN ('O820', 'O821', 'O822', 'O828', 'O829', 'O842') OR EXISTS (SELECT 1 FROM iptoprt o WHERE o.an = periodized.an AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('740', '741', '742', '744', '7499'))) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE LEFT(pdx, 3) BETWEEN 'O80' AND 'O84'
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'CM0204' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (
@@ -1545,13 +1691,13 @@ fact_events AS (
       ) AS value
       FROM periodized
       WHERE (LEFT(pdx, 3) = 'Z38' OR age_y = 0)
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'CM0205' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (
@@ -1570,13 +1716,13 @@ fact_events AS (
       ) AS value
       FROM periodized
       WHERE (LEFT(pdx, 3) = 'Z38' OR age_y = 0)
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'CM0206' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (
@@ -1587,13 +1733,13 @@ fact_events AS (
         ROUND((COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND nb.birth_weight < 2500) OR (periodized.bw > 0 AND periodized.bw < 2500)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE (LEFT(pdx, 3) = 'Z38' OR age_y = 0)
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'CM0207' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (
@@ -1609,13 +1755,13 @@ fact_events AS (
         ROUND((COUNT(*) FILTER (WHERE died AND (EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND nb.birth_weight < 1000) OR (periodized.bw > 0 AND periodized.bw < 1000))) * 100.0) / NULLIF(COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND nb.birth_weight < 1000) OR (periodized.bw > 0 AND periodized.bw < 1000)), 0), 2) AS value
       FROM periodized
       WHERE (LEFT(pdx, 3) = 'Z38' OR age_y = 0)
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'CM0208' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (
@@ -1631,13 +1777,13 @@ fact_events AS (
         ROUND((COUNT(*) FILTER (WHERE died AND (EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND nb.birth_weight BETWEEN 1000 AND 1499) OR (periodized.bw > 0 AND periodized.bw BETWEEN 1000 AND 1499))) * 100.0) / NULLIF(COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND nb.birth_weight BETWEEN 1000 AND 1499) OR (periodized.bw > 0 AND periodized.bw BETWEEN 1000 AND 1499)), 0), 2) AS value
       FROM periodized
       WHERE (LEFT(pdx, 3) = 'Z38' OR age_y = 0)
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'CM0209' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (
@@ -1653,14 +1799,14 @@ fact_events AS (
         ROUND((COUNT(*) FILTER (WHERE died AND (EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND nb.birth_weight BETWEEN 1500 AND 2499) OR (periodized.bw > 0 AND periodized.bw BETWEEN 1500 AND 2499))) * 100.0) / NULLIF(COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM ipt_newborn nb WHERE nb.an = periodized.an AND nb.birth_weight BETWEEN 1500 AND 2499) OR (periodized.bw > 0 AND periodized.bw BETWEEN 1500 AND 2499)), 0), 2) AS value
       FROM periodized
       WHERE (LEFT(pdx, 3) = 'Z38' OR age_y = 0)
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DC0103' AS indicator_code,
-        period_start,
-        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (1)) AS period_start,
+        1 AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(DISTINCT periodized.hn) FILTER (
         WHERE EXISTS (
@@ -1680,13 +1826,13 @@ fact_events AS (
         ROUND((COUNT(DISTINCT periodized.hn) FILTER (WHERE EXISTS (SELECT 1 FROM iptoprt o WHERE o.an = periodized.an AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('9502', '9503', '9512')) OR EXISTS (SELECT 1 FROM ovstdiag od JOIN ovst ov ON ov.vn = od.vn WHERE ov.hn = periodized.hn AND REPLACE(UPPER(TRIM(od.icd10)), '.', '') IN ('Z010', 'Z135') AND ov.vstdate >= :start_date AND ov.vstdate < :end_date)) * 100.0) / NULLIF(COUNT(DISTINCT periodized.hn), 0), 2) AS value
       FROM periodized
       WHERE LEFT(pdx, 3) IN ('E10', 'E11', 'E12', 'E13', 'E14')
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DC0107' AS indicator_code,
-        period_start,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (
@@ -1700,14 +1846,14 @@ fact_events AS (
         ROUND((COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM iptoprt o WHERE o.an = periodized.an AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('8410', '8411', '8412', '8413', '8414', '8415', '8416', '8417', '8418', '8419'))) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE LEFT(pdx, 3) IN ('E10', 'E11', 'E12', 'E13', 'E14')
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DC0108' AS indicator_code,
-        period_start,
-        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) <= 6 THEN 1 ELSE 7 END)) AS period_start,
+        CASE WHEN (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) <= 6 THEN 1 ELSE 7 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (
         WHERE ((age_y < 60 AND EXISTS (
@@ -1749,14 +1895,14 @@ fact_events AS (
             AND CASE WHEN REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') ~ '^[0-9]*[.]?[0-9]+$' THEN CAST(REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') AS numeric) ELSE NULL END <= 8.0)))) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND LEFT(pdx, 3) IN ('E10', 'E11', 'E12', 'E13', 'E14')
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DC0108.1' AS indicator_code,
-        period_start,
-        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) <= 6 THEN 1 ELSE 7 END)) AS period_start,
+        CASE WHEN (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) <= 6 THEN 1 ELSE 7 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE EXISTS (
           SELECT 1 FROM lab_order lo
@@ -1779,14 +1925,14 @@ fact_events AS (
             AND CASE WHEN REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') ~ '^[0-9]*[.]?[0-9]+$' THEN CAST(REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') AS numeric) ELSE NULL END <= 8.0)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 60 AND LEFT(pdx, 3) IN ('E10', 'E11', 'E12', 'E13', 'E14')
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DC0108.2' AS indicator_code,
-        period_start,
-        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) <= 6 THEN 1 ELSE 7 END)) AS period_start,
+        CASE WHEN (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) <= 6 THEN 1 ELSE 7 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE EXISTS (
           SELECT 1 FROM lab_order lo
@@ -1809,14 +1955,14 @@ fact_events AS (
             AND CASE WHEN REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') ~ '^[0-9]*[.]?[0-9]+$' THEN CAST(REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') AS numeric) ELSE NULL END <= 7.0)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND age_y < 60 AND LEFT(pdx, 3) IN ('E10', 'E11', 'E12', 'E13', 'E14')
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DC0201' AS indicator_code,
-        period_start,
-        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) <= 6 THEN 1 ELSE 7 END)) AS period_start,
+        CASE WHEN (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) <= 6 THEN 1 ELSE 7 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (
         WHERE ((age_y < 65 AND EXISTS (
@@ -1842,14 +1988,14 @@ fact_events AS (
             AND sc.bps <= 140 AND sc.bpd <= 80)))) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND LEFT(pdx, 3) IN ('I10', 'I11', 'I12', 'I13', 'I14', 'I15')
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DC0201.1' AS indicator_code,
-        period_start,
-        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) <= 6 THEN 1 ELSE 7 END)) AS period_start,
+        CASE WHEN (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) <= 6 THEN 1 ELSE 7 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE EXISTS (
           SELECT 1 FROM opdscreen sc
@@ -1864,14 +2010,14 @@ fact_events AS (
             AND sc.bps <= 130 AND sc.bpd <= 80)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND age_y < 65 AND LEFT(pdx, 3) IN ('I10', 'I11', 'I12', 'I13', 'I14', 'I15')
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DC0201.2' AS indicator_code,
-        period_start,
-        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) <= 6 THEN 1 ELSE 7 END)) AS period_start,
+        CASE WHEN (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) <= 6 THEN 1 ELSE 7 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE EXISTS (
           SELECT 1 FROM opdscreen sc
@@ -1886,14 +2032,14 @@ fact_events AS (
             AND sc.bps <= 140 AND sc.bpd <= 80)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 65 AND LEFT(pdx, 3) IN ('I10', 'I11', 'I12', 'I13', 'I14', 'I15')
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 
   UNION ALL
 
       SELECT
         'DP0101' AS indicator_code,
-        period_start,
-        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
+        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (1)) AS period_start,
+        1 AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (
         WHERE EXISTS (
@@ -1910,7 +2056,7 @@ fact_events AS (
         ROUND((COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM lab_order lo JOIN lab_head lh ON lh.lab_order_number = lo.lab_order_number JOIN lab_items li ON li.lab_items_code = lo.lab_items_code WHERE lh.hn = periodized.hn AND li.lab_items_name ILIKE '%hba1c%' AND lh.order_date >= :start_date AND lh.order_date < :end_date AND CASE WHEN REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') ~ '^[0-9]*[.]?[0-9]+$' THEN CAST(REGEXP_REPLACE(lo.lab_order_result, '[^0-9.]', '', 'g') AS numeric) ELSE NULL END < 7.5)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM periodized
       WHERE age_y < 18 AND (LEFT(pdx, 3) = 'E10' OR pdx IN ('E891', 'P702'))
-      GROUP BY period_start, calendar_month
+      GROUP BY 2, 3, 4
 ),
 expected(indicator_code, fiscal_month) AS (
   VALUES

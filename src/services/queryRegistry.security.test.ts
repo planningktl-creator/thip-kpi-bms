@@ -128,8 +128,11 @@ describe('EMPIRICAL CHALLENGER: Milestone 1 Security & Boundary Invariants', () 
     it('buildFoundationQuery ensures zero-cohort preservation and correct 0 facts / NULL rate', () => {
       const sql = queryRegistry.thipIpdFoundation.sql;
 
-      // CROSS JOIN ensures complete matrix of expected_codes x fiscal_periods
-      expect(sql).toContain('expected_codes\n      CROSS JOIN fiscal_periods');
+      // expected_codes carries the cadence-aware (code, fiscal_month) grid and
+      // joins the generated fiscal periods so every applicable cell exists.
+      expect(sql).toContain('expected_codes(indicator_code, fiscal_month)');
+      expect(sql).toContain('JOIN fiscal_periods');
+      expect(sql).toContain('ON fiscal_periods.fiscal_month = expected_codes.fiscal_month');
 
       // LEFT JOIN facts ensures zero-cohort periods have rows
       expect(sql).toContain('LEFT JOIN facts');

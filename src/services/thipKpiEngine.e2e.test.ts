@@ -605,7 +605,7 @@ describe('THIP KPI 2025 E2E Test Suite', () => {
       expect(sql).toContain("'DR0403' AS indicator_code");
       expect(sql).toContain("'CM0105' AS indicator_code");
       expect(sql).toContain('UNION ALL');
-      expect(sql).toContain('expected_codes(indicator_code)');
+      expect(sql).toContain('expected_codes(indicator_code, fiscal_month)');
       expect(sql).toContain('fiscal_periods');
     });
 

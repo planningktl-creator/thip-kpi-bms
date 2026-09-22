@@ -33,7 +33,7 @@ describe('BMS query registry', () => {
     expect(sql).toContain('DH0112');
     expect(sql).toContain('DN0109');
     expect(sql).toContain("'DN0302' AS indicator_code");
-    expect(sql).toContain('expected_codes(indicator_code)');
+    expect(sql).toContain('expected_codes(indicator_code, fiscal_month)');
     expect(sql).toContain('generate_series(');
     // Measured zero-cohort contract: empty periods keep 0 facts with a NULL
     // rate instead of dropping the row or inventing a value.
@@ -109,7 +109,7 @@ describe('BMS query registry', () => {
 
 
       expect(query.key).toMatch(/^thip[A-Za-z]+Foundation$/);
-      expect(query.sql).toContain('expected_codes(indicator_code)');
+      expect(query.sql).toContain('expected_codes(indicator_code, fiscal_month)');
       expect(query.sql).toContain('generate_series(');
     }
   });
