@@ -40,7 +40,7 @@ function ratio100(numerator: string, denominator: string): string {
 }
 
 function ratioPlain(numerator: string, denominator: string): string {
-  return `ROUND((${numerator} * 1.0) / NULLIF(${denominator}, 0), 2)}`;
+  return `ROUND((${numerator} * 1.0) / NULLIF(${denominator}, 0), 2)`;
 }
 
 // --- ACSC diagnosis sets (dotless) -----------------------------------------

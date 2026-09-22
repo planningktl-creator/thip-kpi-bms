@@ -964,7 +964,7 @@ fact_events AS (
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         SUM(EXTRACT(EPOCH FROM (opd_periodized.finish_time - opd_periodized.enter_er_time)) / NULLIF(60, 0)) AS numerator,
         COUNT(*) AS denominator,
-        ROUND((SUM(EXTRACT(EPOCH FROM (opd_periodized.finish_time - opd_periodized.enter_er_time)) / NULLIF(60, 0)) * 1.0) / NULLIF(COUNT(*), 0), 2)} AS value
+        ROUND((SUM(EXTRACT(EPOCH FROM (opd_periodized.finish_time - opd_periodized.enter_er_time)) / NULLIF(60, 0)) * 1.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM opd_periodized
       WHERE opd_periodized.enter_er_time IS NOT NULL AND opd_periodized.finish_time IS NOT NULL AND opd_periodized.finish_time > opd_periodized.enter_er_time AND opd_periodized.er_emergency_level_id = 1
       GROUP BY 2, 3, 4
@@ -6103,7 +6103,7 @@ fact_events AS (
         AND v2.vstdate >= :start_date
         AND v2.vstdate < :end_date
         AND LEFT(REPLACE(UPPER(TRIM(sd2.icd10)), '.', ''), 3) IN ('J45', 'J46')
-    ) >= 2), 0), 2)} AS value
+    ) >= 2), 0), 2) AS value
       FROM opd_periodized
       WHERE (
       LEFT(pdx, 3) IN ('J45', 'J46')
@@ -9670,7 +9670,7 @@ fact_events AS (
         WHERE st2.transaction_date >= opd_periodized.period_start
           AND st2.transaction_date < opd_periodized.period_start + INTERVAL '1 month'
           AND COALESCE(st2.out_qty, 0) > 0
-      )), 0), 2)} AS value
+      )), 0), 2) AS value
       FROM opd_periodized
       WHERE opd_periodized.event_date IS NOT NULL
       GROUP BY 2, 3, 4
