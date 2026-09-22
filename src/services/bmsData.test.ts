@@ -703,7 +703,10 @@ describe('BMS KPI data adapter', () => {
       { indicator_code: 'DH0112', fiscal_month: 1, numerator: 42, denominator: 6, value: 7 },
     ], 2026);
     expect(los?.unit).toBe('ratio');
-    expect(los?.direction).toBe('neutral');
+    // Intended change: direction now comes from the THIP KPI dictionary
+    // (DH0112 average length of stay prints 'lower-is-better'), replacing the
+    // previous 'neutral' placeholder for unwired indicators.
+    expect(los?.direction).toBe('lower-is-better');
     expect(los?.target).toBeNull();
     expect(los?.monthly[0]).toMatchObject({ numerator: 42, denominator: 6, value: 7 });
   });

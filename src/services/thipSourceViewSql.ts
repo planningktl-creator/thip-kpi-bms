@@ -1,4 +1,5 @@
 import { thipCatalogue } from '@/data/thipCatalogue';
+import { getDictionaryEntry } from '@/data/thipDictionary';
 import { getRuleUnit, thipKpiRulesByCode } from '@/data/thipKpiRules';
 import { getExpectedFiscalMonths, getReportingCadence, reportingCadenceLabels } from '@/data/thipReporting';
 import { getPendingReason, getImplementationTier, pendingLocalSourceCodes, registeredRuleCodes } from '@/data/thipImplementation';
@@ -28,17 +29,24 @@ function metadataRow(code: string): string {
   const entry = thipCatalogue.find((candidate) => candidate.code === code);
   const rule = thipKpiRulesByCode.get(code);
   if (!entry || !rule) throw new Error(`Source-view metadata requested an unknown code: ${code}`);
+  const dictionary = getDictionaryEntry(code);
   const cadence = getReportingCadence(code);
   const unit = getRuleUnit(rule);
   const tier = getImplementationTier(code);
   const targetScope = cadence === 'annual' ? 'annual' : 'monthly';
   const sourceTables = rule.candidateSourceTables.length ? [...rule.candidateSourceTables] : ['thip_kpi_monthly'];
   const category = groupMeta[entry.group].label;
-  const definition = `ตัวชี้วัดกลุ่ม ${rule.queryFamily} ตาม THIP KPI Dictionary 2025; ${
+  // Printed metadata (definition, formula, a/b labels, direction) comes from
+  // the THIP KPI dictionary; the rule manifest only fills gaps.
+  const definition = dictionary?.definition ?? `ตัวชี้วัดกลุ่ม ${rule.queryFamily} ตาม THIP KPI Dictionary 2025; ${
     tier === 'registered'
       ? 'มี registered query และต้องยืนยัน local clinical rule'
       : 'ยังต้องทำ local mapping และ source view'
   }`;
+  const formula = dictionary?.formula ?? rule.formulaScale;
+  const numeratorLabel = dictionary?.numeratorLabel ?? 'ต้องยืนยันตามนิยาม PDF และ local rule';
+  const denominatorLabel = dictionary?.denominatorLabel ?? 'ต้องยืนยันตามนิยาม PDF และ local rule';
+  const direction = dictionary?.direction ?? 'neutral';
   const reference = `THIP KPI Dictionary 2025 · หน้า ${rule.pdfPage}`;
   const pendingReason = getPendingReason(code);
 
@@ -46,15 +54,15 @@ function metadataRow(code: string): string {
     sqlText(code),
     sqlText(entry.group),
     sqlText(unit),
-    sqlText('neutral'),
+    sqlText(direction),
     sqlText(targetScope),
     sqlText(category),
     sqlText(entry.title),
     sqlText(entry.titleTh),
     sqlText(definition),
-    sqlText(rule.formulaScale),
-    sqlText('ต้องยืนยันตามนิยาม PDF และ local rule'),
-    sqlText('ต้องยืนยันตามนิยาม PDF และ local rule'),
+    sqlText(formula),
+    sqlText(numeratorLabel),
+    sqlText(denominatorLabel),
     sqlArray(sourceTables),
     sqlText(reportingCadenceLabels[cadence]),
     sqlText(reference),

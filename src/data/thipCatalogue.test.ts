@@ -12,7 +12,10 @@ describe('THIP source catalogue', () => {
     expect(indicator.monthly).toHaveLength(12);
     expect(indicator.monthly.every((month) => month.value === null)).toBe(true);
     expect(indicator.monthly.every((month) => month.status === 'no-data')).toBe(true);
-    expect(indicator.formula).toBe('a/b x 100,000');
+    // Dictionary formula is now shown verbatim ('(a/b) x 100,000') because the
+    // indicator definition/formula come from thipKpiDictionary.json, not the
+    // rule manifest's formulaScale label.
+    expect(indicator.formula).toBe('(a/b) x 100,000');
     expect(indicator.reference).toContain('หน้า 286');
     expect(indicator.definition).toContain('ACSC');
   });

@@ -42,6 +42,17 @@ export function DetailView({ indicator, onBack }: Props) {
   const dataMonths = reportedMonths.length;
   const targetLabel = indicator.targetScope === 'annual' ? 'เป้าหมายทั้งปี' : 'เป้าหมายต่อรอบรายงาน';
   const rule = thipKpiRulesByCode.get(indicator.code);
+  // The target slot always shows something: the numeric target when parsed,
+  // otherwise the verbatim printed benchmark text as a note, otherwise the
+  // hospital-defined placeholder.
+  const renderTargetSlot = (target: number | null) =>
+    target !== null ? (
+      <strong>{formatTargetValue(indicator, target)}</strong>
+    ) : indicator.targetText ? (
+      <span className="detail-kpi-meta target-note">{indicator.targetText}</span>
+    ) : (
+      <span className="detail-kpi-meta target-note">ให้โรงพยาบาลกำหนด (รายปี/รายงวด)</span>
+    );
 
   return (
     <div className="page-stack detail-page">
@@ -61,7 +72,7 @@ export function DetailView({ indicator, onBack }: Props) {
 
       <section className="detail-kpi-grid">
         <div className="detail-kpi detail-kpi-primary"><span className="detail-kpi-label">ผลงานล่าสุด · {latest.label}</span><strong>{formatIndicatorValue(indicator, latest.value)}</strong><span className="detail-kpi-meta">จาก {formatNumber(latest.denominator)} รายการ</span></div>
-        <div className="detail-kpi"><span className="detail-kpi-label">{targetLabel}</span><strong>{formatTargetValue(indicator, latestTarget)}</strong><span className="detail-kpi-meta">{indicator.direction === 'lower-is-better' ? 'ค่าต่ำกว่าดีกว่า' : indicator.direction === 'higher-is-better' ? 'ค่าสูงกว่าดีกว่า' : 'ใช้เป็นข้อมูลอ้างอิง'}</span></div>
+        <div className="detail-kpi"><span className="detail-kpi-label">{targetLabel}</span>{renderTargetSlot(latestTarget)}<span className="detail-kpi-meta">{indicator.direction === 'lower-is-better' ? 'ค่าต่ำกว่าดีกว่า' : indicator.direction === 'higher-is-better' ? 'ค่าสูงกว่าดีกว่า' : 'ใช้เป็นข้อมูลอ้างอิง'}</span></div>
         <div className="detail-kpi"><span className="detail-kpi-label">เทียบรอบก่อน</span><strong className={improving === true ? 'text-good' : improving === false ? 'text-bad' : ''}>{formatDelta(latest.value, previous?.value ?? null, indicator).split(' ').slice(0, 2).join(' ')}</strong><span className="detail-kpi-meta">{improving === true ? <><TrendingUp size={13} /> แนวโน้มดีขึ้น</> : improving === false ? <><TrendingDown size={13} /> ต้องติดตาม</> : indicator.direction === 'neutral' && latest.value !== null && previous?.value !== null ? 'ไม่มีทิศทางเปรียบเทียบ' : 'ไม่มีฐานเปรียบเทียบ'}</span></div>
         <div className="detail-kpi"><span className="detail-kpi-label">ความต่อเนื่องของข้อมูล</span><strong>{dataMonths}/{expectedMonths.length}</strong><span className="detail-kpi-meta"><CheckCircle2 size={13} /> รอบรายงานที่มีข้อมูล</span></div>
       </section>
@@ -70,7 +81,7 @@ export function DetailView({ indicator, onBack }: Props) {
         <div className="panel-heading"><div><span className="panel-eyebrow">FISCAL YEAR ROLLUP</span><h3>สรุปผลการดำเนินงาน · {formatFiscalYear(indicator.fiscalYear)}</h3><p>ฐานข้อมูลใช้วันที่ ISO ภายใน แต่การแสดงผลทั้งหมดใช้ปี พ.ศ. และรอบ ต.ค. — ก.ย.</p></div><span className="annual-year-badge">{formatFiscalYearShort(indicator.fiscalYear)}</span></div>
         <div className="annual-summary-grid">
           <div className="annual-summary-card annual-summary-primary"><span>ผลงานสะสมทั้งปี</span><strong>{formatIndicatorValue(indicator, indicator.annual.value)}</strong><small>จาก {formatNumber(indicator.annual.denominator)} รายการ</small></div>
-          <div className="annual-summary-card"><span>{indicator.targetScope === 'annual' ? 'เป้าหมายทั้งปี' : 'เป้าหมายงวดล่าสุด'}</span><strong>{formatTargetValue(indicator, indicator.targetScope === 'annual' ? indicator.annual.target : latestTarget)}</strong><small>{indicator.targetScope === 'annual' ? 'ค่าที่ตั้งไว้ระดับปี' : 'เกณฑ์ของรอบรายงานล่าสุด'}</small></div>
+          <div className="annual-summary-card"><span>{indicator.targetScope === 'annual' ? 'เป้าหมายทั้งปี' : 'เป้าหมายงวดล่าสุด'}</span>{renderTargetSlot(indicator.targetScope === 'annual' ? indicator.annual.target : latestTarget)}<small>{indicator.targetScope === 'annual' ? 'ค่าที่ตั้งไว้ระดับปี' : 'เกณฑ์ของรอบรายงานล่าสุด'}</small></div>
           <div className="annual-summary-card"><span>สถานะทั้งปี</span><StatusPill status={indicator.annual.status} /><small>{dataMonths === expectedMonths.length ? 'ข้อมูลครบตามรอบรายงาน' : `มีข้อมูล ${dataMonths} จาก ${expectedMonths.length} รอบรายงาน`}</small></div>
           <div className="annual-summary-card"><span>ช่วงปีงบประมาณ</span><strong className="annual-range">{formatFiscalRange(indicator.fiscalYear)}</strong><small>{formatFiscalYearShort(indicator.fiscalYear)} · 12 เดือน</small></div>
         </div>
@@ -91,7 +102,7 @@ export function DetailView({ indicator, onBack }: Props) {
         <article className="panel definition-panel">
           <div className="panel-heading"><div><span className="panel-eyebrow">INDICATOR CONTRACT</span><h3>นิยามที่ใช้คำนวณ</h3></div><ClipboardList size={18} className="heading-icon" /></div>
           <div className="definition-block"><span className="definition-label">สูตรคำนวณ</span><strong>{indicator.formula}</strong></div>
-          <div className="definition-split"><div><span className="definition-label">ตัวตั้ง (a)</span><p>{indicator.numeratorLabel}</p></div><div><span className="definition-label">ตัวหาร (b)</span><p>{indicator.denominatorLabel}</p></div></div>
+          <div className="definition-split"><div><span className="definition-label">ตัวตั้ง ({indicator.numeratorLabel})</span><p>{indicator.numeratorDefinition ?? indicator.numeratorLabel}</p></div><div><span className="definition-label">ตัวหาร ({indicator.denominatorLabel})</span><p>{indicator.denominatorDefinition ?? indicator.denominatorLabel}</p></div></div>
           <div className="definition-block"><span className="definition-label">นิยาม / ขอบเขต</span><p>{indicator.definition}</p></div>
           {rule?.evidence?.length ? (
             <div className="definition-block rule-evidence">
@@ -117,7 +128,7 @@ export function DetailView({ indicator, onBack }: Props) {
 
       <PeriodBreakdown indicator={indicator} />
 
-      <div className="source-callout"><Info size={16} /><span>เกณฑ์อ้างอิง: {indicator.reference} · เมื่อเชื่อม BMS จริง ระบบจะอ่านผลลัพธ์จาก registered query ที่มี grain เป็น 1 indicator × 1 reporting period และสรุปผลงานต่อปีงบประมาณโดยไม่แปลงวันที่ ISO ในฐานข้อมูล</span></div>
+      <div className="source-callout"><Info size={16} /><span>เกณฑ์อ้างอิง: {indicator.reference}{indicator.benchmarkSource ? ` · ที่มาเป้าหมาย: ${indicator.benchmarkSource}` : ''} · เมื่อเชื่อม BMS จริง ระบบจะอ่านผลลัพธ์จาก registered query ที่มี grain เป็น 1 indicator × 1 reporting period และสรุปผลงานต่อปีงบประมาณโดยไม่แปลงวันที่ ISO ในฐานข้อมูล</span></div>
     </div>
   );
 }

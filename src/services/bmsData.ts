@@ -1,5 +1,6 @@
 import { createNoDataIndicator, thipCatalogue, thipCatalogueByCode } from '@/data/thipCatalogue';
 import { createFoundationIndicator, type FoundationDefinition } from '@/data/liveDefinitions';
+import { getDictionaryEntry, parseBenchmark } from '@/data/thipDictionary';
 import { foundationRuleCodes, getFormulaScale, getRuleUnit, thipKpiRulesByCode } from '@/data/thipKpiRules';
 import { getExpectedFiscalMonths } from '@/data/thipReporting';
 import { BmsRequestError } from '@/services/bmsErrors';
@@ -698,9 +699,14 @@ export function buildIndicatorFromRows(
   const base = getBaseIndicator(code, fiscalYear);
   if (!base) return null;
   const periods = getFiscalMonthPeriods(fiscalYear);
+  const expectedMonths = new Set(getExpectedFiscalMonths(code));
+  const dictionary = getDictionaryEntry(code);
   const firstRow = rows[0];
   const unit = asUnit(getValue(firstRow ?? {}, 'unit'), base.unit);
-  const direction = asDirection(getValue(firstRow ?? {}, 'direction'), base.direction);
+  // The THIP KPI dictionary owns the printed metadata (direction, definitions,
+  // benchmark text); source-view labels only fill gaps for codes the dictionary
+  // does not cover.
+  const direction = dictionary?.direction ?? asDirection(getValue(firstRow ?? {}, 'direction'), base.direction);
   const targetScope = asTargetScope(getValue(firstRow ?? {}, 'target_scope'), base.targetScope);
   const formula = asString(getValue(firstRow ?? {}, 'formula')) ?? base.formula;
   // The normalized view may repeat a human-readable formula, but the numeric
@@ -711,6 +717,11 @@ export function buildIndicatorFromRows(
   const targetFromRows = sourceProvidesTarget
     ? rows.map((row) => asNumber(getValue(row, 'target'))).find((value) => value !== null) ?? null
     : null;
+  // The parsed dictionary benchmark is a fallback ONLY when the source supplies
+  // no target column at all. An explicit NULL target from a normalized source
+  // row is a real decision and is never overwritten by the dictionary.
+  const dictionaryTarget = sourceProvidesTarget ? null : parseBenchmark(dictionary?.target ?? null).value;
+  const effectiveTarget = targetFromRows ?? dictionaryTarget;
   const rowsByMonth = new Map<number, RawKpiRow>();
 
   for (const row of rows) {
@@ -740,7 +751,7 @@ export function buildIndicatorFromRows(
     const target = targetScope === 'monthly'
       ? sourceProvidesTarget
         ? asNumber(getValue(row ?? {}, 'target'))
-        : asNumber(getValue(row ?? {}, 'target')) ?? targetFromRows
+        : expectedMonths.has(period.fiscalMonth) ? dictionaryTarget : null
       : null;
 
     return {
@@ -780,12 +791,16 @@ export function buildIndicatorFromRows(
     titleTh: rowText('title_th', base.titleTh),
     unit,
     direction,
-    target: targetFromRows,
+    target: effectiveTarget,
     targetScope,
-    definition: rowText('definition', base.definition),
+    targetText: dictionary?.target ?? asString(getValue(firstRow ?? {}, 'target_text')) ?? base.targetText,
+    benchmarkSource: base.benchmarkSource,
+    definition: dictionary?.definition ?? rowText('definition', base.definition),
     formula,
-    numeratorLabel: rowText('numerator_label', base.numeratorLabel),
-    denominatorLabel: rowText('denominator_label', base.denominatorLabel),
+    numeratorLabel: dictionary?.numeratorLabel ?? rowText('numerator_label', base.numeratorLabel),
+    denominatorLabel: dictionary?.denominatorLabel ?? rowText('denominator_label', base.denominatorLabel),
+    numeratorDefinition: dictionary?.numeratorDefinition ?? base.numeratorDefinition,
+    denominatorDefinition: dictionary?.denominatorDefinition ?? base.denominatorDefinition,
     sourceTables: asSourceTables(getValue(firstRow ?? {}, 'source_tables'), base.sourceTables),
     frequency: rowText('frequency', base.frequency),
     reference: rowText('reference', base.reference),
@@ -794,7 +809,7 @@ export function buildIndicatorFromRows(
       monthly,
       fiscalYear,
       unit,
-      targetScope === 'annual' ? targetFromRows : null,
+      targetScope === 'annual' ? effectiveTarget : null,
       direction,
       formulaScale,
     ),

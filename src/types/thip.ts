@@ -63,6 +63,14 @@ export type Indicator = {
   formula: string;
   numeratorLabel: string;
   denominatorLabel: string;
+  /** Printed `a = ...` line from the THIP KPI dictionary, verbatim. */
+  numeratorDefinition: string | null;
+  /** Printed `b = ...` line from the THIP KPI dictionary, verbatim. */
+  denominatorDefinition: string | null;
+  /** Verbatim benchmark/เป้าหมาย text from the dictionary (null when the PDF printed none). */
+  targetText: string | null;
+  /** Benchmark citation source from the PDF (e.g. `U.S.A. National Median`), or the full printed string. */
+  benchmarkSource: string | null;
   sourceTables: string[];
   frequency: string;
   reference: string;

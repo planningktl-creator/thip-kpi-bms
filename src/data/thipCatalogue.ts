@@ -1,7 +1,8 @@
+import { benchmarkSourceFromTarget, getDictionaryEntry, parseBenchmark } from '@/data/thipDictionary';
 import { groupMeta } from '@/data/thipMeta';
 import { getImplementationTier, getPendingReason } from '@/data/thipImplementation';
 import { getRuleUnit, thipKpiRulesByCode } from '@/data/thipKpiRules';
-import { getReportingCadence, reportingCadenceLabels } from '@/data/thipReporting';
+import { getExpectedFiscalMonths, getReportingCadence, reportingCadenceLabels } from '@/data/thipReporting';
 import type { FiscalYear, Indicator, IndicatorGroup, MonthlyResult } from '@/types/thip';
 import { getCurrentFiscalYear, getFiscalMonthPeriods } from '@/utils/fiscal';
 
@@ -1414,8 +1415,15 @@ export const thipCatalogueByCode = new Map(thipCatalogue.map((entry) => [entry.c
 export function createNoDataIndicator(entry: ThipCatalogueEntry, fiscalYear: FiscalYear = getCurrentFiscalYear()): Indicator {
   const periods = getFiscalMonthPeriods(fiscalYear);
   const rule = thipKpiRulesByCode.get(entry.code);
+  const dictionary = getDictionaryEntry(entry.code);
+  const targetText = dictionary?.target ?? null;
+  const benchmark = parseBenchmark(targetText);
   const targetScope = rule && getReportingCadence(entry.code) === 'annual' ? 'annual' : 'monthly';
   const ruleStatus = rule?.status === 'foundation' ? 'มี foundation query สำหรับตรวจสอบ' : 'ยังต้องทำ local mapping และ source view';
+  const expectedMonths = new Set(getExpectedFiscalMonths(entry.code));
+  // Monthly-scope benchmarks are per-period targets; annual-scope benchmarks
+  // live on the annual rollup. Every indicator keeps a target slot either way.
+  const monthlyTarget = targetScope === 'monthly' ? benchmark.value : null;
   const monthly: MonthlyResult[] = periods.map((period) => ({
     periodStart: period.periodStart,
     fiscalYear: period.fiscalYear,
@@ -1424,7 +1432,7 @@ export function createNoDataIndicator(entry: ThipCatalogueEntry, fiscalYear: Fis
     numerator: null,
     denominator: null,
     value: null,
-    target: null,
+    target: monthlyTarget !== null && expectedMonths.has(period.fiscalMonth) ? monthlyTarget : null,
     percentile: null,
     status: 'no-data',
   }));
@@ -1440,24 +1448,28 @@ export function createNoDataIndicator(entry: ThipCatalogueEntry, fiscalYear: Fis
     title: entry.title,
     titleTh: entry.titleTh,
     unit: rule ? getRuleUnit(rule) : 'percent',
-    direction: 'neutral',
-    target: null,
+    direction: dictionary?.direction ?? 'neutral',
+    target: benchmark.value,
     targetScope,
-    definition: rule
+    targetText,
+    benchmarkSource: benchmarkSourceFromTarget(targetText),
+    definition: dictionary?.definition ?? (rule
       ? `ตัวชี้วัดกลุ่ม ${rule.queryFamily} อยู่ใน THIP KPI Dictionary; ${ruleStatus} ก่อนเปิดใช้งาน production ต้องยืนยัน cohort, numerator/denominator, event time และ local code set ของโรงพยาบาล`
-      : 'ตัวชี้วัดนี้อยู่ใน THIP KPI Dictionary แต่ยังไม่ได้ผูก source view และนิยาม numerator/denominator ของโรงพยาบาล',
-    formula: rule?.formulaScale ?? 'รอยืนยันจาก source view ของโรงพยาบาล',
-    numeratorLabel: 'ต้องยืนยันตามนิยาม PDF และ local rule',
-    denominatorLabel: 'ต้องยืนยันตามนิยาม PDF และ local rule',
+      : 'ตัวชี้วัดนี้อยู่ใน THIP KPI Dictionary แต่ยังไม่ได้ผูก source view และนิยาม numerator/denominator ของโรงพยาบาล'),
+    formula: dictionary?.formula ?? rule?.formulaScale ?? 'รอยืนยันจาก source view ของโรงพยาบาล',
+    numeratorLabel: dictionary?.numeratorLabel ?? 'ต้องยืนยันตามนิยาม PDF และ local rule',
+    denominatorLabel: dictionary?.denominatorLabel ?? 'ต้องยืนยันตามนิยาม PDF และ local rule',
+    numeratorDefinition: dictionary?.numeratorDefinition ?? null,
+    denominatorDefinition: dictionary?.denominatorDefinition ?? null,
     sourceTables: [],
-    frequency: rule ? reportingCadenceLabels[getReportingCadence(entry.code)] : 'ต้องยืนยันจาก dictionary/local mapping',
-    reference: rule ? `THIP KPI Dictionary 2025 · หน้า ${rule.pdfPage}` : 'THIP KPI Dictionary 2025',
+    frequency: dictionary?.frequency ?? (rule ? reportingCadenceLabels[getReportingCadence(entry.code)] : 'ต้องยืนยันจาก dictionary/local mapping'),
+    reference: rule ? `THIP KPI Dictionary 2025 · หน้า ${rule.pdfPage}` : `THIP KPI Dictionary 2025 · หน้า ${dictionary?.page ?? ''}`.trim(),
     annual: {
       fiscalYear,
       numerator: null,
       denominator: null,
       value: null,
-      target: null,
+      target: targetScope === 'annual' ? benchmark.value : null,
       status: 'no-data',
     },
     monthly,
