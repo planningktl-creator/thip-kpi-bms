@@ -40,6 +40,8 @@ export function createFoundationIndicator(definition: FoundationDefinition, fisc
   return {
     code: definition.code,
     dataSource: 'bms',
+    implementationTier: 'registered',
+    pendingReason: null,
     fiscalYear,
     group: definition.group,
     category: definition.category,

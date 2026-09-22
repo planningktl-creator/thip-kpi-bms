@@ -35,7 +35,10 @@ describe('BMS query registry', () => {
     expect(sql).toContain("'DN0302' AS indicator_code");
     expect(sql).toContain('expected_codes(indicator_code)');
     expect(sql).toContain('generate_series(');
-    expect(sql).toContain('COALESCE(facts.denominator, 0)');
+    // Measured zero-cohort contract: empty periods keep 0 facts with a NULL
+    // rate instead of dropping the row or inventing a value.
+    expect(sql).toContain('COALESCE(facts.numerator, 0) AS numerator');
+    expect(sql).toContain('COALESCE(facts.denominator, 0) AS denominator');
   });
 
   it('normalizes ICD-10 to dotless codes so dotted or dotless database values match', () => {

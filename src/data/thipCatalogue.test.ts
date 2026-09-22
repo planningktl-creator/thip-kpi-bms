@@ -29,6 +29,8 @@ describe('THIP source catalogue', () => {
     const los = createNoDataIndicator(thipCatalogue.find((entry) => entry.code === 'DG0102')!);
 
     expect(acsc.unit).toBe('rate');
+    expect(acsc.implementationTier).toBe('pending-local-source');
+    expect(acsc.pendingReason).toContain('population denominator');
     expect(los.unit).toBe('ratio');
   });
 

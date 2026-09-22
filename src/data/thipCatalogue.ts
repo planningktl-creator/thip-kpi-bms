@@ -1,4 +1,5 @@
 import { groupMeta } from '@/data/thipMeta';
+import { getImplementationTier, getPendingReason } from '@/data/thipImplementation';
 import { getRuleUnit, thipKpiRulesByCode } from '@/data/thipKpiRules';
 import { getReportingCadence, reportingCadenceLabels } from '@/data/thipReporting';
 import type { FiscalYear, Indicator, IndicatorGroup, MonthlyResult } from '@/types/thip';
@@ -1431,6 +1432,8 @@ export function createNoDataIndicator(entry: ThipCatalogueEntry, fiscalYear: Fis
   return {
     code: entry.code,
     dataSource: 'no-data',
+    implementationTier: getImplementationTier(entry.code),
+    pendingReason: getPendingReason(entry.code),
     fiscalYear,
     group: entry.group,
     category: groupMeta[entry.group].label,

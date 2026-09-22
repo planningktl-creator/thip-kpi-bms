@@ -304,7 +304,10 @@ export type RawKpiRow = Record<string, unknown>;
 
 export type BmsCoverage = {
   expectedIndicatorCount: number;
+  /** Codes whose cells carry a delivered state (measured, or explicit unavailable with a reason). */
   liveIndicatorCount: number;
+  /** Codes with at least one measured cell (real aggregate value). */
+  measuredIndicatorCount: number;
   expectedCellCount: number;
   coveredCellCount: number;
   /** Cells whose source row carries a measured denominator (real aggregate). */
@@ -595,7 +598,8 @@ export function summarizeCoverage(rows: RawKpiRow[], fiscalYear: FiscalYear): Bm
   const expectedCells = new Set<string>(thipCatalogue.flatMap((entry) => getExpectedFiscalMonths(entry.code).map((month) => `${entry.code}:${month}`)));
   const cells = new Set<string>();
   const unexpectedCells = new Set<string>();
-  const monthsByCode = new Map<string, Set<number>>();
+  const measuredCodes = new Set<string>();
+  const deliveredCodes = new Set<string>();
   let availableCellCount = 0;
   let unavailableCellCount = 0;
 
@@ -610,32 +614,38 @@ export function summarizeCoverage(rows: RawKpiRow[], fiscalYear: FiscalYear): Bm
     }
     if (cells.has(cell)) continue;
     cells.add(cell);
-    // A NULL denominator is the contract's explicit "unavailable" state; any
-    // other row is a measured aggregate (including a measured zero cohort,
-    // which the source view represents with denominator = 0 and value = NULL).
-    if (asNumber(getValue(row, 'denominator')) === null) {
-      unavailableCellCount += 1;
-    } else {
+
+    const numerator = asNumber(getValue(row, 'numerator'));
+    const denominator = asNumber(getValue(row, 'denominator'));
+    const value = asNumber(getValue(row, 'value'));
+    const unit = getRuleUnit(thipKpiRulesByCode.get(code) ?? { formulaScale: 'a/b' });
+    const measured = denominator !== null || (unit === 'count' && (numerator !== null || value !== null));
+    if (measured) {
       availableCellCount += 1;
+      measuredCodes.add(code);
+      deliveredCodes.add(code);
+    } else {
+      unavailableCellCount += 1;
+      // An explicit unavailable cell must carry a reason; only then has the
+      // source view actually delivered a recognized state for this code.
+      if (asString(getValue(row, 'pending_reason'))) deliveredCodes.add(code);
     }
-    const months = monthsByCode.get(code) ?? new Set<number>();
-    months.add(month);
-    monthsByCode.set(code, months);
   }
 
-  const liveCodes = Array.from(thipCatalogueByCode.keys()).filter((code) => monthsByCode.has(code));
+  const liveCodes = Array.from(thipCatalogueByCode.keys()).filter((code) => deliveredCodes.has(code));
   const expectedIndicatorCount = thipCatalogue.length;
   const expectedCellCount = expectedCells.size;
 
   return {
     expectedIndicatorCount,
     liveIndicatorCount: liveCodes.length,
+    measuredIndicatorCount: measuredCodes.size,
     expectedCellCount,
     coveredCellCount: cells.size,
     availableCellCount,
     unavailableCellCount,
     unexpectedCellCount: unexpectedCells.size,
-    complete: liveCodes.length === expectedIndicatorCount && cells.size === expectedCellCount && unexpectedCells.size === 0,
+    complete: cells.size === expectedCellCount && unexpectedCells.size === 0,
     liveCodes,
   };
 }
@@ -676,8 +686,6 @@ function makeAnnual(
 }
 
 function getBaseIndicator(code: string, fiscalYear: FiscalYear): Indicator | null {
-  const foundationDefinition = foundationDefinitions[code];
-  if (foundationDefinition) return createFoundationIndicator({ code, ...foundationDefinition }, fiscalYear);
   const catalogueEntry = thipCatalogueByCode.get(code);
   return catalogueEntry ? createNoDataIndicator(catalogueEntry, fiscalYear) : null;
 }
@@ -753,10 +761,18 @@ export function buildIndicatorFromRows(
 
   const rowText = (key: string, fallback: string): string => asString(getValue(firstRow ?? {}, key)) ?? fallback;
   const group = (rowText('indicator_group', rowText('group', base.group)) as IndicatorGroup);
+  const hasMeasuredRow = [...rowsByMonth.values()].some((row) => {
+    const numerator = asNumber(getValue(row, 'numerator'));
+    const denominator = asNumber(getValue(row, 'denominator'));
+    const sourceValue = asNumber(getValue(row, 'value'));
+    return unit === 'count'
+      ? numerator !== null || sourceValue !== null
+      : denominator !== null;
+  });
   const next: Indicator = {
     ...base,
     code,
-    dataSource: rowsByMonth.size ? 'bms' : 'no-data',
+    dataSource: hasMeasuredRow ? 'bms' : 'no-data',
     fiscalYear,
     group: ['D', 'C', 'S', 'H', 'A'].includes(group) ? group : base.group,
     category: rowText('category', base.category),

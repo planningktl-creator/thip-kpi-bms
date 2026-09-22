@@ -18,6 +18,7 @@ type DataSourceState = 'loading' | 'live' | 'partial' | 'unavailable';
 const emptyCoverage: BmsCoverage = {
   expectedIndicatorCount: 232,
   liveIndicatorCount: 0,
+  measuredIndicatorCount: 0,
   expectedCellCount: 1552,
   coveredCellCount: 0,
   availableCellCount: 0,
@@ -97,7 +98,10 @@ export default function App() {
       setIndicators(result.indicators);
       setRefreshedAt(result.refreshedAt);
       setCoverage(result.coverage);
-      setDataSource(result.coverage.complete ? 'live' : 'partial');
+      const fullyMeasured = result.coverage.complete
+        && result.coverage.unavailableCellCount === 0
+        && result.coverage.liveIndicatorCount === result.coverage.expectedIndicatorCount;
+      setDataSource(fullyMeasured ? 'live' : 'partial');
       setDataMessage(result.sourceView
         ? `อ่านข้อมูลจริง ${result.coverage.liveIndicatorCount}/${result.coverage.expectedIndicatorCount} ตัวชี้วัด · ${result.coverage.coveredCellCount}/${result.coverage.expectedCellCount} งวดรายงานจาก source view ${result.sourceView} แล้ว`
         : `อ่านข้อมูลจริง ${result.coverage.liveIndicatorCount}/${result.coverage.expectedIndicatorCount} ตัวชี้วัด · ${result.coverage.coveredCellCount}/${result.coverage.expectedCellCount} งวดรายงานจาก HOSxP แล้ว`);

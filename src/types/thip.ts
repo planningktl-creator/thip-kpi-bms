@@ -45,6 +45,10 @@ export type AnnualResult = {
 export type Indicator = {
   code: string;
   dataSource?: IndicatorDataSource;
+  /** Whether the code has a registered read-only query or still needs a local source. */
+  implementationTier: 'registered' | 'pending-local-source';
+  /** Explicit reason when the code cannot be measured yet; never a fabricated zero. */
+  pendingReason: string | null;
   fiscalYear: FiscalYear;
   group: IndicatorGroup;
   category: string;

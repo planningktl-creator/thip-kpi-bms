@@ -49,7 +49,7 @@ function metadataRow(code: string): string {
     sqlText(targetScope),
     sqlText(category),
     sqlText(entry.title),
-    sqlText(entry.title),
+    sqlText(entry.titleTh),
     sqlText(definition),
     sqlText(rule.formulaScale),
     sqlText('ต้องยืนยันตามนิยาม PDF และ local rule'),
@@ -125,9 +125,8 @@ INSERT INTO ${schema}.${table} (
   definition, formula, numerator_label, denominator_label,
   source_tables, frequency, reference, rule_version, pending_reason, tier, refreshed_at
 )
-WITH
 ${ipdBaseCte('standard')},
-facts AS (
+fact_events AS (
 ${registeredBranches.join('\n\n  UNION ALL\n')}
 ),
 expected(indicator_code, fiscal_month) AS (
@@ -153,14 +152,39 @@ fiscal_periods AS (
     CAST(:end_date AS date) - INTERVAL '1 month',
     INTERVAL '1 month'
   ) AS generated(period_start)
+),
+-- Registered codes get a complete fact grid: a period whose registered query
+-- ran and found an empty cohort is a measured zero cohort (0 facts, NULL
+-- value), never a fabricated rate. Pending tiers stay out of the grid so their
+-- cells remain explicit unavailable rows in the outer SELECT.
+facts AS (
+  SELECT
+    e.indicator_code,
+    fp.period_start,
+    fp.fiscal_year,
+    fp.fiscal_month,
+    COALESCE(fe.numerator, 0) AS numerator,
+    CASE WHEN m.unit = 'count' THEN fe.denominator ELSE COALESCE(fe.denominator, 0) END AS denominator,
+    fe.value
+  FROM expected e
+  JOIN metadata m
+    ON m.indicator_code = e.indicator_code
+   AND m.tier = 'registered'
+  JOIN fiscal_periods fp
+    ON fp.fiscal_month = e.fiscal_month
+  LEFT JOIN fact_events fe
+    ON fe.indicator_code = e.indicator_code
+   AND fe.period_start = fp.period_start
+   AND fe.fiscal_month = fp.fiscal_month
+   AND fe.fiscal_year = fp.fiscal_year
 )
 SELECT
   m.indicator_code,
   fp.period_start,
   fp.fiscal_year,
   fp.fiscal_month,
-  CASE WHEN m.tier = 'registered' THEN COALESCE(f.numerator, 0) ELSE NULL END AS numerator,
-  CASE WHEN m.tier = 'registered' THEN COALESCE(f.denominator, 0) ELSE NULL END AS denominator,
+  CASE WHEN m.tier = 'registered' THEN f.numerator ELSE NULL END AS numerator,
+  CASE WHEN m.tier = 'registered' THEN f.denominator ELSE NULL END AS denominator,
   CASE WHEN m.tier = 'registered' THEN f.value ELSE NULL END AS value,
   NULL::numeric AS target,
   m.target_scope,

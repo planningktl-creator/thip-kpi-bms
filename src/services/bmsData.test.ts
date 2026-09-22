@@ -28,6 +28,15 @@ describe('BMS KPI data adapter', () => {
     expect(indicator?.sourceTables).toEqual(['ipt', 'an_stat']);
   });
 
+  it('does not label an all-unavailable source row as BMS live data', () => {
+    const indicator = buildIndicatorFromRows('DH0101', [
+      { indicator_code: 'DH0101', fiscal_month: 1, numerator: null, denominator: null, value: null },
+    ], 2026);
+
+    expect(indicator?.dataSource).toBe('no-data');
+    expect(indicator?.monthly[0]).toMatchObject({ numerator: null, denominator: null, value: null, status: 'no-data' });
+  });
+
   it('uses the KPI formula multiplier for rate values and annual rollups', () => {
     const indicator = buildIndicatorFromRows('AA0101', [
       { indicator_code: 'AA0101', fiscal_month: 1, numerator: 1, denominator: 1000 },
@@ -79,7 +88,7 @@ describe('BMS KPI data adapter', () => {
 
     expect(coverage).toMatchObject({
       expectedIndicatorCount: 232,
-      liveIndicatorCount: 232,
+      liveIndicatorCount: 0,
       expectedCellCount: 1552,
       coveredCellCount: 1552,
       unexpectedCellCount: 0,
@@ -93,7 +102,7 @@ describe('BMS KPI data adapter', () => {
       { indicator_code: 'DH0101', fiscal_month: 2 },
     ], 2026);
 
-    expect(coverage).toMatchObject({ liveIndicatorCount: 1, coveredCellCount: 2, complete: false });
+    expect(coverage).toMatchObject({ liveIndicatorCount: 0, availableCellCount: 0, unavailableCellCount: 2, coveredCellCount: 2, complete: false });
   });
 
   it('rejects a row outside an indicator cadence from complete coverage', () => {
@@ -103,7 +112,7 @@ describe('BMS KPI data adapter', () => {
     ], 2026);
 
     expect(coverage).toMatchObject({
-      liveIndicatorCount: 1,
+      liveIndicatorCount: 0,
       coveredCellCount: 1,
       unexpectedCellCount: 1,
       complete: false,
@@ -159,7 +168,7 @@ describe('BMS KPI data adapter', () => {
         appIdentifier: 'THIP.KPI.BMS',
       }, 2026);
       expect(result.sourceView).toBe('thip_kpi_monthly');
-      expect(result.liveCodes).toHaveLength(232);
+      expect(result.liveCodes).toHaveLength(0);
       expect(result.indicators).toHaveLength(232);
       expect(result.coverage.complete).toBe(true);
       expect(result.refreshedAt).toBe('2026-09-11T08:00:00Z');

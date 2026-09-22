@@ -22,12 +22,25 @@ describe('THIP reporting-layer source view', () => {
     expect(thipCatalogue).toHaveLength(232);
   });
 
-  it('keeps the registered and pending values separated in the refresh', () => {
+  it('zero-fills registered empty cohorts while keeping pending rows unavailable', () => {
     const refresh = buildSourceViewRefreshSql();
-    expect(refresh).toContain("CASE WHEN m.tier = 'registered' THEN COALESCE(f.numerator, 0) ELSE NULL END");
-    expect(refresh).toContain("CASE WHEN m.tier = 'registered' THEN COALESCE(f.denominator, 0) ELSE NULL END");
+    // Pending tiers keep explicit unavailable facts (never fabricated zeroes).
+    expect(refresh).toContain("CASE WHEN m.tier = 'registered' THEN f.numerator ELSE NULL END");
+    expect(refresh).toContain("CASE WHEN m.tier = 'registered' THEN f.denominator ELSE NULL END");
     expect(refresh).toContain("CASE WHEN m.tier = 'registered' THEN f.value ELSE NULL END");
+    // A registered query that ran over an empty cohort is a measured zero
+    // cohort: 0 facts with a NULL value from the completed fact grid.
+    expect(refresh).toContain('COALESCE(fe.numerator, 0) AS numerator');
+    expect(refresh).toContain('fe.value');
+    expect(refresh).not.toContain('COALESCE(f.numerator, 0)');
+    expect(refresh).not.toContain('COALESCE(f.denominator, 0)');
     expect(refresh).toContain('m.pending_reason');
+  });
+
+  it('emits Thai titles and one SQL WITH clause in the generated refresh', () => {
+    const refresh = buildSourceViewRefreshSql();
+    expect(refresh).toContain('ร้อยละการเสียชีวิตของผู้ป่วยในจากภาวะติดเชื้อในกระแสโลหิต');
+    expect(refresh).not.toMatch(/\bWITH\s+WITH\b/i);
   });
 
   it('does not expose PHI columns in the reporting table', () => {
