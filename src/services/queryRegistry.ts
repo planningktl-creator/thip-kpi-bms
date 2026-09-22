@@ -4,6 +4,7 @@ import { registeredRuleCodes } from '@/data/thipImplementation';
 import { getExpectedFiscalMonths } from '@/data/thipReporting';
 import { ipdBaseCte, type IpdBaseVariant } from '@/services/thipIpdBase';
 import { branchIpd, extendedBaseCte, isExternalBranch } from '@/services/thipFamilyBase';
+import { thipBatchBranchByCode } from '@/services/thipFamilies/index';
 import { recordQueryTelemetry, responseRowCount, type QueryTelemetryOutcome } from '@/services/queryTelemetry';
 
 export type BmsParamType = 'string' | 'integer' | 'float' | 'date' | 'time' | 'datetime' | 'text';
@@ -882,13 +883,23 @@ function extractBranchCode(sql: string): string | null {
   return match ? match[1] : null;
 }
 
-export const registeredBranches = registeredRuleCodes.flatMap((code) => {
+/**
+ * One fact branch per registered code. Batch modules (src/services/thipFamilies)
+ * serve the 171 codes added after the registered core; the legacy in-registry
+ * FAMILY_BRANCHES serve the rest. Exactly one branch per code — a duplicate or
+ * missing branch is a wiring bug caught by queryRegistry.test.
+ */
+export const registeredBranches = registeredRuleCodes.map((code) => {
+  const batch = thipBatchBranchByCode.get(code);
+  if (batch) return batch;
   const family = thipKpiRulesByCode.get(code)?.queryFamily ?? '';
-  const branches = (FAMILY_BRANCHES[family] ?? []).filter((sql) => sql.includes(`'${code}' AS indicator_code`));
-  if (branches.length > 0) return branches;
-  return Object.values(FAMILY_BRANCHES).flatMap((bList) =>
-    bList.filter((sql) => sql.includes(`'${code}' AS indicator_code`))
-  );
+  const familyBranches = (FAMILY_BRANCHES[family] ?? []).filter((sql) => sql.includes(`'${code}' AS indicator_code`));
+  if (familyBranches.length > 0) return familyBranches[0]!;
+  for (const list of Object.values(FAMILY_BRANCHES)) {
+    const match = list.find((sql) => sql.includes(`'${code}' AS indicator_code`));
+    if (match) return match;
+  }
+  throw new Error(`No registered fact branch found for THIP code ${code}`);
 });
 
 /** HOSxP-sourced branches only; safe to run against the hospital database. */
@@ -918,11 +929,15 @@ function expectedCodeValues(codes: readonly string[]): string {
 function buildFoundationQuery(
   key: string,
   description: string,
-  codes: readonly string[],
+  codes: readonly string[] | null,
   branches: readonly string[],
   options: { variant?: IpdBaseVariant; includeExternal?: boolean } = {},
 ): RegisteredQuery {
   const variant = options.variant ?? 'standard';
+  // null = derive the expected grid from the branch labels themselves (used by
+  // partial opt-in variants so unmeasured codes are never zero-filled).
+  const codeList = codes ?? codesOf(branches);
+  const zeroFillEmptyCohorts = options.includeExternal !== true;
   const branchSql = branches.length > 0
     ? branches.join('\n\n      UNION ALL\n')
     : `      SELECT
@@ -934,8 +949,8 @@ function buildFoundationQuery(
         NULL::numeric AS denominator,
         NULL::numeric AS value
       WHERE FALSE`;
-  const expectedGrid = codes.length > 0
-    ? `VALUES\n          ${expectedCodeValues(codes)}`
+  const expectedGrid = codeList.length > 0
+    ? `VALUES\n          ${expectedCodeValues(codeList)}`
     : 'SELECT NULL::text AS indicator_code, NULL::smallint AS fiscal_month WHERE FALSE';
   return {
     key,
@@ -971,8 +986,8 @@ function buildFoundationQuery(
         fiscal_periods.period_start,
         fiscal_periods.fiscal_month,
         fiscal_periods.fiscal_year,
-        COALESCE(facts.numerator, 0) AS numerator,
-        COALESCE(facts.denominator, 0) AS denominator,
+        ${zeroFillEmptyCohorts ? 'COALESCE(facts.numerator, 0) AS numerator' : 'facts.numerator'},
+        ${zeroFillEmptyCohorts ? 'COALESCE(facts.denominator, 0) AS denominator' : 'facts.denominator'},
         facts.value
       FROM expected_codes
       JOIN fiscal_periods
@@ -1026,9 +1041,9 @@ export const queryRegistry = {
   },
   thipIpdFoundation: buildFoundationQuery(
     'thipIpdFoundation',
-    'ผลลัพธ์จริงรายเดือนสำหรับตัวชี้วัด THIP กลุ่ม IPD จาก HOSxP',
-    registeredRuleCodes,
-    registeredBranches,
+    'ผลลัพธ์จริงรายงวดสำหรับตัวชี้วัด THIP จาก HOSxP',
+    hosxpRegisteredCodes,
+    hosxpRegisteredBranches,
   ),
   // Opt-in variant for sites whose coded diagnosis lives in `ipt_drg_result`.
   // It shares the pdx-only branches, so it covers mortality/readmission/LOS
@@ -1036,7 +1051,7 @@ export const queryRegistry = {
   thipIpdDrgResultFoundation: buildFoundationQuery(
     'thipIpdDrgResultFoundation',
     'ผลลัพธ์จริงรายเดือนจาก ipt_drg_result (pdx-only) สำหรับโรงพยาบาลที่เก็บ coded diagnosis ในตารางนี้',
-    registeredRuleCodes,
+    null,
     [
       pdxMortalityBranch('DH0101', "pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')"),
       pdxMortalityBranch('DH0101.1', "pdx IN ('I210', 'I211', 'I212', 'I213')"),

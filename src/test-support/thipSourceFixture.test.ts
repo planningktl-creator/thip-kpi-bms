@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { thipCatalogue } from '@/data/thipCatalogue';
+import { thipImplementation } from '@/data/thipImplementation';
 import { loadBmsIndicators } from '@/services/bmsData';
 import {
   FIXTURE_FISCAL_YEAR,
@@ -60,10 +61,12 @@ describe('THIP aggregate source fixture', () => {
       unexpectedCellCount: 0,
       complete: true,
     });
-    // Registered codes carry measured cells; pending-local-source codes carry
-    // explicit unavailable cells, and the two must add up to the full grid.
-    expect(result.coverage.availableCellCount).toBeGreaterThan(0);
-    expect(result.coverage.unavailableCellCount).toBeGreaterThan(0);
+    // Every code now has a registered fact branch, so the complete synthetic
+    // fixture is fully measured (232 codes x cadence cells). Explicit
+    // unavailable cells appear whenever a source or external staging row is
+    // missing — covered by the bmsData adapter tests and the invalid fixtures.
+    expect(result.coverage.availableCellCount).toBe(1552);
+    expect(result.coverage.unavailableCellCount).toBe(0);
     expect(result.coverage.availableCellCount + result.coverage.unavailableCellCount).toBe(1552);
     expect(result.indicators).toHaveLength(232);
     expect(result.refreshedAt).toBe(FIXTURE_REFRESHED_AT);
@@ -104,15 +107,25 @@ describe('THIP aggregate source fixture', () => {
   });
 
   it('verifies all pending-local-source indicators have null values and explicit non-empty pending reasons', () => {
+    // Since the 232-code integration every code has a registered fact branch,
+    // so the complete fixture carries no pending rows. The unavailable
+    // contract (null facts + explicit reason) is enforced here for any code
+    // that becomes pending again and in the bmsData adapter tests for missing
+    // source rows.
     const rows = buildCompleteSourceFixture();
     const pendingRows = rows.filter((r) => r.pending_reason !== null);
-    expect(pendingRows.length).toBeGreaterThan(0);
     for (const r of pendingRows) {
       expect(r.numerator, `${r.indicator_code} numerator`).toBeNull();
       expect(r.denominator, `${r.indicator_code} denominator`).toBeNull();
       expect(r.value, `${r.indicator_code} value`).toBeNull();
       expect(typeof r.pending_reason).toBe('string');
       expect((r.pending_reason as string).trim().length).toBeGreaterThan(5);
+    }
+    for (const entry of thipImplementation) {
+      if (entry.tier === 'pending-local-source') {
+        expect(entry.reason, entry.code).toBeTruthy();
+        expect(entry.reason!.trim().length).toBeGreaterThan(5);
+      }
     }
   });
 

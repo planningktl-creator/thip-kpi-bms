@@ -5,7 +5,7 @@ import { getExpectedFiscalMonths, getReportingCadence, reportingCadenceLabels } 
 import { getPendingReason, getImplementationTier, pendingLocalSourceCodes, registeredRuleCodes } from '@/data/thipImplementation';
 import { FISCAL_MONTH_GENERATED_EXPR, FISCAL_YEAR_GENERATED_EXPR, ipdBaseCte } from '@/services/thipIpdBase';
 import { extendedBaseCte } from '@/services/thipFamilyBase';
-import { registeredBranches } from '@/services/queryRegistry';
+import { externalRegisteredCodes, registeredBranches } from '@/services/queryRegistry';
 import { groupMeta } from '@/data/thipMeta';
 
 /**
@@ -136,6 +136,7 @@ CREATE TABLE IF NOT EXISTS ${schema}.thip_external_facts (
  * `:end_date` (YYYY-10-01 of the next year, exclusive).
  */
 export function buildSourceViewRefreshSql(schema = 'reporting', table = 'thip_kpi_monthly'): string {
+  const externalCodes = externalRegisteredCodes;
   const expectedValues = thipCatalogue
     .flatMap((entry) => getExpectedFiscalMonths(entry.code).map((month) => `    (${sqlText(entry.code)}, ${month})`))
     .join(',\n');
@@ -181,10 +182,11 @@ fiscal_periods AS (
     INTERVAL '1 month'
   ) AS generated(period_start)
 ),
--- Registered codes get a complete fact grid: a period whose registered query
--- ran and found an empty cohort is a measured zero cohort (0 facts, NULL
--- value), never a fabricated rate. Pending tiers stay out of the grid so their
--- cells remain explicit unavailable rows in the outer SELECT.
+-- Registered HOSxP codes get a complete fact grid: a period whose registered
+-- query ran and found an empty cohort is a measured zero cohort (0 facts, NULL
+-- value), never a fabricated rate. External-fact codes (hospital-loaded
+-- staging) and pending tiers stay out of the grid, so a missing source row
+-- remains an explicit unavailable row in the outer SELECT instead of a zero.
 facts AS (
   SELECT
     e.indicator_code,
@@ -198,6 +200,7 @@ facts AS (
   JOIN metadata m
     ON m.indicator_code = e.indicator_code
    AND m.tier = 'registered'
+   AND NOT (m.indicator_code = ANY(${sqlArray(externalCodes)}))
   JOIN fiscal_periods fp
     ON fp.fiscal_month = e.fiscal_month
   LEFT JOIN fact_events fe

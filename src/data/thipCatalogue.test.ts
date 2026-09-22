@@ -32,8 +32,10 @@ describe('THIP source catalogue', () => {
     const los = createNoDataIndicator(thipCatalogue.find((entry) => entry.code === 'DG0102')!);
 
     expect(acsc.unit).toBe('rate');
-    expect(acsc.implementationTier).toBe('pending-local-source');
-    expect(acsc.pendingReason).toContain('population denominator');
+    // AA0101 has a registered fact branch (ACSC batch family) since the
+    // 232-code integration, so it is no longer pending-local-source.
+    expect(acsc.implementationTier).toBe('registered');
+    expect(acsc.pendingReason).toBeNull();
     expect(los.unit).toBe('ratio');
   });
 

@@ -14,31 +14,17 @@ import { thipKpiRules } from '@/data/thipKpiRules';
 export type ThipImplementationTier = 'registered' | 'pending-local-source';
 
 /**
- * Codes with a real registered read-only query in this release. They are the
- * only codes whose source-view rows carry a measured numerator/denominator.
+ * Codes with a real registered read-only query. Every one of the 232 THIP codes
+ * now resolves to exactly one fact branch: the legacy in-registry families
+ * cover the registered core and the batch modules in `src/services/thipFamilies`
+ * cover the remaining 171 codes (see `thipBatchBranchByCode`). A code whose
+ * branch reads `reporting.thip_external_facts` measures only after the hospital
+ * loads its staging rows; until then the reporting layer emits explicit
+ * unavailable rows for it (never a fabricated zero). Documented per-code
+ * approximations live in `src/services/thipFamilies/*_APPROXIMATIONS` and still
+ * need clinical/quality owner sign-off before being called `ready`.
  */
-export const registeredRuleCodes: readonly string[] = [
-  'DH0101', 'DH0101.1', 'DH0101.2', 'DH0102', 'DH0112',
-  'DN0101', 'DN0107', 'DN0109', 'DN0302',
-  'DR0101', 'DR0102', 'DR0403',
-  'CE0101', 'CI0101',
-  'DG0102', 'DG0202',
-  // Added from the reviewed hospital master evidence; Pdx-only cohorts.
-  'DC0401', 'DR0201', 'DG0201', 'DH0111', 'DR0301', 'DR0401', 'DG0101', 'CM0105',
-  // Heart Failure
-  'DH0301', 'DH0302',
-  // CABG
-  'DH0201', 'DH0202', 'DH0203', 'DH0204',
-  // Arthroplasty (Hip & Knee)
-  'DO0202', 'DO0204', 'DO0205', 'DO0302', 'DO0303', 'DO0304',
-  // Asthma & COPD
-  'DR0302', 'DR0404',
-  // Maternal & Child
-  'CM0104', 'CM0107', 'CM0109', 'CM0110', 'CM0116', 'CM0117', 'CM0118', 'CM0119',
-  'CM0204', 'CM0205', 'CM0206', 'CM0207', 'CM0208', 'CM0209',
-  // Diabetes & HT
-  'DC0103', 'DC0107', 'DC0108', 'DC0108.1', 'DC0108.2', 'DC0201', 'DC0201.1', 'DC0201.2', 'DP0101',
-] as const;
+export const registeredRuleCodes: readonly string[] = thipKpiRules.map((rule) => rule.code);
 
 export const registeredRuleCodeSet: ReadonlySet<string> = new Set(registeredRuleCodes);
 
