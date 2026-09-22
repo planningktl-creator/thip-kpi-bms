@@ -23,7 +23,7 @@ import {
 import type { BmsConnection, FiscalYear, Indicator, IndicatorGroup, IndicatorStatus, RefreshedAt } from '@/types/thip';
 import { groupMeta, sourceDictionaryCount } from '@/data/thipMeta';
 import { getLatestApplicableFiscalMonth } from '@/data/thipReporting';
-import { formatFiscalYear, formatFiscalYearShort, getFiscalMonthPeriods } from '@/utils/fiscal';
+import { formatFiscalYear, formatFiscalYearShort, getCurrentFiscalYear, getFiscalMonthPeriods } from '@/utils/fiscal';
 import { formatIndicatorValue, formatPercent, formatRefreshTime } from '@/utils/format';
 import { exportAggregateCsv } from '@/utils/export';
 import { getDataQualitySummary, type DataSourceState } from '@/utils/dataQuality';
@@ -51,9 +51,11 @@ type Props = {
   coverage: BmsCoverage;
 };
 
-/** Fiscal years offered in the selector: the current year plus the two before it. */
-function selectableFiscalYears(current: FiscalYear): FiscalYear[] {
-  return [current, current - 1, current - 2];
+/** Fiscal years offered in the selector, always anchored on the current fiscal year. */
+function selectableFiscalYears(selected: FiscalYear): FiscalYear[] {
+  const current = getCurrentFiscalYear();
+  const years = [current, current - 1, current - 2];
+  return years.includes(selected) ? years : [...years, selected].sort((a, b) => b - a);
 }
 
 export function DashboardPage({

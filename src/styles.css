@@ -509,6 +509,21 @@ h1, h2, h3, p { margin: 0; }
   .app-footer { align-items: flex-start; flex-direction: column; gap: 5px; }
 }
 
+/* Control chart + period breakdown */
+.control-chart-panel { padding-bottom: 18px; }
+.control-chart-block { position: relative; min-height: 272px; margin-top: 15px; }
+.control-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; margin-bottom: 13px; }
+.control-stat { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; border: 1px solid var(--line-soft); border-radius: 10px; background: var(--paper); }
+.control-stat small { color: var(--muted); font-size: 9px; letter-spacing: .03em; text-transform: uppercase; }
+.control-stat strong { color: var(--ink); font-size: 11.5px; font-weight: 600; }
+.control-footnote { display: flex; justify-content: space-between; gap: 12px; margin-top: 10px; color: var(--muted); font-size: 9.5px; }
+.period-breakdown-panel { padding-bottom: 0; }
+.period-breakdown-panel .chart-switcher { flex-shrink: 0; }
+@media (max-width: 900px) {
+  .control-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .control-footnote { flex-direction: column; gap: 4px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }

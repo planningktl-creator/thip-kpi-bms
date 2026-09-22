@@ -20,6 +20,8 @@ import { formatDelta, formatIndicatorValue, formatNumber, formatTargetValue } fr
 import { exportIndicatorCsv } from '@/utils/export';
 import { StatusPill } from '@/components/StatusPill';
 import { TrendChart, type ChartMode } from '@/components/TrendChart';
+import { ControlChart } from '@/components/ControlChart';
+import { PeriodBreakdown } from '@/components/PeriodBreakdown';
 
 type Props = {
   indicator: Indicator;
@@ -33,7 +35,6 @@ export function DetailView({ indicator, onBack }: Props) {
   const latestApplicableMonth = expectedMonths[expectedMonths.length - 1] ?? 12;
   const latest = reportedMonths[reportedMonths.length - 1] ?? indicator.monthly[latestApplicableMonth - 1];
   const previous = reportedMonths[reportedMonths.length - 2] ?? null;
-  const latestIndex = latest.fiscalMonth - 1;
   const latestTarget = indicator.targetScope === 'monthly' ? latest.target : indicator.annual.target;
   const improving = indicator.direction !== 'neutral' && latest.value !== null && previous?.value !== null && previous !== null
     ? indicator.direction === 'lower-is-better' ? latest.value < previous.value : latest.value > previous.value
@@ -103,15 +104,18 @@ export function DetailView({ indicator, onBack }: Props) {
         </article>
       </section>
 
-      <section className="panel monthly-detail-panel">
-        <div className="panel-heading"><div><span className="panel-eyebrow">FISCAL-PERIOD DETAIL</span><h3>ตัวตั้ง ตัวหาร และสถานะของทุกงวดรายงาน</h3><p>{indicator.dataSource === 'bms' ? 'ตัวเลขในตารางอ่านจาก BMS แบบ read-only และจัดกลุ่มตามงวดงบประมาณ' : 'ยังไม่มีผลลัพธ์จริงของโรงพยาบาล จึงแสดงค่าว่างแทนการคาดเดา'}</p></div><span className="reference-note">{indicator.reference}</span></div>
-        <div className="monthly-table-wrap">
-          <table className="monthly-table">
-            <thead><tr><th>เดือนงบประมาณ</th><th>ตัวตั้ง (a)</th><th>ตัวหาร (b)</th><th>ผลลัพธ์</th><th>{targetLabel}</th><th>Percentile</th><th>สถานะ</th></tr></thead>
-            <tbody>{indicator.monthly.map((month, index) => <tr key={month.fiscalMonth} className={index === latestIndex ? 'is-latest' : ''}><td><strong>{month.label}</strong><span>{formatFiscalYearShort(indicator.fiscalYear)} · งวดที่ {month.fiscalMonth}</span></td><td>{formatNumber(month.numerator)}</td><td>{formatNumber(month.denominator)}</td><td><strong>{formatIndicatorValue(indicator, month.value)}</strong></td><td>{formatTargetValue(indicator, indicator.targetScope === 'monthly' ? month.target : null)}</td><td>{month.percentile === null ? '—' : <span className="percentile-cell"><i style={{ width: `${month.percentile}%` }} />{month.percentile}</span>}</td><td><StatusPill status={month.status} compact /></td></tr>)}</tbody>
-          </table>
+      <section className="panel control-chart-panel">
+        <div className="panel-heading">
+          <div>
+            <span className="panel-eyebrow">STATISTICAL PROCESS CONTROL</span>
+            <h3>แผนภูมิควบคุมรายตัวชี้วัด · {formatFiscalYear(indicator.fiscalYear)}</h3>
+            <p>เส้นกลาง (CL) และขอบควบคุมบน/ล่าง (UCL/LCL) คำนวณจากผลลัพธ์รายงวดของปีงบประมาณนี้ จุดที่เกินขอบควบคุม 3σ หรือรันผิดปกติคือสัญญาณ special cause ที่ต้องทวนสอบ</p>
+          </div>
         </div>
+        <ControlChart indicator={indicator} />
       </section>
+
+      <PeriodBreakdown indicator={indicator} />
 
       <div className="source-callout"><Info size={16} /><span>เกณฑ์อ้างอิง: {indicator.reference} · เมื่อเชื่อม BMS จริง ระบบจะอ่านผลลัพธ์จาก registered query ที่มี grain เป็น 1 indicator × 1 reporting period และสรุปผลงานต่อปีงบประมาณโดยไม่แปลงวันที่ ISO ในฐานข้อมูล</span></div>
     </div>
