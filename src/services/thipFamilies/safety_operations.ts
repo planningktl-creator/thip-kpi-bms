@@ -353,20 +353,24 @@ const ca0104Num = `COUNT(DISTINCT periodized.an) FILTER (WHERE EXISTS (
         AND ${reIntubationOl}
     ))`;
 
-const ca0105Den = `COUNT(DISTINCT periodized.an) FILTER (WHERE EXISTS (
-      SELECT 1
-      FROM operation_list ol
-      WHERE ol.an = periodized.an
-        AND ${gaIntubatedOl}
-    ))`;
+const ca0105Den = `COUNT(DISTINCT periodized.an) FILTER (WHERE COALESCE(operation_flags.ga, FALSE))`;
 
-const ca0105Num = `COUNT(DISTINCT periodized.an) FILTER (WHERE EXISTS (
-      SELECT 1
-      FROM operation_list ol
-      WHERE ol.an = periodized.an
-        AND ${gaIntubatedOl}
-        AND ${capnometryOl}
-    ))`;
+const ca0105Num = `COUNT(DISTINCT periodized.an) FILTER (WHERE COALESCE(operation_flags.ga_capno, FALSE))`;
+
+/**
+ * One scan of `operation_list` per episode, exposing the anesthesia flags the
+ * CA/CO branches aggregate. The predicates reuse the shared `ol`-scoped helpers, so
+ * the semantics are unchanged; what changes is that the previously duplicated nested
+ * EXISTS (evaluated once for the numerator, once for the denominator and once again
+ * for the value) now runs a single time per episode.
+ */
+const operationFlagsLateral = `LEFT JOIN LATERAL (
+          SELECT
+            BOOL_OR(${gaIntubatedOl}) AS ga,
+            BOOL_OR(${gaIntubatedOl} AND ${capnometryOl}) AS ga_capno
+          FROM operation_list ol
+          WHERE ol.an = periodized.an
+        ) operation_flags ON TRUE`;
 
 const cg0101Den = 'SUM(COALESCE(periodized.los, 0))';
 const cg0101Num = `COUNT(DISTINCT periodized.an) FILTER (WHERE ${hapiEvidence})`;
@@ -374,35 +378,34 @@ const cg0101Num = `COUNT(DISTINCT periodized.an) FILTER (WHERE ${hapiEvidence})`
 const cg0102Den = `SUM(COALESCE(periodized.los, 0)) FILTER (WHERE ${riskAssessed})`;
 const cg0102Num = `COUNT(DISTINCT periodized.an) FILTER (WHERE ${riskAssessed} AND ${hapiEvidence})`;
 
-const co0105Den = `COUNT(DISTINCT periodized.an) FILTER (WHERE EXISTS (
-      SELECT 1
-      FROM operation_list ol
-      WHERE ol.an = periodized.an
-        AND ${anesCaseOl}
-        AND ${notEmergencyOl}
-    ))`;
+const co0105Den = `COUNT(DISTINCT periodized.an) FILTER (WHERE COALESCE(operation_flags.elective_anes, FALSE))`;
 
-const co0105Num = `COUNT(DISTINCT periodized.an) FILTER (WHERE EXISTS (
-      SELECT 1
-      FROM operation_list ol
-      WHERE ol.an = periodized.an
-        AND ${anesCaseOl}
-        AND ${notEmergencyOl}
-        AND EXISTS (
-          SELECT 1
-          FROM operation_detail od
-          WHERE od.operation_id = ol.operation_id
-            AND EXISTS (
-              SELECT 1
-              FROM death d
-              WHERE d.an = periodized.an
-                AND (d.death_date + COALESCE(d.death_time, TIME '23:59:59')) >=
-                  COALESCE(od.begin_datetime, ol.operation_date + COALESCE(ol.operation_time, TIME '00:00:00'))
-                AND (d.death_date + COALESCE(d.death_time, TIME '23:59:59')) <=
-                  COALESCE(od.begin_datetime, ol.operation_date + COALESCE(ol.operation_time, TIME '00:00:00')) + INTERVAL '24 hours'
-            )
-        )
-    ))`;
+const co0105Num = `COUNT(DISTINCT periodized.an) FILTER (WHERE COALESCE(operation_flags.elective_anes_death_24h, FALSE))`;
+
+/** Elective anesthetized case with death within 24 hours of the operation start. */
+const deathWithin24hOl = `EXISTS (
+            SELECT 1
+            FROM operation_detail od
+            WHERE od.operation_id = ol.operation_id
+              AND EXISTS (
+                SELECT 1
+                FROM death d
+                WHERE d.an = periodized.an
+                  AND (d.death_date + COALESCE(d.death_time, TIME '23:59:59')) >=
+                    COALESCE(od.begin_datetime, ol.operation_date + COALESCE(ol.operation_time, TIME '00:00:00'))
+                  AND (d.death_date + COALESCE(d.death_time, TIME '23:59:59')) <=
+                    COALESCE(od.begin_datetime, ol.operation_date + COALESCE(ol.operation_time, TIME '00:00:00')) + INTERVAL '24 hours'
+              )
+          )`;
+
+/** Same lateral rollup as above, plus the perioperative-mortality flag for CO0105. */
+const operationFlagsLateralCo = `LEFT JOIN LATERAL (
+          SELECT
+            BOOL_OR(${anesCaseOl} AND ${notEmergencyOl}) AS elective_anes,
+            BOOL_OR(${anesCaseOl} AND ${notEmergencyOl} AND ${deathWithin24hOl}) AS elective_anes_death_24h
+          FROM operation_list ol
+          WHERE ol.an = periodized.an
+        ) operation_flags ON TRUE`;
 
 const sl0101Num = 'SUM(brd.request_qty)';
 const sl0101Den = 'SUM(brd.response_qty)';
@@ -435,7 +438,7 @@ export const SAFETY_OPERATIONS_BRANCHES: readonly string[] = [
   branchIpd('CA0102', ca0102Num, ca0102Den, ratioValue(ca0102Num, ca0102Den, 100), 'TRUE'),
   branchIpd('CA0103', ca0103Num, ca0103Den, ratioValue(ca0103Num, ca0103Den, 100), 'TRUE'),
   branchIpd('CA0104', ca0104Num, ca0104Den, ratioValue(ca0104Num, ca0104Den, 100), 'TRUE'),
-  branchIpd('CA0105', ca0105Num, ca0105Den, ratioValue(ca0105Num, ca0105Den, 100), 'TRUE'),
+  branchIpd('CA0105', ca0105Num, ca0105Den, ratioValue(ca0105Num, ca0105Den, 100), 'TRUE', { join: operationFlagsLateral }),
   branchIpd('CG0101', cg0101Num, cg0101Den, ratioValue(cg0101Num, cg0101Den, 1000), 'TRUE'),
   branchIpd('CG0102', cg0102Num, cg0102Den, ratioValue(cg0102Num, cg0102Den, 1000), 'TRUE'),
   externalFactBranch('CG0103'),
@@ -448,7 +451,7 @@ export const SAFETY_OPERATIONS_BRANCHES: readonly string[] = [
     'TRUE',
     { join: 'JOIN operation_list ol ON ol.an = periodized.an' },
   ),
-  branchIpd('CO0105', co0105Num, co0105Den, ratioValue(co0105Num, co0105Den, 100), 'TRUE'),
+  branchIpd('CO0105', co0105Num, co0105Den, ratioValue(co0105Num, co0105Den, 100), 'TRUE', { join: operationFlagsLateralCo }),
   branchIpd(
     'CO0107',
     "COUNT(DISTINCT ol.operation_id) FILTER (WHERE ol.re_operation = 'Y')",

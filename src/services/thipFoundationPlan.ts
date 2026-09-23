@@ -233,13 +233,17 @@ function codesOfChunk(chunk: RegisteredQuery): string[] {
  * An annual code covers the year in one bucket, so it can never be windowed — the
  * function returns an empty array and the caller must treat the code as unmeasurable
  * rather than reporting half a year as if it were the annual result.
+ *
+ * The split is by calendar month (`YYYY-MM-01` boundaries), so repeated bisection
+ * bottoms out at a single month, which is the natural window for monthly-cadence
+ * codes.
  */
 export function splitFoundationRequestByWindow(request: FoundationRequest): FoundationRequest[] {
   const codes = codesOfChunk(request.query);
   if (codes.some((code) => getReportingCadence(code) === 'annual')) return [];
   const months = monthsBetween(request.start, request.end);
   if (months < 2) return [];
-  const middle = addMonths(request.start, Math.ceil(months / 2));
+  const middle = addMonths(request.start, Math.floor(months / 2));
   return [
     { ...request, key: `${request.key}.w1`, end: middle },
     { ...request, key: `${request.key}.w2`, start: middle },
