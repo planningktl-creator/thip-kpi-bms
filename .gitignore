@@ -23,3 +23,6 @@ TEST_READY.md
 __pycache__/
 *.pyc
 
+
+# Agent plan scratch (kept out of the release artifact)
+.hermes/

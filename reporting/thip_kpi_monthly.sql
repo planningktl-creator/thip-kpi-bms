@@ -832,98 +832,50 @@ fact_events AS (
         DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
-        COUNT(DISTINCT periodized.an) FILTER (WHERE EXISTS (
-      SELECT 1
-      FROM operation_list ol
-      WHERE ol.an = periodized.an
-        AND EXISTS (
-            SELECT 1
-            FROM operation_anes oa
-            WHERE oa.operation_id = ol.operation_id
-              AND (
-                oa.anes_tube_type_id IS NOT NULL
-                OR oa.anes_intubation_time IS NOT NULL
-              )
-          )
-        AND (
-            EXISTS (
-              SELECT 1
-              FROM operation_anes_detail ad
-              WHERE ad.operation_id = ol.operation_id
-                AND (
-                  LOWER(ad.monitor) LIKE '%capno%'
-                  OR LOWER(ad.monitor) LIKE '%etco%'
-                  OR ad.monitor ILIKE '%คาพโน%'
-                )
-            )
-            OR EXISTS (
-              SELECT 1
-              FROM ipd_nurse_note nn
-              WHERE nn.an = periodized.an
-                AND nn.etco2 IS NOT NULL
-            )
-          )
-    )) AS numerator,
-        COUNT(DISTINCT periodized.an) FILTER (WHERE EXISTS (
-      SELECT 1
-      FROM operation_list ol
-      WHERE ol.an = periodized.an
-        AND EXISTS (
-            SELECT 1
-            FROM operation_anes oa
-            WHERE oa.operation_id = ol.operation_id
-              AND (
-                oa.anes_tube_type_id IS NOT NULL
-                OR oa.anes_intubation_time IS NOT NULL
-              )
-          )
-    )) AS denominator,
-        ROUND(COUNT(DISTINCT periodized.an) FILTER (WHERE EXISTS (
-      SELECT 1
-      FROM operation_list ol
-      WHERE ol.an = periodized.an
-        AND EXISTS (
-            SELECT 1
-            FROM operation_anes oa
-            WHERE oa.operation_id = ol.operation_id
-              AND (
-                oa.anes_tube_type_id IS NOT NULL
-                OR oa.anes_intubation_time IS NOT NULL
-              )
-          )
-        AND (
-            EXISTS (
-              SELECT 1
-              FROM operation_anes_detail ad
-              WHERE ad.operation_id = ol.operation_id
-                AND (
-                  LOWER(ad.monitor) LIKE '%capno%'
-                  OR LOWER(ad.monitor) LIKE '%etco%'
-                  OR ad.monitor ILIKE '%คาพโน%'
-                )
-            )
-            OR EXISTS (
-              SELECT 1
-              FROM ipd_nurse_note nn
-              WHERE nn.an = periodized.an
-                AND nn.etco2 IS NOT NULL
-            )
-          )
-    )) * 100 / NULLIF(COUNT(DISTINCT periodized.an) FILTER (WHERE EXISTS (
-      SELECT 1
-      FROM operation_list ol
-      WHERE ol.an = periodized.an
-        AND EXISTS (
-            SELECT 1
-            FROM operation_anes oa
-            WHERE oa.operation_id = ol.operation_id
-              AND (
-                oa.anes_tube_type_id IS NOT NULL
-                OR oa.anes_intubation_time IS NOT NULL
-              )
-          )
-    )), 0), 2) AS value
+        COUNT(DISTINCT periodized.an) FILTER (WHERE COALESCE(operation_flags.ga_capno, FALSE)) AS numerator,
+        COUNT(DISTINCT periodized.an) FILTER (WHERE COALESCE(operation_flags.ga, FALSE)) AS denominator,
+        ROUND(COUNT(DISTINCT periodized.an) FILTER (WHERE COALESCE(operation_flags.ga_capno, FALSE)) * 100 / NULLIF(COUNT(DISTINCT periodized.an) FILTER (WHERE COALESCE(operation_flags.ga, FALSE)), 0), 2) AS value
       FROM periodized
+      LEFT JOIN LATERAL (
+          SELECT
+            BOOL_OR(EXISTS (
+            SELECT 1
+            FROM operation_anes oa
+            WHERE oa.operation_id = ol.operation_id
+              AND (
+                oa.anes_tube_type_id IS NOT NULL
+                OR oa.anes_intubation_time IS NOT NULL
+              )
+          )) AS ga,
+            BOOL_OR(EXISTS (
+            SELECT 1
+            FROM operation_anes oa
+            WHERE oa.operation_id = ol.operation_id
+              AND (
+                oa.anes_tube_type_id IS NOT NULL
+                OR oa.anes_intubation_time IS NOT NULL
+              )
+          ) AND (
+            EXISTS (
+              SELECT 1
+              FROM operation_anes_detail ad
+              WHERE ad.operation_id = ol.operation_id
+                AND (
+                  LOWER(ad.monitor) LIKE '%capno%'
+                  OR LOWER(ad.monitor) LIKE '%etco%'
+                  OR ad.monitor ILIKE '%คาพโน%'
+                )
+            )
+            OR EXISTS (
+              SELECT 1
+              FROM ipd_nurse_note nn
+              WHERE nn.an = periodized.an
+                AND nn.etco2 IS NOT NULL
+            )
+          )) AS ga_capno
+          FROM operation_list ol
+          WHERE ol.an = periodized.an
+        ) operation_flags ON TRUE
       WHERE TRUE
       GROUP BY 2, 3, 4
 
@@ -1786,126 +1738,62 @@ fact_events AS (
         DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,
         CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
-        COUNT(DISTINCT periodized.an) FILTER (WHERE EXISTS (
-      SELECT 1
-      FROM operation_list ol
-      WHERE ol.an = periodized.an
-        AND (
-          ol.operation_list_anes_type_id IS NOT NULL
-          OR ol.anes_complete = 'Y'
-          OR EXISTS (
-            SELECT 1
-            FROM operation_anes oa
-            WHERE oa.operation_id = ol.operation_id
-          )
-        )
-        AND NOT EXISTS (
-          SELECT 1
-          FROM operation_emergency oe
-          WHERE oe.emergency_id = ol.emergency_id
-            AND (
-              oe.emergency_name ILIKE '%ฉุกเฉิน%'
-              OR LOWER(oe.emergency_name) LIKE '%emergen%'
-            )
-        )
-        AND EXISTS (
-          SELECT 1
-          FROM operation_detail od
-          WHERE od.operation_id = ol.operation_id
-            AND EXISTS (
-              SELECT 1
-              FROM death d
-              WHERE d.an = periodized.an
-                AND (d.death_date + COALESCE(d.death_time, TIME '23:59:59')) >=
-                  COALESCE(od.begin_datetime, ol.operation_date + COALESCE(ol.operation_time, TIME '00:00:00'))
-                AND (d.death_date + COALESCE(d.death_time, TIME '23:59:59')) <=
-                  COALESCE(od.begin_datetime, ol.operation_date + COALESCE(ol.operation_time, TIME '00:00:00')) + INTERVAL '24 hours'
-            )
-        )
-    )) AS numerator,
-        COUNT(DISTINCT periodized.an) FILTER (WHERE EXISTS (
-      SELECT 1
-      FROM operation_list ol
-      WHERE ol.an = periodized.an
-        AND (
-          ol.operation_list_anes_type_id IS NOT NULL
-          OR ol.anes_complete = 'Y'
-          OR EXISTS (
-            SELECT 1
-            FROM operation_anes oa
-            WHERE oa.operation_id = ol.operation_id
-          )
-        )
-        AND NOT EXISTS (
-          SELECT 1
-          FROM operation_emergency oe
-          WHERE oe.emergency_id = ol.emergency_id
-            AND (
-              oe.emergency_name ILIKE '%ฉุกเฉิน%'
-              OR LOWER(oe.emergency_name) LIKE '%emergen%'
-            )
-        )
-    )) AS denominator,
-        ROUND(COUNT(DISTINCT periodized.an) FILTER (WHERE EXISTS (
-      SELECT 1
-      FROM operation_list ol
-      WHERE ol.an = periodized.an
-        AND (
-          ol.operation_list_anes_type_id IS NOT NULL
-          OR ol.anes_complete = 'Y'
-          OR EXISTS (
-            SELECT 1
-            FROM operation_anes oa
-            WHERE oa.operation_id = ol.operation_id
-          )
-        )
-        AND NOT EXISTS (
-          SELECT 1
-          FROM operation_emergency oe
-          WHERE oe.emergency_id = ol.emergency_id
-            AND (
-              oe.emergency_name ILIKE '%ฉุกเฉิน%'
-              OR LOWER(oe.emergency_name) LIKE '%emergen%'
-            )
-        )
-        AND EXISTS (
-          SELECT 1
-          FROM operation_detail od
-          WHERE od.operation_id = ol.operation_id
-            AND EXISTS (
-              SELECT 1
-              FROM death d
-              WHERE d.an = periodized.an
-                AND (d.death_date + COALESCE(d.death_time, TIME '23:59:59')) >=
-                  COALESCE(od.begin_datetime, ol.operation_date + COALESCE(ol.operation_time, TIME '00:00:00'))
-                AND (d.death_date + COALESCE(d.death_time, TIME '23:59:59')) <=
-                  COALESCE(od.begin_datetime, ol.operation_date + COALESCE(ol.operation_time, TIME '00:00:00')) + INTERVAL '24 hours'
-            )
-        )
-    )) * 100 / NULLIF(COUNT(DISTINCT periodized.an) FILTER (WHERE EXISTS (
-      SELECT 1
-      FROM operation_list ol
-      WHERE ol.an = periodized.an
-        AND (
-          ol.operation_list_anes_type_id IS NOT NULL
-          OR ol.anes_complete = 'Y'
-          OR EXISTS (
-            SELECT 1
-            FROM operation_anes oa
-            WHERE oa.operation_id = ol.operation_id
-          )
-        )
-        AND NOT EXISTS (
-          SELECT 1
-          FROM operation_emergency oe
-          WHERE oe.emergency_id = ol.emergency_id
-            AND (
-              oe.emergency_name ILIKE '%ฉุกเฉิน%'
-              OR LOWER(oe.emergency_name) LIKE '%emergen%'
-            )
-        )
-    )), 0), 2) AS value
+        COUNT(DISTINCT periodized.an) FILTER (WHERE COALESCE(operation_flags.elective_anes_death_24h, FALSE)) AS numerator,
+        COUNT(DISTINCT periodized.an) FILTER (WHERE COALESCE(operation_flags.elective_anes, FALSE)) AS denominator,
+        ROUND(COUNT(DISTINCT periodized.an) FILTER (WHERE COALESCE(operation_flags.elective_anes_death_24h, FALSE)) * 100 / NULLIF(COUNT(DISTINCT periodized.an) FILTER (WHERE COALESCE(operation_flags.elective_anes, FALSE)), 0), 2) AS value
       FROM periodized
+      LEFT JOIN LATERAL (
+          SELECT
+            BOOL_OR((
+          ol.operation_list_anes_type_id IS NOT NULL
+          OR ol.anes_complete = 'Y'
+          OR EXISTS (
+            SELECT 1
+            FROM operation_anes oa
+            WHERE oa.operation_id = ol.operation_id
+          )
+        ) AND NOT EXISTS (
+          SELECT 1
+          FROM operation_emergency oe
+          WHERE oe.emergency_id = ol.emergency_id
+            AND (
+              oe.emergency_name ILIKE '%ฉุกเฉิน%'
+              OR LOWER(oe.emergency_name) LIKE '%emergen%'
+            )
+        )) AS elective_anes,
+            BOOL_OR((
+          ol.operation_list_anes_type_id IS NOT NULL
+          OR ol.anes_complete = 'Y'
+          OR EXISTS (
+            SELECT 1
+            FROM operation_anes oa
+            WHERE oa.operation_id = ol.operation_id
+          )
+        ) AND NOT EXISTS (
+          SELECT 1
+          FROM operation_emergency oe
+          WHERE oe.emergency_id = ol.emergency_id
+            AND (
+              oe.emergency_name ILIKE '%ฉุกเฉิน%'
+              OR LOWER(oe.emergency_name) LIKE '%emergen%'
+            )
+        ) AND EXISTS (
+            SELECT 1
+            FROM operation_detail od
+            WHERE od.operation_id = ol.operation_id
+              AND EXISTS (
+                SELECT 1
+                FROM death d
+                WHERE d.an = periodized.an
+                  AND (d.death_date + COALESCE(d.death_time, TIME '23:59:59')) >=
+                    COALESCE(od.begin_datetime, ol.operation_date + COALESCE(ol.operation_time, TIME '00:00:00'))
+                  AND (d.death_date + COALESCE(d.death_time, TIME '23:59:59')) <=
+                    COALESCE(od.begin_datetime, ol.operation_date + COALESCE(ol.operation_time, TIME '00:00:00')) + INTERVAL '24 hours'
+              )
+          )) AS elective_anes_death_24h
+          FROM operation_list ol
+          WHERE ol.an = periodized.an
+        ) operation_flags ON TRUE
       WHERE TRUE
       GROUP BY 2, 3, 4
 
