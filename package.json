@@ -9,6 +9,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:probe": "vitest run --config vitest.probe.config.ts",
     "test:watch": "vitest",
     "fixture:export": "node scripts/export-thip-fixture.mjs",
     "sourceview:build": "node scripts/build-thip-source-view.mjs",
