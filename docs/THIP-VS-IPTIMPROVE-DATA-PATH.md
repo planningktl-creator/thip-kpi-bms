@@ -36,6 +36,8 @@
 
 1. **เพดานของ BMS API เป็นเวลา ไม่ใช่ขนาด** — IPTImprove ตั้ง timeout 20 วิ และจำกัดผลลัพธ์ด้วย
    `LIMIT` เสมอ จึงไม่เจออาการปฏิเสธที่ THIP-KPI-BMS เจอเมื่อส่ง statement ขนาด 479 KB
+   การทดลองแบ่งก้อนตามขนาดยืนยันแล้วว่าไม่ช่วย: ก้อน 30/15/5 โค้ด (73/43/15 KB) ถูกปฏิเสธ
+   HTTP 404 @10.1s เท่ากันหมด — สิ่งที่กินเวลาคือการวางแผนคำสั่งที่มี UNION หลายสาขา
 2. **อ่าน HOSxP ตรงได้ ถ้า query ถูกจำกัดขอบเขต** — ไม่จำเป็นต้องรอ DBA สร้าง view ก่อน
    (`VITE_BMS_KPI_LIVE_FOUNDATION=true` ทำให้ THIP-KPI-BMS ใช้เส้นทางนี้)
 3. **registry เป็น allow-list ปิด** — ทั้งสองโปรเจ็คปฏิเสธ SQL ที่ไม่อยู่ในทะเบียน
@@ -43,7 +45,10 @@
 
 ## ข้อจำกัดที่ยังเหลือ
 
-- แม้ตั้ง `VITE_BMS_KPI_LIVE_FOUNDATION=true` แล้ว แอปยังต้องยิงหลาย request
-  (ครั้งละ ~0.9-6 วิ เพราะเพดาน 10 วิ) ⇒ ทางที่เร็วกว่าคือ provision `reporting.thip_kpi_monthly`
+- เส้นทาง foundation ยิง 209 request และทำงาน**เรียงลำดับ**เป็นค่าเริ่มต้น (วัดได้ ~10 นาที)
+  ตั้ง `VITE_BMS_KPI_FOUNDATION_CONCURRENCY=6` (หรือส่ง `concurrency` ให้ `loadBmsIndicators`)
+  เพื่อยิงขนานแบบมีเพดาน — แอปจำกัดไม่เกิน 12 และผลลัพธ์ที่ประกอบได้ไม่เปลี่ยน
 - 4 ตัวชี้วัด annual (`HC0101`, `HC0102`, `HH0104.3`, `HH0104.4`) ยังเกินเพดานแม้ยิงเดี่ยว
 - 55 ตัวชี้วัดที่ต้องโหลดจากภายนอกยังต้องมี `reporting.thip_external_facts`
+- ทางที่เร็วกว่าและแนะนำสำหรับใช้งานประจำคือ provision `reporting.thip_kpi_monthly`
+  (มี DDL + refresh พร้อมรันใน [`docs/THIP-ALL-QUERIES-2569.sql`](./THIP-ALL-QUERIES-2569.sql))
