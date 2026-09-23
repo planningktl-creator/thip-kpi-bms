@@ -376,7 +376,22 @@ function configuredSourceView(): string | null {
   return value || null;
 }
 
+/**
+ * Set `VITE_BMS_KPI_LIVE_FOUNDATION=true` to serve the dashboard straight from the
+ * registered HOSxP foundation queries instead of the normalized source view. Off by
+ * default: a complete hospital release is expected to read the source view, and the
+ * fallback fans the contract out into many sequential requests, so it is slower.
+ */
+function prefersLiveFoundation(): boolean {
+  const value = String(import.meta.env.VITE_BMS_KPI_LIVE_FOUNDATION ?? '').trim().toLowerCase();
+  return ['1', 'true', 'yes', 'on'].includes(value);
+}
+
 function requiresCompleteSourceView(): boolean {
+  // An explicit live-foundation build is a deliberate deployment without the source
+  // view; the fail-closed gate must not block it. Any other production build that
+  // declares no source view is still refused.
+  if (prefersLiveFoundation()) return false;
   const configured = String(import.meta.env.VITE_BMS_KPI_REQUIRE_COMPLETE_SOURCE_VIEW ?? '').trim().toLowerCase();
   return import.meta.env.PROD || ['1', 'true', 'yes', 'on'].includes(configured);
 }

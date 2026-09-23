@@ -10,14 +10,18 @@ ARG VITE_BMS_APP_IDENTIFIER="THIP.KPI.BMS"
 ENV VITE_BMS_APP_IDENTIFIER="${VITE_BMS_APP_IDENTIFIER}"
 ARG VITE_BMS_KPI_SOURCE_VIEW=""
 ENV VITE_BMS_KPI_SOURCE_VIEW="${VITE_BMS_KPI_SOURCE_VIEW}"
+# Alternative data path: serve the dashboard from the registered HOSxP foundation
+# queries (slower and many sequential requests, but needs no source-view provisioning).
+ARG VITE_BMS_KPI_LIVE_FOUNDATION=""
+ENV VITE_BMS_KPI_LIVE_FOUNDATION="${VITE_BMS_KPI_LIVE_FOUNDATION}"
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN npm install --global pnpm@11.19.0 \
     && pnpm install --frozen-lockfile
 
 COPY . .
-RUN if [ -z "${VITE_BMS_KPI_SOURCE_VIEW}" ]; then \
-      echo "VITE_BMS_KPI_SOURCE_VIEW is required for the production image" >&2; \
+RUN if [ -z "${VITE_BMS_KPI_SOURCE_VIEW}" ] && [ -z "${VITE_BMS_KPI_LIVE_FOUNDATION}" ]; then \
+      echo "Set VITE_BMS_KPI_SOURCE_VIEW (normalized source view) or VITE_BMS_KPI_LIVE_FOUNDATION=true for the production image" >&2; \
       exit 1; \
     fi
 RUN pnpm run build

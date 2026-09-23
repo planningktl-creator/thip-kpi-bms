@@ -870,6 +870,51 @@ describe('BMS KPI data adapter', () => {
     }
   });
 
+  it('runs the live foundation path when the live-foundation flag is set and no source view exists', async () => {
+    vi.stubEnv('PROD', true);
+    vi.stubEnv('VITE_BMS_KPI_SOURCE_VIEW', '');
+    vi.stubEnv('VITE_BMS_KPI_LIVE_FOUNDATION', 'true');
+    const seen: string[] = [];
+    vi.stubGlobal('fetch', vi.fn((_url: string, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body ?? '{}')) as { sql: string };
+      seen.push(body.sql);
+      return Promise.resolve({ ok: true, status: 200, text: vi.fn().mockResolvedValue(JSON.stringify({ data: [] })) });
+    }));
+
+    try {
+      // The fail-closed production gate must not fire: this build deliberately has no
+      // source view and serves HOSxP directly.
+      const result = await loadBmsIndicators({
+        apiUrl: 'https://bms.test',
+        bearerToken: 'test-token',
+        appIdentifier: 'THIP.KPI.BMS',
+      }, 2026);
+      expect(result.sourceView).toBeNull();
+      expect(seen.length).toBeGreaterThan(1);
+      expect(seen.every((sql) => sql.includes('facts AS ('))).toBe(true);
+    } finally {
+      vi.unstubAllGlobals();
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it('still fails closed in production without either the source view or the live-foundation flag', async () => {
+    vi.stubEnv('PROD', true);
+    vi.stubEnv('VITE_BMS_KPI_SOURCE_VIEW', '');
+    vi.stubEnv('VITE_BMS_KPI_LIVE_FOUNDATION', '');
+    vi.stubGlobal('fetch', vi.fn());
+    try {
+      await expect(loadBmsIndicators({
+        apiUrl: 'https://bms.test',
+        bearerToken: 'test-token',
+        appIdentifier: 'THIP.KPI.BMS',
+      }, 2026)).rejects.toMatchObject({ phase: 'data', failure: 'config' });
+    } finally {
+      vi.unstubAllGlobals();
+      vi.unstubAllEnvs();
+    }
+  });
+
   it('maps a hung BMS API request to a timeout failure', async () => {
     vi.stubGlobal('fetch', vi.fn((_url: string, init?: RequestInit) => new Promise<Response>((_resolve, reject) => {
       init?.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));

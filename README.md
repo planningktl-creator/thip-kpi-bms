@@ -59,7 +59,12 @@ python scripts/bms-connectivity-smoke.py
 
 The smoke verifies PasteJSON, CORS preflight, authenticated `SELECT VERSION()`, the app identifier, and CORS headers on the actual API response.
 
-Production builds fail closed when `VITE_BMS_KPI_SOURCE_VIEW` is empty: the Docker image rejects the build and the browser runtime also refuses the incomplete configuration. A complete hospital release must provide all 232 indicators through the normalized read-only source view. In local Vite development only, an empty value runs the evidence-backed HOSxP foundation query for `DH0101`, `DH0101.1`, `DH0101.2`, `DN0101`, `DR0101`, `CE0101`, `CI0101`, `DH0102`, `DG0102`, `DG0202`, `DR0403`, `DR0102`, `DN0107`, `DH0112`, `DN0109`, and `DN0302` for query validation. The view contract is documented in `docs/THIP-DATA-CONTRACT.md`.
+Production builds fail closed when neither data path is configured: the Docker image rejects the build and the browser runtime also refuses an incomplete configuration. There are two ways to serve the 232-indicator contract:
+
+1. **Normalized source view (recommended)** — `VITE_BMS_KPI_SOURCE_VIEW=thip_kpi_monthly`. Small and fast, one read for all 232 codes, but requires the hospital DBA to run `reporting/thip_kpi_monthly.sql` on the HOSxP database first. A complete hospital release must provide the normalized read-only view; its contract is documented in `docs/THIP-DATA-CONTRACT.md`.
+2. **Registered HOSxP foundation queries** — `VITE_BMS_KPI_LIVE_FOUNDATION=true`. Needs no DBA step: the app reads HOSxP directly through the registered read-only queries, fans the contract out into bounded requests over the full fiscal-year window, and bisects any request the BMS API refuses (HTTP 404 at its ~10 s ceiling) down to a single code or, for non-annual cadences, a single month. It is slower and puts more load on the HIS, so prefer path 1 for routine operation.
+
+In local Vite development only, an empty value runs the evidence-backed HOSxP foundation query for `DH0101`, `DH0101.1`, `DH0101.2`, `DN0101`, `DR0101`, `CE0101`, `CI0101`, `DH0102`, `DG0102`, `DG0202`, `DR0403`, `DR0102`, `DN0107`, `DH0112`, `DN0109`, and `DN0302` for query validation.
 
 The repository intentionally keeps the GitHub mirror remote separate from the BMS deployment remote. The BMS remote and application identifier must be supplied by the platform owner before production registration.
 
