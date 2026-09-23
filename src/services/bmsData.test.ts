@@ -4,6 +4,7 @@ import { getExpectedFiscalMonths } from '@/data/thipReporting';
 import { getRuleUnit, thipKpiRulesByCode } from '@/data/thipKpiRules';
 import { BmsRequestError } from '@/services/bmsErrors';
 import { buildCompletenessAuditQuery, buildDuplicateCheckQuery, buildIndicatorFromRows, buildSourceViewQuery, loadBmsIndicators, quoteSourceView, summarizeCoverage } from '@/services/bmsData';
+import { hosxpRegisteredCodes } from '@/services/queryRegistry';
 import { getFiscalMonthPeriods } from '@/utils/fiscal';
 
 describe('BMS KPI data adapter', () => {
@@ -788,6 +789,82 @@ describe('BMS KPI data adapter', () => {
         bearerToken: 'expired-token',
         appIdentifier: 'THIP.KPI.BMS',
       }, 2026)).rejects.toMatchObject({ phase: 'data', failure: 'http', status: 401 });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('splits the whole-contract fallback into bounded requests that cover every registered code', async () => {
+    const seen: string[] = [];
+    vi.stubGlobal('fetch', vi.fn((_url: string, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body ?? '{}')) as { sql: string };
+      seen.push(body.sql);
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        text: vi.fn().mockResolvedValue(JSON.stringify({ data: [] })),
+      });
+    }));
+
+    try {
+      const result = await loadBmsIndicators({
+        apiUrl: 'https://bms.test',
+        bearerToken: 'test-token',
+        appIdentifier: 'THIP.KPI.BMS',
+      }, 2026);
+      // Every registered HOSxP code must be requested, in more than one request.
+      expect(seen.length).toBeGreaterThan(1);
+      expect(seen.every((sql) => sql.includes('CAST(:start_date AS date)'))).toBe(true);
+      const requested = new Set<string>();
+      for (const sql of seen) {
+        for (const match of sql.matchAll(/'([A-Z]{2}\d{4}(?:\.\d)?)' AS indicator_code/g)) requested.add(match[1]!);
+      }
+      expect(requested.size).toBe(hosxpRegisteredCodes.length);
+      expect(result.rowCount).toBe(0);
+      expect(result.sourceView).toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('shrinks a chunk the endpoint refuses, keeping codes that still fit measurable', async () => {
+    const attempts: number[] = [];
+    vi.stubGlobal('fetch', vi.fn((_url: string, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body ?? '{}')) as { sql: string };
+      const codes = Array.from(body.sql.matchAll(/'([A-Z]{2}\d{4}(?:\.\d)?)' AS indicator_code/g), (match) => match[1]!);
+      attempts.push(codes.length);
+      // Mimic the measured ceiling: a request holding more than one code is refused
+      // with the 404 the live endpoint answers after ~10 s.
+      if (codes.length > 1) {
+        return Promise.resolve({ ok: false, status: 404, text: vi.fn().mockResolvedValue('') });
+      }
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        text: vi.fn().mockResolvedValue(JSON.stringify({
+          data: codes.map((code) => ({
+            indicator_code: code,
+            period_start: '2025-10-01',
+            fiscal_month: 1,
+            fiscal_year: 2026,
+            numerator: 5,
+            denominator: 100,
+            value: 5,
+          })),
+        })),
+      });
+    }));
+
+    try {
+      const result = await loadBmsIndicators({
+        apiUrl: 'https://bms.test',
+        bearerToken: 'test-token',
+        appIdentifier: 'THIP.KPI.BMS',
+      }, 2026);
+      // The first attempt is a multi-code chunk; the last attempts are single codes.
+      expect(attempts[0]!).toBeGreaterThan(1);
+      expect(attempts.filter((count) => count === 1).length).toBeGreaterThan(0);
+      expect(result.rowCount).toBeGreaterThan(0);
     } finally {
       vi.unstubAllGlobals();
     }

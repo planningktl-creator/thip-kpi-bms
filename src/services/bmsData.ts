@@ -4,6 +4,8 @@ import { getDictionaryEntry, parseBenchmark } from '@/data/thipDictionary';
 import { foundationRuleCodes, getFormulaScale, getRuleUnit, thipKpiRulesByCode } from '@/data/thipKpiRules';
 import { getExpectedFiscalMonths } from '@/data/thipReporting';
 import { BmsRequestError } from '@/services/bmsErrors';
+import { recordQueryTelemetry, type QueryTelemetryOutcome } from '@/services/queryTelemetry';
+import { planFoundationChunks, splitFoundationChunk } from '@/services/thipFoundationPlan';
 import {
   executeRegisteredQuery,
   queryRegistry,
@@ -1023,31 +1025,51 @@ export async function loadBmsIndicators(
     }
     rows = responseRows(response);
   } else {
+    // No normalized source view is configured, so results come from the registered
+    // HOSxP foundation queries directly. A single whole-contract statement (~470 KB,
+    // 177 UNION-ed branches) was measured to exceed the BMS API's ~10 s request
+    // ceiling on a live site and returned nothing, so the contract is fanned out
+    // into bounded chunks over the FULL fiscal-year window and any chunk the
+    // endpoint refuses is bisected down to single codes.
     const periods = getFiscalMonthPeriods(fiscalYear);
-    const quarterRanges = [
-      { start: `${fiscalYear - 1}-10-01`, end: `${fiscalYear}-01-01` },
-      { start: `${fiscalYear}-01-01`, end: `${fiscalYear}-04-01` },
-      { start: `${fiscalYear}-04-01`, end: `${fiscalYear}-07-01` },
-      { start: `${fiscalYear}-07-01`, end: `${fiscalYear}-10-01` },
-    ];
+    const params = paramsForFiscalYear(fiscalYear, false);
     const seenCell = new Set<string>();
+    const chunkTelemetry: { key: string; outcome: QueryTelemetryOutcome; latencyMs: number }[] = [];
     rows = [];
-    for (const q of quarterRanges) {
-      const qParams: Record<string, BmsParam> = {
-        start_date: { value: q.start, value_type: 'date' },
-        end_date: { value: q.end, value_type: 'date' },
-      };
+    const queue = planFoundationChunks().slice();
+    while (queue.length > 0) {
+      const chunk = queue.shift()!;
+      const startedAt = Date.now();
       let response: BmsSqlResponse;
       try {
         response = await executeRegisteredQuery(
-          queryRegistry.thipIpdFoundation,
+          chunk,
           runtime,
-          qParams,
+          params,
           runtime.marketplaceToken,
           { signal: options?.signal, timeoutMs: options?.timeoutMs },
         );
       } catch (error) {
-        throw asDataError(error);
+        // A caller cancellation must propagate.
+        if (options?.signal?.aborted) throw asDataError(error);
+        // Only the measured ceiling response is retried by shrinking the request:
+        // the live endpoint answers HTTP 404 after ~10 s instead of executing a
+        // statement that does not fit its budget. A client-side timeout, a 401
+        // session expiry, a 5xx or a network failure must surface as before —
+        // shrinking those would hide a real outage behind empty results.
+        const refusedByBudget = error instanceof BmsRequestError
+          && error.failure === 'http'
+          && (error.status === 404 || error.status === 408 || error.status === 504);
+        if (!refusedByBudget) throw asDataError(error);
+        chunkTelemetry.push({ key: chunk.key, outcome: 'timeout', latencyMs: Date.now() - startedAt });
+        const split = splitFoundationChunk(chunk);
+        if (split.length === 2) {
+          queue.unshift(...split);
+          continue;
+        }
+        // A single code that still exceeds the budget cannot be subdivided. It is
+        // left as no-data (never a fabricated zero) and recorded in telemetry.
+        continue;
       }
       for (const row of responseRows(response)) {
         const code = asString(getValue(row, 'indicator_code'));
@@ -1059,6 +1081,7 @@ export async function loadBmsIndicators(
         }
       }
     }
+    chunkTelemetry.forEach((entry) => recordQueryTelemetry({ ...entry, rowCount: 0, at: new Date().toISOString() }));
   }
   if (sourceView && rows.length === 0) {
     throw new BmsRequestError('data', 'response', `Normalized THIP source view ${sourceView} returned no rows for fiscal year ${fiscalYear}`);
