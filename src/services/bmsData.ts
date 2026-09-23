@@ -5,7 +5,13 @@ import { foundationRuleCodes, getFormulaScale, getRuleUnit, thipKpiRulesByCode }
 import { getExpectedFiscalMonths } from '@/data/thipReporting';
 import { BmsRequestError } from '@/services/bmsErrors';
 import { recordQueryTelemetry, type QueryTelemetryOutcome } from '@/services/queryTelemetry';
-import { planFoundationRequests, splitFoundationChunk, splitFoundationRequestByWindow } from '@/services/thipFoundationPlan';
+import {
+  planFoundationRequests,
+  resolveFoundationConcurrency,
+  splitFoundationChunk,
+  splitFoundationRequestByWindow,
+  type FoundationRequest,
+} from '@/services/thipFoundationPlan';
 import {
   executeRegisteredQuery,
   queryRegistry,
@@ -394,6 +400,22 @@ function requiresCompleteSourceView(): boolean {
   if (prefersLiveFoundation()) return false;
   const configured = String(import.meta.env.VITE_BMS_KPI_REQUIRE_COMPLETE_SOURCE_VIEW ?? '').trim().toLowerCase();
   return import.meta.env.PROD || ['1', 'true', 'yes', 'on'].includes(configured);
+}
+
+/**
+ * Optional build-time breadth for the foundation fan-out.
+ *
+ * Unset means sequential, which is what every existing build and offline verification
+ * script gets. A deployment that has measured the endpoint holding up under parallel
+ * load can set `VITE_BMS_KPI_FOUNDATION_CONCURRENCY` (the clamp in
+ * `resolveFoundationConcurrency` still applies); a per-call `options.concurrency`
+ * overrides it.
+ */
+function configuredFoundationConcurrency(): number | undefined {
+  const raw = String(import.meta.env.VITE_BMS_KPI_FOUNDATION_CONCURRENCY ?? '').trim();
+  if (!raw) return undefined;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }
 
 export function quoteSourceView(value: string): string {
@@ -1014,10 +1036,105 @@ function assertRequiredSourceCoverage(coverage: BmsCoverage, sourceView: string)
   );
 }
 
+/** One shrink step of a refused request: smaller code set, or a halved window. */
+function isRefusalByBudget(error: unknown): boolean {
+  // Only the measured ceiling response is retried by shrinking the request: the live
+  // endpoint answers HTTP 404 after ~10 s instead of executing a statement that does
+  // not fit its budget. A client-side timeout, a 401 session expiry, a 5xx or a
+  // network failure must surface as before — shrinking those would hide a real outage
+  // behind empty results.
+  return error instanceof BmsRequestError
+    && error.failure === 'http'
+    && (error.status === 404 || error.status === 408 || error.status === 504);
+}
+
+/**
+ * Turns a refused request into the next, smaller requests to try.
+ *
+ * Splitting by code first and by date window second is loss-free for every cadence:
+ * a fact branch buckets to its cadence anchor, so a monthly, quarterly or semiannual
+ * code measured over a shorter window produces exactly the cells it would produce over
+ * the whole fiscal year. An annual code covers the year in one bucket, so it can never
+ * be windowed — it is left as no-data rather than reporting half a year as the annual
+ * result. An empty array means the request cannot be shrunk any further.
+ */
+function shrinkRefusedRequest(request: FoundationRequest): FoundationRequest[] {
+  const byCode = splitFoundationChunk(request.query);
+  if (byCode.length === 2) return byCode.map((query) => ({ ...request, key: query.key, query }));
+  return splitFoundationRequestByWindow(request);
+}
+
+/** Runs one foundation request and reports either its rows or the next requests to try. */
+async function runFoundationRequest(
+  request: FoundationRequest,
+  runtime: { apiUrl: string; bearerToken: string; appIdentifier: string; marketplaceToken?: string },
+  options: { signal?: AbortSignal; timeoutMs?: number } | undefined,
+  telemetry: Array<{ key: string; outcome: QueryTelemetryOutcome; latencyMs: number }>,
+): Promise<{ rows: RawKpiRow[]; followUp: FoundationRequest[] }> {
+  const startedAt = Date.now();
+  try {
+    const response = await executeRegisteredQuery(
+      request.query,
+      runtime,
+      {
+        start_date: { value: request.start, value_type: 'date' },
+        end_date: { value: request.end, value_type: 'date' },
+      },
+      runtime.marketplaceToken,
+      { signal: options?.signal, timeoutMs: options?.timeoutMs },
+    );
+    return { rows: responseRows(response), followUp: [] };
+  } catch (error) {
+    // A caller cancellation must propagate.
+    if (options?.signal?.aborted) throw asDataError(error);
+    if (!isRefusalByBudget(error)) throw asDataError(error);
+    telemetry.push({ key: request.key, outcome: 'timeout', latencyMs: Date.now() - startedAt });
+    return { rows: [], followUp: shrinkRefusedRequest(request) };
+  }
+}
+
+/**
+ * Runs the foundation queue with at most `breadth` requests in flight.
+ *
+ * A request the endpoint refuses appends its smaller replacements to the same queue,
+ * so shrinking composes with breadth: with `breadth` 1 the queue drains exactly in
+ * plan order, and with more workers a refusal inside one worker never blocks the
+ * others. Rows are merged in queue order, not completion order, so the assembled
+ * result does not depend on how many requests ran at once.
+ *
+ * No work can be lost to the pool draining: every worker re-checks the queue after
+ * each request, so a worker always picks up the follow-ups it just created, and a
+ * worker only exits when the queue is empty and it has nothing in flight. The pool
+ * therefore drains without any worker ever waiting on a peer.
+ */
+async function runFoundationQueue(
+  queue: FoundationRequest[],
+  breadth: number,
+  runtime: { apiUrl: string; bearerToken: string; appIdentifier: string; marketplaceToken?: string },
+  options: { signal?: AbortSignal; timeoutMs?: number } | undefined,
+  telemetry: Array<{ key: string; outcome: QueryTelemetryOutcome; latencyMs: number }>,
+): Promise<RawKpiRow[]> {
+  const rows: RawKpiRow[] = [];
+  let cursor = 0;
+
+  async function worker(): Promise<void> {
+    for (;;) {
+      if (cursor >= queue.length) return;
+      const request = queue[cursor++]!;
+      const outcome = await runFoundationRequest(request, runtime, options, telemetry);
+      if (outcome.followUp.length > 0) queue.push(...outcome.followUp);
+      rows.push(...outcome.rows);
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.max(1, breadth) }, () => worker()));
+  return rows;
+}
+
 export async function loadBmsIndicators(
   runtime: { apiUrl: string; bearerToken: string; appIdentifier: string; marketplaceToken?: string },
   fiscalYear: FiscalYear,
-  options?: { signal?: AbortSignal; timeoutMs?: number },
+  options?: { signal?: AbortSignal; timeoutMs?: number; concurrency?: number },
 ): Promise<BmsDataLoadResult> {
   const sourceView = configuredSourceView();
   if (!sourceView && requiresCompleteSourceView()) {
@@ -1050,61 +1167,27 @@ export async function loadBmsIndicators(
     const periods = getFiscalMonthPeriods(fiscalYear);
     const seenCell = new Set<string>();
     const chunkTelemetry: { key: string; outcome: QueryTelemetryOutcome; latencyMs: number }[] = [];
-    rows = [];
-    const queue = planFoundationRequests({ fiscalYear }).slice();
-    while (queue.length > 0) {
-      const request = queue.shift()!;
-      const startedAt = Date.now();
-      let response: BmsSqlResponse;
-      try {
-        response = await executeRegisteredQuery(
-          request.query,
-          runtime,
-          {
-            start_date: { value: request.start, value_type: 'date' },
-            end_date: { value: request.end, value_type: 'date' },
-          },
-          runtime.marketplaceToken,
-          { signal: options?.signal, timeoutMs: options?.timeoutMs },
-        );
-      } catch (error) {
-        // A caller cancellation must propagate.
-        if (options?.signal?.aborted) throw asDataError(error);
-        // Only the measured ceiling response is retried by shrinking the request:
-        // the live endpoint answers HTTP 404 after ~10 s instead of executing a
-        // statement that does not fit its budget. A client-side timeout, a 401
-        // session expiry, a 5xx or a network failure must surface as before —
-        // shrinking those would hide a real outage behind empty results.
-        const refusedByBudget = error instanceof BmsRequestError
-          && error.failure === 'http'
-          && (error.status === 404 || error.status === 408 || error.status === 504);
-        if (!refusedByBudget) throw asDataError(error);
-        chunkTelemetry.push({ key: request.key, outcome: 'timeout', latencyMs: Date.now() - startedAt });
-        const byCode = splitFoundationChunk(request.query);
-        if (byCode.length === 2) {
-          queue.unshift(...byCode.map((query) => ({ ...request, key: query.key, query })));
-          continue;
-        }
-        const byWindow = splitFoundationRequestByWindow(request);
-        if (byWindow.length === 2) {
-          queue.unshift(...byWindow);
-          continue;
-        }
-        // A single code over the narrowest window still exceeds the budget. It is
-        // left as no-data (never a fabricated zero or a partial-year value); the
-        // refusal is recorded in telemetry for the query-optimization pass.
-        continue;
-      }
-      for (const row of responseRows(response)) {
-        const code = asString(getValue(row, 'indicator_code'));
-        const month = rowPeriod(row, periods, fiscalYear);
-        const cellKey = `${code}:${month}`;
-        if (!seenCell.has(cellKey)) {
-          seenCell.add(cellKey);
-          rows.push(row);
-        }
+    const plan = planFoundationRequests({ fiscalYear });
+    // Sequential unless the caller asked for breadth: measured single-code latency is
+    // median ≈ 0.7 s and the plan is ≈ 45 requests, so the endpoint's ~10 s ceiling —
+    // not the client — is the binding constraint. `options.concurrency` raises it for a
+    // deployment that has verified the endpoint holds up under parallel load.
+    const breadth = resolveFoundationConcurrency(
+      options?.concurrency ?? configuredFoundationConcurrency(),
+      plan.length,
+    );
+    const collected = await runFoundationQueue(plan.slice(), breadth, runtime, options, chunkTelemetry);
+    const merged: RawKpiRow[] = [];
+    for (const row of collected) {
+      const code = asString(getValue(row, 'indicator_code'));
+      const month = rowPeriod(row, periods, fiscalYear);
+      const cellKey = `${code}:${month}`;
+      if (!seenCell.has(cellKey)) {
+        seenCell.add(cellKey);
+        merged.push(row);
       }
     }
+    rows = merged;
     chunkTelemetry.forEach((entry) => recordQueryTelemetry({ ...entry, rowCount: 0, at: new Date().toISOString() }));
   }
   if (sourceView && rows.length === 0) {

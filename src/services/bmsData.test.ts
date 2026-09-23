@@ -915,6 +915,289 @@ describe('BMS KPI data adapter', () => {
     }
   });
 
+  it('keeps the fallback sequential when the caller asks for no breadth', async () => {
+    let inFlight = 0;
+    let maxInFlight = 0;
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      inFlight += 1;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      inFlight -= 1;
+      return { ok: true, status: 200, text: vi.fn().mockResolvedValue(JSON.stringify({ data: [] })) };
+    }));
+
+    try {
+      const result = await loadBmsIndicators({
+        apiUrl: 'https://bms.test',
+        bearerToken: 'test-token',
+        appIdentifier: 'THIP.KPI.BMS',
+      }, 2026);
+      // Default behaviour must stay exactly one request in flight.
+      expect(maxInFlight).toBe(1);
+      expect(result.rowCount).toBe(0);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('runs the fallback in parallel up to the requested breadth', async () => {
+    let inFlight = 0;
+    let maxInFlight = 0;
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      inFlight += 1;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      await new Promise((resolve) => setTimeout(resolve, 15));
+      inFlight -= 1;
+      return { ok: true, status: 200, text: vi.fn().mockResolvedValue(JSON.stringify({ data: [] })) };
+    }));
+
+    try {
+      const result = await loadBmsIndicators({
+        apiUrl: 'https://bms.test',
+        bearerToken: 'test-token',
+        appIdentifier: 'THIP.KPI.BMS',
+      }, 2026, { concurrency: 6 });
+      // More than one request in flight, and never past the requested breadth.
+      expect(maxInFlight).toBeGreaterThan(1);
+      expect(maxInFlight).toBeLessThanOrEqual(6);
+      // Breadth must not change the assembled result.
+      expect(result.rowCount).toBe(0);
+      expect(result.sourceView).toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('resolves the same codes and rows in parallel as it does sequentially', async () => {
+    const rows = (code: string) => ({
+      indicator_code: code,
+      period_start: '2025-10-01',
+      fiscal_month: 1,
+      fiscal_year: 2026,
+      numerator: 4,
+      denominator: 100,
+      value: 4,
+    });
+    const makeFetch = (delay: number) => vi.fn(async (_url: string, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body ?? '{}')) as { sql: string };
+      const codes = Array.from(body.sql.matchAll(/'([A-Z]{2}\d{4}(?:\.\d)?)' AS indicator_code/g), (match) => match[1]!);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      return { ok: true, status: 200, text: vi.fn().mockResolvedValue(JSON.stringify({ data: codes.map(rows) })) };
+    });
+
+    // Vary the delay so completion order cannot match plan order.
+    vi.stubGlobal('fetch', makeFetch(7));
+    const sequential = await loadBmsIndicators({
+      apiUrl: 'https://bms.test',
+      bearerToken: 'test-token',
+      appIdentifier: 'THIP.KPI.BMS',
+    }, 2026);
+    vi.unstubAllGlobals();
+    vi.stubGlobal('fetch', makeFetch(1));
+    const parallel = await loadBmsIndicators({
+      apiUrl: 'https://bms.test',
+      bearerToken: 'test-token',
+      appIdentifier: 'THIP.KPI.BMS',
+    }, 2026, { concurrency: 8 });
+
+    try {
+      expect(parallel.rowCount).toBe(sequential.rowCount);
+      expect(parallel.liveCodes).toEqual(sequential.liveCodes);
+      expect(parallel.indicators.map((indicator) => indicator.code)).toEqual(sequential.indicators.map((indicator) => indicator.code));
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('still shrinks a refused request when running in parallel', async () => {
+    const attempts: number[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (_url: string, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body ?? '{}')) as { sql: string };
+      const codes = Array.from(body.sql.matchAll(/'([A-Z]{2}\d{4}(?:\.\d)?)' AS indicator_code/g), (match) => match[1]!);
+      attempts.push(codes.length);
+      if (codes.length > 1) {
+        return { ok: false, status: 404, text: vi.fn().mockResolvedValue('') };
+      }
+      return {
+        ok: true,
+        status: 200,
+        text: vi.fn().mockResolvedValue(JSON.stringify({ data: codes.map((code) => ({
+          indicator_code: code,
+          period_start: '2025-10-01',
+          fiscal_month: 1,
+          fiscal_year: 2026,
+          numerator: 5,
+          denominator: 100,
+          value: 5,
+        })) })),
+      };
+    }));
+
+    try {
+      const result = await loadBmsIndicators({
+        apiUrl: 'https://bms.test',
+        bearerToken: 'test-token',
+        appIdentifier: 'THIP.KPI.BMS',
+      }, 2026, { concurrency: 6 });
+      // A refused multi-code chunk must still bisect down to measurable single codes,
+      // even though the follow-ups are appended while other workers are running.
+      expect(attempts.filter((count) => count === 1).length).toBeGreaterThan(0);
+      expect(result.rowCount).toBeGreaterThan(0);
+      const measured = new Set(result.indicators.filter((indicator) => indicator.dataSource === 'bms').map((indicator) => indicator.code));
+      expect(measured.size).toBe(hosxpRegisteredCodes.length);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('honours the build-time breadth without changing the sequential default', async () => {
+    const measureBreadth = async (envValue: string | undefined): Promise<number> => {
+      let inFlight = 0;
+      let maxInFlight = 0;
+      vi.stubEnv('VITE_BMS_KPI_LIVE_FOUNDATION', 'true');
+      if (envValue === undefined) delete (import.meta.env as Record<string, unknown>).VITE_BMS_KPI_FOUNDATION_CONCURRENCY;
+      else vi.stubEnv('VITE_BMS_KPI_FOUNDATION_CONCURRENCY', envValue);
+      vi.stubGlobal('fetch', vi.fn(async () => {
+        inFlight += 1;
+        maxInFlight = Math.max(maxInFlight, inFlight);
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        inFlight -= 1;
+        return { ok: true, status: 200, text: vi.fn().mockResolvedValue(JSON.stringify({ data: [] })) };
+      }));
+      try {
+        await loadBmsIndicators({
+          apiUrl: 'https://bms.test',
+          bearerToken: 'test-token',
+          appIdentifier: 'THIP.KPI.BMS',
+        }, 2026);
+        return maxInFlight;
+      } finally {
+        vi.unstubAllGlobals();
+        vi.unstubAllEnvs();
+      }
+    };
+
+    // Unset and unusable values keep the sequential default.
+    expect(await measureBreadth(undefined)).toBe(1);
+    expect(await measureBreadth('not-a-number')).toBe(1);
+    expect(await measureBreadth('0')).toBe(1);
+    // A usable build-time value is honoured.
+    expect(await measureBreadth('5')).toBeGreaterThan(1);
+  });
+
+  it('assembles identical results however the queue interleaves', async () => {
+    // Adversarial property check for the worker pool: with randomised refusals and
+    // delays the breadth must not change what the caller receives. A pool that dropped a
+    // follow-up behind it, or merged rows in completion order, would fail here on at
+    // least one seed.
+    const makeSeededFetch = (seed: number, delayMs: number) => {
+      let state = seed;
+      const next = () => {
+        state = (state * 1103515245 + 12345) & 0x7fffffff;
+        return state / 0x7fffffff;
+      };
+      return vi.fn(async (_url: string, init?: RequestInit) => {
+        const body = JSON.parse(String(init?.body ?? '{}')) as { sql: string };
+        const codes = Array.from(body.sql.matchAll(/'([A-Z]{2}\d{4}(?:\.\d)?)' AS indicator_code/g), (match) => match[1]!);
+        // A wide, varied single-code latency, plus a refusal rate on multi-code chunks.
+        await new Promise((resolve) => setTimeout(resolve, Math.floor(next() * delayMs)));
+        if (codes.length > 1 && next() < 0.5) {
+          return { ok: false, status: 404, text: vi.fn().mockResolvedValue('') };
+        }
+        return {
+          ok: true,
+          status: 200,
+          text: vi.fn().mockResolvedValue(JSON.stringify({ data: codes.map((code) => ({
+            indicator_code: code,
+            period_start: '2025-10-01',
+            fiscal_month: 1,
+            fiscal_year: 2026,
+            numerator: 3,
+            denominator: 60,
+            value: 5,
+          })) })),
+        };
+      });
+    };
+
+    const run = async (seed: number, concurrency?: number) => {
+      vi.stubGlobal('fetch', makeSeededFetch(seed, 4));
+      try {
+        const result = await loadBmsIndicators({
+          apiUrl: 'https://bms.test',
+          bearerToken: 'test-token',
+          appIdentifier: 'THIP.KPI.BMS',
+        }, 2026, concurrency === undefined ? undefined : { concurrency });
+        return {
+          rowCount: result.rowCount,
+          liveCodes: [...result.liveCodes].sort(),
+          measured: result.indicators.filter((indicator) => indicator.dataSource === 'bms').map((indicator) => indicator.code).sort(),
+        };
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    };
+
+    for (const seed of [1, 7]) {
+      const sequential = await run(seed);
+      for (const concurrency of [3, 8]) {
+        const parallel = await run(seed, concurrency);
+        expect(parallel.rowCount, `seed ${seed} breadth ${concurrency}`).toBe(sequential.rowCount);
+        expect(parallel.liveCodes, `seed ${seed} breadth ${concurrency}`).toEqual(sequential.liveCodes);
+        expect(parallel.measured, `seed ${seed} breadth ${concurrency}`).toEqual(sequential.measured);
+      }
+    }
+  }, 60_000);
+
+  it('keeps the requested breadth while the queue is still being extended by refusals', async () => {
+    // Every multi-code chunk is refused, so the whole run is driven by follow-ups. The
+    // pool must keep the requested breadth through that phase rather than letting the
+    // workers drain out and leaving each refused chunk's replacements to run alone.
+    let inFlight = 0;
+    let maxInFlightDuringFollowUps = 0;
+    let firstRefusalSeen = false;
+    vi.stubGlobal('fetch', vi.fn(async (_url: string, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body ?? '{}')) as { sql: string };
+      const codes = Array.from(body.sql.matchAll(/'([A-Z]{2}\d{4}(?:\.\d)?)' AS indicator_code/g), (match) => match[1]!);
+      inFlight += 1;
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      if (codes.length > 1) {
+        firstRefusalSeen = true;
+        inFlight -= 1;
+        maxInFlightDuringFollowUps = Math.max(maxInFlightDuringFollowUps, inFlight);
+        return { ok: false, status: 404, text: vi.fn().mockResolvedValue('') };
+      }
+      inFlight -= 1;
+      if (firstRefusalSeen) maxInFlightDuringFollowUps = Math.max(maxInFlightDuringFollowUps, inFlight);
+      return {
+        ok: true,
+        status: 200,
+        text: vi.fn().mockResolvedValue(JSON.stringify({ data: codes.map((code) => ({
+          indicator_code: code,
+          period_start: '2025-10-01',
+          fiscal_month: 1,
+          fiscal_year: 2026,
+          numerator: 1,
+          denominator: 10,
+          value: 10,
+        })) })),
+      };
+    }));
+
+    try {
+      const result = await loadBmsIndicators({
+        apiUrl: 'https://bms.test',
+        bearerToken: 'test-token',
+        appIdentifier: 'THIP.KPI.BMS',
+      }, 2026, { concurrency: 6 });
+      // The follow-up phase must still overlap work, not run one request at a time.
+      expect(maxInFlightDuringFollowUps).toBeGreaterThan(1);
+      expect(result.rowCount).toBeGreaterThan(0);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  }, 60_000);
+
   it('maps a hung BMS API request to a timeout failure', async () => {
     vi.stubGlobal('fetch', vi.fn((_url: string, init?: RequestInit) => new Promise<Response>((_resolve, reject) => {
       init?.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));

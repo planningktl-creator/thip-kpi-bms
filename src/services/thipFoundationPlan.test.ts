@@ -4,10 +4,13 @@ import { extendedBaseCte } from '@/services/thipFamilyBase';
 import { hosxpRegisteredCodes } from '@/services/queryRegistry';
 import {
   FOUNDATION_CHUNK_SIZE,
+  FOUNDATION_DEFAULT_CONCURRENCY,
+  FOUNDATION_MAX_CONCURRENCY,
   planFoundationChunks,
   planFoundationRequests,
   plannedCodeCount,
   registeredCodeBranchPairs,
+  resolveFoundationConcurrency,
   splitFoundationChunk,
   splitFoundationRequestByWindow,
 } from '@/services/thipFoundationPlan';
@@ -144,5 +147,23 @@ describe('foundation fan-out plan', () => {
   it('never halves an annual window, because a year is one bucket', () => {
     const annual = planFoundationRequests({ fiscalYear: 2026, codes: [firstCodeWithCadence('annual')] })[0]!;
     expect(splitFoundationRequestByWindow(annual)).toHaveLength(0);
+  });
+
+  it('clamps a requested breadth to a safe range', () => {
+    const planSize = planFoundationRequests({ fiscalYear: 2026 }).length;
+    // Missing, non-finite and non-positive inputs stay sequential, which is the
+    // behaviour every existing caller and offline verification script relies on.
+    expect(resolveFoundationConcurrency(undefined, planSize)).toBe(FOUNDATION_DEFAULT_CONCURRENCY);
+    expect(resolveFoundationConcurrency(Number.NaN, planSize)).toBe(FOUNDATION_DEFAULT_CONCURRENCY);
+    expect(resolveFoundationConcurrency(0, planSize)).toBe(FOUNDATION_DEFAULT_CONCURRENCY);
+    expect(resolveFoundationConcurrency(-4, planSize)).toBe(FOUNDATION_DEFAULT_CONCURRENCY);
+    // A useful request is honoured, floored to a whole number of workers.
+    expect(resolveFoundationConcurrency(6, planSize)).toBe(6);
+    expect(resolveFoundationConcurrency(7.9, planSize)).toBe(7);
+    // The cap protects the endpoint from an absurd request.
+    expect(resolveFoundationConcurrency(1_000, planSize)).toBe(FOUNDATION_MAX_CONCURRENCY);
+    // Never more workers than there are requests to run.
+    expect(resolveFoundationConcurrency(8, 3)).toBe(3);
+    expect(resolveFoundationConcurrency(8, 0)).toBe(FOUNDATION_DEFAULT_CONCURRENCY);
   });
 });

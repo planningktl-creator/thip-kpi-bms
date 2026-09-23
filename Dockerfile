@@ -14,6 +14,10 @@ ENV VITE_BMS_KPI_SOURCE_VIEW="${VITE_BMS_KPI_SOURCE_VIEW}"
 # queries (slower and many sequential requests, but needs no source-view provisioning).
 ARG VITE_BMS_KPI_LIVE_FOUNDATION=""
 ENV VITE_BMS_KPI_LIVE_FOUNDATION="${VITE_BMS_KPI_LIVE_FOUNDATION}"
+# Optional: how many foundation requests may be in flight at once. Unset means
+# sequential, which is the measured-safe default; the app clamps any value.
+ARG VITE_BMS_KPI_FOUNDATION_CONCURRENCY=""
+ENV VITE_BMS_KPI_FOUNDATION_CONCURRENCY="${VITE_BMS_KPI_FOUNDATION_CONCURRENCY}"
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN npm install --global pnpm@11.19.0 \

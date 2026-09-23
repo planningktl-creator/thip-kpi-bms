@@ -250,6 +250,43 @@ export function splitFoundationRequestByWindow(request: FoundationRequest): Foun
   ];
 }
 
+// ---------------------------------------------------------------------------
+// Execution breadth
+// ---------------------------------------------------------------------------
+
+/**
+ * How many foundation requests the fallback load keeps in flight at once.
+ *
+ * Defaults to 1. The fan-out is bounded by the endpoint's ~10 s per-request
+ * ceiling rather than by the client, so the sequential order keeps the load on the
+ * HIS gentle and keeps the request order stable for the offline verification
+ * scripts. A caller that has measured the endpoint holding up under parallel load
+ * can raise it per call; nothing changes unless it is asked for.
+ */
+export const FOUNDATION_DEFAULT_CONCURRENCY = 1;
+
+/**
+ * Hard cap on in-flight foundation requests.
+ *
+ * Measured single-code latency on a live site is median ≈ 0.7 s, p90 ≈ 5 s, and the
+ * 177-code contract plans to ≈ 45 requests, so a dozen workers already sits on the
+ * flat part of the curve while keeping a heavy branch from stacking up against the
+ * ceiling and being refused for reasons of its own load.
+ */
+export const FOUNDATION_MAX_CONCURRENCY = 12;
+
+/**
+ * Clamps a caller-supplied concurrency to a safe, useful value: sequential for
+ * every missing, non-finite or non-positive input, never more than the cap, and
+ * never more workers than there are requests to run.
+ */
+export function resolveFoundationConcurrency(value: number | undefined, requestCount: number): number {
+  if (value === undefined || !Number.isFinite(value)) return FOUNDATION_DEFAULT_CONCURRENCY;
+  const requested = Math.floor(value);
+  if (requested <= FOUNDATION_DEFAULT_CONCURRENCY) return FOUNDATION_DEFAULT_CONCURRENCY;
+  return Math.min(requested, FOUNDATION_MAX_CONCURRENCY, Math.max(1, Math.floor(requestCount)));
+}
+
 export type FoundationRequestPlanOptions = FoundationPlanOptions & {
   /** Fiscal year used for the request windows. Defaults to the current fiscal year. */
   fiscalYear?: number;
