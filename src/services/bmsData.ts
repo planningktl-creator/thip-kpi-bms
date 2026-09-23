@@ -5,7 +5,7 @@ import { foundationRuleCodes, getFormulaScale, getRuleUnit, thipKpiRulesByCode }
 import { getExpectedFiscalMonths } from '@/data/thipReporting';
 import { BmsRequestError } from '@/services/bmsErrors';
 import { recordQueryTelemetry, type QueryTelemetryOutcome } from '@/services/queryTelemetry';
-import { planFoundationChunks, splitFoundationChunk } from '@/services/thipFoundationPlan';
+import { planFoundationRequests, splitFoundationChunk, splitFoundationRequestByWindow } from '@/services/thipFoundationPlan';
 import {
   executeRegisteredQuery,
   queryRegistry,
@@ -1029,23 +1029,26 @@ export async function loadBmsIndicators(
     // HOSxP foundation queries directly. A single whole-contract statement (~470 KB,
     // 177 UNION-ed branches) was measured to exceed the BMS API's ~10 s request
     // ceiling on a live site and returned nothing, so the contract is fanned out
-    // into bounded chunks over the FULL fiscal-year window and any chunk the
-    // endpoint refuses is bisected down to single codes.
+    // into bounded requests over the full fiscal-year window. A request the endpoint
+    // refuses is retried by shrinking the code set and then, for every cadence except
+    // annual, by halving the date window — both are loss-free for their cadence.
     const periods = getFiscalMonthPeriods(fiscalYear);
-    const params = paramsForFiscalYear(fiscalYear, false);
     const seenCell = new Set<string>();
     const chunkTelemetry: { key: string; outcome: QueryTelemetryOutcome; latencyMs: number }[] = [];
     rows = [];
-    const queue = planFoundationChunks().slice();
+    const queue = planFoundationRequests({ fiscalYear }).slice();
     while (queue.length > 0) {
-      const chunk = queue.shift()!;
+      const request = queue.shift()!;
       const startedAt = Date.now();
       let response: BmsSqlResponse;
       try {
         response = await executeRegisteredQuery(
-          chunk,
+          request.query,
           runtime,
-          params,
+          {
+            start_date: { value: request.start, value_type: 'date' },
+            end_date: { value: request.end, value_type: 'date' },
+          },
           runtime.marketplaceToken,
           { signal: options?.signal, timeoutMs: options?.timeoutMs },
         );
@@ -1061,14 +1064,20 @@ export async function loadBmsIndicators(
           && error.failure === 'http'
           && (error.status === 404 || error.status === 408 || error.status === 504);
         if (!refusedByBudget) throw asDataError(error);
-        chunkTelemetry.push({ key: chunk.key, outcome: 'timeout', latencyMs: Date.now() - startedAt });
-        const split = splitFoundationChunk(chunk);
-        if (split.length === 2) {
-          queue.unshift(...split);
+        chunkTelemetry.push({ key: request.key, outcome: 'timeout', latencyMs: Date.now() - startedAt });
+        const byCode = splitFoundationChunk(request.query);
+        if (byCode.length === 2) {
+          queue.unshift(...byCode.map((query) => ({ ...request, key: query.key, query })));
           continue;
         }
-        // A single code that still exceeds the budget cannot be subdivided. It is
-        // left as no-data (never a fabricated zero) and recorded in telemetry.
+        const byWindow = splitFoundationRequestByWindow(request);
+        if (byWindow.length === 2) {
+          queue.unshift(...byWindow);
+          continue;
+        }
+        // A single code over the narrowest window still exceeds the budget. It is
+        // left as no-data (never a fabricated zero or a partial-year value); the
+        // refusal is recorded in telemetry for the query-optimization pass.
         continue;
       }
       for (const row of responseRows(response)) {

@@ -12,7 +12,7 @@
  * the full fiscal-year window so cadence-aware bucketing is unaffected.
  */
 
-import { getExpectedFiscalMonths } from '@/data/thipReporting';
+import { getExpectedFiscalMonths, getReportingCadence } from '@/data/thipReporting';
 import { ipdBaseCte } from '@/services/thipIpdBase';
 import { extendedBaseCte } from '@/services/thipFamilyBase';
 import {
@@ -20,6 +20,7 @@ import {
   hosxpRegisteredCodes,
   type RegisteredQuery,
 } from '@/services/queryRegistry';
+import { getCurrentFiscalYear } from '@/utils/fiscal';
 
 /**
  * Codes per request when the foundation query has to be fanned out.
@@ -184,4 +185,74 @@ export function splitFoundationChunk(chunk: RegisteredQuery): RegisteredQuery[] 
     `${chunk.key}.${index + 1}`,
     `${chunk.description} (bisect ${index + 1}/2)`,
   ));
+}
+
+// ---------------------------------------------------------------------------
+// Window-level splitting
+// ---------------------------------------------------------------------------
+
+/** One executable request: a registered statement plus the date window to run it over. */
+export type FoundationRequest = {
+  key: string;
+  query: RegisteredQuery;
+  /** Inclusive ISO start date. */
+  start: string;
+  /** Exclusive ISO end date. */
+  end: string;
+};
+
+/** Fiscal-year window in ISO terms: 1 Oct of the previous calendar year to 1 Oct. */
+export function fiscalYearWindow(fiscalYear: number): { start: string; end: string } {
+  return { start: `${fiscalYear - 1}-10-01`, end: `${fiscalYear}-10-01` };
+}
+
+function monthsBetween(start: string, end: string): number {
+  const [startYear, startMonth] = start.split('-').map(Number) as [number, number];
+  const [endYear, endMonth] = end.split('-').map(Number) as [number, number];
+  return (endYear - startYear) * 12 + (endMonth - startMonth);
+}
+
+function addMonths(iso: string, months: number): string {
+  const [year, month] = iso.split('-').map(Number) as [number, number];
+  const total = year * 12 + (month - 1) + months;
+  return `${Math.floor(total / 12)}-${String((total % 12) + 1).padStart(2, '0')}-01`;
+}
+
+function codesOfChunk(chunk: RegisteredQuery): string[] {
+  return Array.from(new Set(
+    Array.from(chunk.sql.matchAll(/'([A-Z]{2}\d{4}(?:\.\d)?)' AS indicator_code/g), (match) => match[1]!),
+  ));
+}
+
+/**
+ * Splits a request's date window in half.
+ *
+ * Loss-free for every cadence except `annual`: fact branches bucket to their
+ * cadence anchor, so a monthly/quarterly/semiannual code measured over Oct-Mar and
+ * Apr-Sep produces exactly the cells it would produce over the whole fiscal year.
+ * An annual code covers the year in one bucket, so it can never be windowed — the
+ * function returns an empty array and the caller must treat the code as unmeasurable
+ * rather than reporting half a year as if it were the annual result.
+ */
+export function splitFoundationRequestByWindow(request: FoundationRequest): FoundationRequest[] {
+  const codes = codesOfChunk(request.query);
+  if (codes.some((code) => getReportingCadence(code) === 'annual')) return [];
+  const months = monthsBetween(request.start, request.end);
+  if (months < 2) return [];
+  const middle = addMonths(request.start, Math.ceil(months / 2));
+  return [
+    { ...request, key: `${request.key}.w1`, end: middle },
+    { ...request, key: `${request.key}.w2`, start: middle },
+  ];
+}
+
+export type FoundationRequestPlanOptions = FoundationPlanOptions & {
+  /** Fiscal year used for the request windows. Defaults to the current fiscal year. */
+  fiscalYear?: number;
+};
+
+/** Plans the fallback load as bounded requests over the full fiscal-year window. */
+export function planFoundationRequests(options: FoundationRequestPlanOptions = {}): FoundationRequest[] {
+  const window = fiscalYearWindow(options.fiscalYear ?? getCurrentFiscalYear());
+  return planFoundationChunks(options).map((query) => ({ key: query.key, query, ...window }));
 }

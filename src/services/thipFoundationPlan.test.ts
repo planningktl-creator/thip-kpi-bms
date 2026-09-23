@@ -1,13 +1,23 @@
 import { describe, expect, it } from 'vitest';
+import { getReportingCadence } from '@/data/thipReporting';
 import { extendedBaseCte } from '@/services/thipFamilyBase';
 import { hosxpRegisteredCodes } from '@/services/queryRegistry';
 import {
   FOUNDATION_CHUNK_SIZE,
   planFoundationChunks,
+  planFoundationRequests,
   plannedCodeCount,
   registeredCodeBranchPairs,
   splitFoundationChunk,
+  splitFoundationRequestByWindow,
 } from '@/services/thipFoundationPlan';
+
+/** First registered code that reports on the given cadence, for splitter tests. */
+function firstCodeWithCadence(cadence: ReturnType<typeof getReportingCadence>): string {
+  const code = hosxpRegisteredCodes.find((candidate) => getReportingCadence(candidate) === cadence);
+  if (!code) throw new Error(`no registered code with ${cadence} cadence`);
+  return code;
+}
 
 describe('foundation fan-out plan', () => {
   it('covers every HOSxP registered code exactly once', () => {
@@ -77,5 +87,34 @@ describe('foundation fan-out plan', () => {
     // A single-code chunk cannot be bisected further; that code is unmeasurable alone.
     const single = planFoundationChunks({ chunkSize: 1 })[0]!;
     expect(splitFoundationChunk(single)).toHaveLength(0);
+  });
+
+  it('plans every request over the full fiscal-year window', () => {
+    const requests = planFoundationRequests({ fiscalYear: 2026 });
+    expect(requests.length).toBe(planFoundationChunks().length);
+    for (const request of requests) {
+      expect(request.start).toBe('2025-10-01');
+      expect(request.end).toBe('2026-10-01');
+    }
+    // A different fiscal year moves the window with it: nothing is hard-coded.
+    for (const request of planFoundationRequests({ fiscalYear: 2025 })) {
+      expect(request.start).toBe('2024-10-01');
+      expect(request.end).toBe('2025-10-01');
+    }
+  });
+
+  it('halves a window for cadences that bucket into months, quarters or half-years', () => {
+    const monthly = planFoundationRequests({ fiscalYear: 2026, codes: [firstCodeWithCadence('monthly')] })[0]!;
+    const halves = splitFoundationRequestByWindow(monthly);
+    expect(halves).toHaveLength(2);
+    expect(halves[0]!.start).toBe('2025-10-01');
+    expect(halves[0]!.end).toBe('2026-04-01');
+    expect(halves[1]!.start).toBe('2026-04-01');
+    expect(halves[1]!.end).toBe('2026-10-01');
+  });
+
+  it('never halves an annual window, because a year is one bucket', () => {
+    const annual = planFoundationRequests({ fiscalYear: 2026, codes: [firstCodeWithCadence('annual')] })[0]!;
+    expect(splitFoundationRequestByWindow(annual)).toHaveLength(0);
   });
 });
