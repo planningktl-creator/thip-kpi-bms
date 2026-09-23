@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="THIP KPI">
+  <rect width="64" height="64" rx="12" fill="#0a2035" />
+  <path d="M12 42 L22 28 L30 34 L40 18 L52 24" fill="none" stroke="#5eead4" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="22" cy="28" r="3.2" fill="#5eead4" />
+  <circle cx="30" cy="34" r="3.2" fill="#5eead4" />
+  <circle cx="40" cy="18" r="3.2" fill="#5eead4" />
+  <circle cx="52" cy="24" r="3.2" fill="#5eead4" />
+</svg>
