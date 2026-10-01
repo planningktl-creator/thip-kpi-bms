@@ -77,7 +77,8 @@ function chunkSql(codes: readonly string[], branches: readonly string[]): string
         fiscal_periods.fiscal_year,
         COALESCE(facts.numerator, 0) AS numerator,
         COALESCE(facts.denominator, 0) AS denominator,
-        facts.value
+        facts.value,
+        (facts.indicator_code IS NOT NULL) AS fact_present
       FROM expected_codes
       JOIN fiscal_periods
         ON fiscal_periods.fiscal_month = expected_codes.fiscal_month

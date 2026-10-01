@@ -14,6 +14,8 @@
     "fixture:export": "node scripts/export-thip-fixture.mjs",
     "sourceview:build": "node scripts/build-thip-source-view.mjs",
     "sourceview:check": "node scripts/build-thip-source-view.mjs --check",
+    "steps:build": "node scripts/build-thip-step-manifest.mjs",
+    "steps:check": "node scripts/build-thip-step-manifest.mjs --check",
     "monitoring:release-check": "node scripts/check-monitoring-release.mjs",
     "audit:source": "python scripts/thip_source_audit.py"
   },

@@ -2,6 +2,8 @@
 
 This document describes the official THIP reporting series (232 codes / 1,552 cadence cells). The separate 232×12 monitoring series is specified in [THIP-MONITORING-CONTRACT.md](THIP-MONITORING-CONTRACT.md). `Indicator.monthly` retains its reporting-period meaning. SQL registration and structural completeness do not authorize publication.
 
+The separate [Step validation page](THIP-STEP-LOADING.md) consumes seven-column candidates from registered per-code queries with progress/pause/resume/cancel. It never feeds candidate facts into official screens/export, and does not weaken this strict normalized source or publication contract. `observedAt` is query observation time; unknown source freshness remains NULL. Production Docker builds may include this page without source-view configuration; official runtime gates still apply.
+
 ## Indicator
 
 ```ts

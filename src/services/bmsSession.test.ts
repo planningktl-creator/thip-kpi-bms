@@ -79,6 +79,44 @@ describe('BMS launch context', () => {
     expect(result.runtime).toBeUndefined();
   });
 
+  it('accepts and strips the sessionId launcher alias while preserving view state', () => {
+    setUrl('?sessionId=alias&view=validation&fy=2026');
+    expect(getLaunchContext().sessionId).toBe('alias');
+    stripLaunchCredentialsFromUrl(); applyUrlUpdate();
+    expect(window.location.search).toBe('?view=validation&fy=2026');
+  });
+
+  it('connects a manually supplied session without putting credentials in the URL', async () => {
+    setUrl('?view=validation&fy=2026');
+    const fetchMock = vi.fn((url: string | URL | Request) => Promise.resolve(new Response(JSON.stringify(String(url).includes('PasteJSON') ? pasteJsonPayload : { result: [{ version: 'PostgreSQL 16' }] }), { status: 200 })));
+    vi.stubGlobal('fetch', fetchMock);
+    const result = await connectBmsSession(' TEST_MANUAL ');
+    expect(result.connection.status).toBe('connected');
+    expect(result.runtime?.apiUrl).toBe('https://bms.test');
+    expect(String(fetchMock.mock.calls[0][0])).toContain('code=TEST_MANUAL');
+    expect(window.location.search).toBe('?view=validation&fy=2026');
+  });
+
+  it('refuses credential-bearing or remote HTTP API URLs before any SQL request', async () => {
+    for (const url of ['https://name:password@synthetic.invalid', 'http://synthetic.invalid', 'https://synthetic.invalid?token=TEST_ONLY', 'https://synthetic.invalid#secret']) {
+      const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ result: { user_info: { ...pasteJsonPayload.result.user_info, bms_url: url } } }), { status: 200 }));
+      vi.stubGlobal('fetch', fetchMock);
+      expect((await connectBmsSession('TEST_MANUAL')).connection.status).toBe('error');
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    }
+  });
+
+  it('clears rejected capabilities from PasteJSON MessageCode even with HTTP 200', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ MessageCode: '401' }), { status: 200 })));
+    expect((await connectBmsSession('TEST_ONLY')).connection.status).toBe('error');
+    expect(getLaunchContext().sessionId).toBeNull();
+  });
+
+  it('does not accept a PostgreSQL declaration if VERSION proves a different database', async () => {
+    vi.stubGlobal('fetch', vi.fn((url: string | URL | Request) => Promise.resolve(new Response(JSON.stringify(String(url).includes('PasteJSON') ? pasteJsonPayload : { result: [{ version: 'MySQL 8' }] }), { status: 200 }))));
+    expect((await connectBmsSession('TEST_ONLY')).connection.status).toBe('unsupported');
+  });
+
   it('connects through PasteJSON and probes the database type', async () => {
     setUrl('?bms-session-id=abc');
     vi.stubGlobal('fetch', vi.fn((url: string | URL | Request) => {

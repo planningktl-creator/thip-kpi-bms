@@ -4,6 +4,12 @@
 **หลักฐานราย code:** [THIP KPI development matrix (อ่านง่าย)](THIP-KPI-DEVELOPMENT-MATRIX-2026-09-30.md) และ [JSON](THIP-KPI-DEVELOPMENT-MATRIX-2026-09-30.json)
 **ข้อค้นพบ/รายละเอียด:** [Project audit](PROJECT-AUDIT-2026-09-30.md) · [remediation และ acceptance criteria](PROJECT-AUDIT-REMEDIATION-2026-09-30.md)
 
+**แผนถัดไปจากโปรเจ็คที่ดึง BMS ได้:** [Direct HOSxP aggregate และหน้าตรวจสอบก่อนรับรอง](THIP-BMS-DIRECT-DATA-DEVELOPMENT-PLAN.md) (1 ตุลาคม 2569; ยังไม่ได้ implement). ผู้ใช้ยืนยันหน้าตรวจสอบ aggregate จริงแยกจากผลเผยแพร่. สำหรับ native queries ให้ตรวจผ่าน registered direct SELECT ได้ก่อนโดยไม่ต้อง provision reporting layer; source view เป็นทางเลือก. Dependency/acceptance ของทางเลือกนี้ใช้แผนที่ลิงก์ ส่วนกติกา publication approval และ cadence เดิมยังคงอยู่.
+
+**ผล export ที่ใช้ปรับแผน:** [ตรวจ Excel FY2569](THIP-EXPORTED-AGGREGATE-REVIEW-2026-10-01.md): 177 codes / 1,353 cadence cells, 55 external codes ขาด, integer arithmetic discrepancies และ 0/0 provenance ต้องแก้ก่อนเปิดผลทางการ; มีผลส่งออกไม่ใช่ approval.
+
+**Implemented เพิ่มเติม:** [Step loader](THIP-STEP-LOADING.md) โหลด native candidates ทีละหนึ่งรหัส เว้น 1 วินาที พร้อม progressive results/pause/resume/cancel/retry และหน้าสอบทานแยก. Source query manifest มี numeric arithmetic guard; source presence แยก 0/0 จาก missing facts. ยังไม่รวม direct monthly provider สำหรับ 71 additional rules หรือการรับรอง/เปิดข้อมูลจริงของแผนระยะถัดไป.
+
 ## เป้าหมาย
 
 พัฒนา dashboard ให้ติดตามผลงานรายเดือน **232 KPI × 12 เดือน** ควบคู่กับผลรายงาน THIP ตามรอบเดิม โดยแยก series และ rule version:

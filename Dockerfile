@@ -26,10 +26,8 @@ RUN npm install --global pnpm@11.19.0 \
     && pnpm install --frozen-lockfile
 
 COPY . .
-RUN if [ -z "${VITE_BMS_KPI_SOURCE_VIEW}" ] && [ -z "${VITE_BMS_KPI_LIVE_FOUNDATION}" ]; then \
-      echo "Set VITE_BMS_KPI_SOURCE_VIEW (normalized source view) or VITE_BMS_KPI_LIVE_FOUNDATION=true for the production image" >&2; \
-      exit 1; \
-    fi
+# The candidate Step page reads registered aggregates without a source view.
+# Official reporting/monitoring retain their runtime source and approval gates.
 RUN pnpm run build
 RUN node scripts/render-nginx.mjs nginx.conf.template nginx.conf
 

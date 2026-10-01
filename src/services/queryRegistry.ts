@@ -1,5 +1,5 @@
 import { abortable } from './abortable';
-import { BmsRequestError } from '@/services/bmsErrors';
+import { BmsRequestError, parseRetryAfter } from '@/services/bmsErrors';
 import { thipKpiRulesByCode } from '@/data/thipKpiRules';
 import { registeredRuleCodes } from '@/data/thipImplementation';
 import { getExpectedFiscalMonths } from '@/data/thipReporting';
@@ -1155,23 +1155,27 @@ export async function executeRegisteredQuery(
     record(failure);
     throw new BmsRequestError('api', failure, 'BMS response body did not complete', undefined, { cause: error });
   }
-  if (!response.ok) {
-    record('http');
-    throw new BmsRequestError('api', 'http', `BMS API returned HTTP ${response.status}`, response.status);
-  }
-
   let payload: BmsSqlResponse = {};
   if (responseText.trim()) {
     try {
       payload = JSON.parse(responseText) as BmsSqlResponse;
     } catch (error) {
+      if (!response.ok) {
+        record('http');
+        throw new BmsRequestError('api', 'http', `BMS API returned HTTP ${response.status}`, response.status, { retryAfterMs: response.status === 429 ? parseRetryAfter(response.headers?.get('Retry-After') ?? null) : undefined });
+      }
       record('response');
       throw new BmsRequestError('api', 'response', 'BMS API returned invalid JSON', response.status, { cause: error });
     }
   }
-  if (payload.MessageCode !== undefined && payload.MessageCode >= 400) {
+  const messageCode = payload.MessageCode === undefined ? undefined : Number(payload.MessageCode);
+  if (messageCode !== undefined && Number.isFinite(messageCode) && messageCode >= 400) {
     record('message');
-    throw new BmsRequestError('api', 'message', payload.Message || 'BMS API rejected the query', response.status);
+    throw new BmsRequestError('api', 'message', payload.Message || 'BMS API rejected the query', response.status, { messageCode, retryAfterMs: messageCode === 429 ? parseRetryAfter(response.headers?.get('Retry-After') ?? null) : undefined });
+  }
+  if (!response.ok) {
+    record('http');
+    throw new BmsRequestError('api', 'http', `BMS API returned HTTP ${response.status}`, response.status, { retryAfterMs: response.status === 429 ? parseRetryAfter(response.headers?.get('Retry-After') ?? null) : undefined });
   }
   record('success', responseRowCount(payload));
   return payload;

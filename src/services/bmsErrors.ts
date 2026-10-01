@@ -2,16 +2,28 @@ export type BmsRequestPhase = 'session' | 'api' | 'data';
 export type BmsRequestFailure = 'network' | 'http' | 'response' | 'message' | 'timeout' | 'config';
 
 export class BmsRequestError extends Error {
+  public readonly messageCode?: number;
+  public readonly retryAfterMs?: number;
   constructor(
     public readonly phase: BmsRequestPhase,
     public readonly failure: BmsRequestFailure,
     message: string,
     public readonly status?: number,
-    options?: ErrorOptions,
+    options?: ErrorOptions & { messageCode?: number; retryAfterMs?: number },
   ) {
     super(message, options);
     this.name = 'BmsRequestError';
+    this.messageCode = options?.messageCode;
+    this.retryAfterMs = options?.retryAfterMs;
   }
+}
+
+export function parseRetryAfter(value: string | null, now = Date.now()): number {
+  if (!value) return 1000;
+  const seconds = Number(value);
+  if (Number.isFinite(seconds) && seconds >= 0) return seconds * 1000;
+  const date = Date.parse(value);
+  return Number.isFinite(date) ? Math.max(0, date - now) : 1000;
 }
 
 export function getBmsConnectionErrorMessage(error: unknown): string {

@@ -4,6 +4,12 @@ THIP KPI quality intelligence frontend for BMS Marketplace. The default view is 
 
 ## Monthly monitoring release
 
+### โหลดทีละ KPI เพื่อสอบทาน
+
+เปิดเมนู **ตรวจข้อมูลทีละ KPI** (`?view=validation&fy=2026` สำหรับ FY2569). รับ launcher session หรือกรอก session ในหน้า; ตรวจ PostgreSQL แล้วโหลด DH0101, DH0112 และ native codes ที่เหลือทีละหนึ่งรหัส รวม 177 รหัส เว้น 1 วินาที พร้อมผลระหว่างทางและปุ่มพัก/ต่อ/ยกเลิก/retry เฉพาะ failed codes. External 55 รหัสยังแสดงรอ source. Candidate facts อยู่เฉพาะหน้าสอบทาน ไม่มี export และไม่เพิ่ม approved coverage. ดู [Step loading contract และการตรวจรับ](docs/THIP-STEP-LOADING.md).
+
+Candidate page ไม่ต้องมี source view และ Docker สร้างได้โดยไม่ตั้ง source variables. ผล THIP/monitoring ที่เผยแพร่ยังต้องผ่าน source/approval gates เดิม. เปลี่ยนปี/session หรือ refresh ไม่ใช้ snapshot/credentials ของ context เก่า. `pnpm steps:build` / `pnpm steps:check` สร้างและตรวจ single-code query manifest จาก source.
+
 Search codes/names, filter group/data state/assessment, open a cell's facts and rule, and export all twelve months of the filtered KPI rows. Filters and fiscal year persist in the URL. Mobile month columns scroll horizontally with sticky KPI identity; arrows move between cells, Enter opens details, Escape closes and restores focus. Missing facts stay NULL with a reason. Reporting retains 232 codes / 1,552 cadence cells; monitoring adds 2,784 cells without changing `Indicator.monthly`.
 
 Run the synthetic preview in PowerShell:
@@ -84,7 +90,7 @@ The smoke verifies PasteJSON, CORS preflight, authenticated `SELECT VERSION()`, 
 
 Production builds fail closed when neither data path is configured: the Docker image rejects the build and the browser runtime also refuses an incomplete configuration. There are two ways to serve the 232-indicator contract:
 
-1. **Normalized source view (recommended)** — `VITE_BMS_KPI_SOURCE_VIEW=thip_kpi_monthly`. Small and fast, one read for all 232 codes, but requires the hospital DBA to run `reporting/thip_kpi_monthly.sql` on the HOSxP database first. A complete hospital release must provide the normalized read-only view; its contract is documented in `docs/THIP-DATA-CONTRACT.md`.
+1. **Normalized source view (recommended)** — `VITE_BMS_KPI_SOURCE_VIEW=thip_kpi_monthly`. Small and fast, one read for all 232 codes, but requires a hospital-approved read-only reporting source. `reporting/thip_kpi_monthly.sql` is an offline provisioning/refresh artifact for a separate approved reporting database; the app never runs it or writes to HOSxP. A complete hospital release must provide the normalized read-only view; its contract is documented in `docs/THIP-DATA-CONTRACT.md`.
 2. **Registered HOSxP foundation queries** — `VITE_BMS_KPI_LIVE_FOUNDATION=true` is a development validation path. Requests retain the full fiscal-year observation window and partition by code only. A refused single-code request becomes unavailable with `query-budget-exceeded`; it is never split by date without proof of equivalence. Concurrency defaults to sequential and is capped at 12. This candidate SQL path does not grant publication approval.
 
 In local Vite development only, an empty value runs the evidence-backed HOSxP foundation query for `DH0101`, `DH0101.1`, `DH0101.2`, `DN0101`, `DR0101`, `CE0101`, `CI0101`, `DH0102`, `DG0102`, `DG0202`, `DR0403`, `DR0102`, `DN0107`, `DH0112`, `DN0109`, and `DN0302` for query validation.

@@ -1,0 +1,87 @@
+import { useEffect, useRef, useState } from 'react';
+import { ArrowRight, Pause, Play, RefreshCw, Square } from 'lucide-react';
+import type { BmsRuntimeConfig } from '@/services/bmsSession';
+import { createThipStepLoader, type StepSnapshot, type ThipStepLoader, type CandidateAggregate } from '@/services/thipStepLoader';
+import { thipCatalogue, thipCatalogueByCode } from '@/data/thipCatalogue';
+import { monitoringUnitLabels } from '@/monitoring/rules';
+import { getReportingCadence, reportingCadenceLabels } from '@/data/thipReporting';
+import { getCurrentFiscalYear, formatFiscalYear, toBuddhistYear } from '@/utils/fiscal';
+import { groupMeta } from '@/data/thipMeta';
+import type { IndicatorGroup } from '@/types/thip';
+
+type Props = { runtime: BmsRuntimeConfig | null; fiscalYear: number; onFiscalYearChange(year: number): void; group: IndicatorGroup | 'all'; search: string; onSearchChange(value: string): void; onGroupChange(value: IndicatorGroup | 'all'): void; onMonitoring(): void };
+const statusLabels = { pending: 'รอโหลด', running: 'กำลังโหลด', success: 'query สำเร็จ', failed: 'ล้มเหลว', skipped: 'รอ external source' };
+const number = (value: number | null) => value === null ? '—' : value.toLocaleString('th-TH', { maximumFractionDigits: 4 });
+
+function AggregateDetails({ rows }: { rows: CandidateAggregate[] }) {
+  return <details><summary>ดู aggregate {rows.length} งวด · มีค่า {rows.filter((row) => row.sourceValue !== null).length} งวด</summary>
+    <div className="step-detail-scroll"><table><caption>ผลรายงวดเพื่อสอบทาน ยังไม่รับรอง</caption><thead><tr>{['เริ่มงวด', 'ตัวตั้ง', 'ตัวหาร', 'source value', 'คำนวณสอบทาน', 'หน่วย / version / เหตุผล'].map((label) => <th scope="col" key={label}>{label}</th>)}</tr></thead><tbody>{rows.map((row) => <tr key={row.fiscalMonth}>
+      <th scope="row">{row.periodStart}</th><td>{number(row.numerator)}</td><td>{number(row.denominator)}</td><td>{number(row.sourceValue)}</td><td>{number(row.derivedValue)}{row.discrepancy && ' (ต่างจาก source)'}</td>
+      <td>{monitoringUnitLabels[row.unit]} · {row.ruleVersion}<p>{row.reason ?? 'มี aggregate; สูตรยังไม่รับรอง'}</p><small>อ่านเมื่อ {new Date(row.observedAt).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })} · data-through/refresh ยังไม่ยืนยัน</small></td>
+    </tr>)}</tbody></table></div>
+  </details>;
+}
+
+export function StepValidationPage({ runtime, fiscalYear, onFiscalYearChange, group, search, onSearchChange, onGroupChange, onMonitoring }: Props) {
+  const [snapshot, setSnapshot] = useState<StepSnapshot | null>(null);
+  const [refresh, setRefresh] = useState(0);
+  const [now, setNow] = useState(Date.now());
+  const loader = useRef<ThipStepLoader | null>(null);
+  const snapshotOwner = useRef<BmsRuntimeConfig | null>(null);
+  useEffect(() => {
+    let alive = true;
+    setSnapshot(null);
+    if (!runtime) return;
+    const controller = createThipStepLoader(runtime, fiscalYear, (next) => { if (alive) { snapshotOwner.current = runtime; setSnapshot(next); } });
+    loader.current = controller;
+    void controller.start();
+    return () => { alive = false; controller.cancel(); loader.current = null; };
+  }, [runtime, fiscalYear, refresh]);
+  useEffect(() => {
+    if (!snapshot?.retryAt || snapshot.state !== 'paused') return;
+    setNow(Date.now());
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [snapshot?.retryAt, snapshot?.state]);
+  const current = snapshot?.fiscalYear === fiscalYear && runtime && snapshotOwner.current === runtime ? snapshot : null;
+  const steps = new Map(current?.steps.map((step) => [step.code, step]));
+  const orderedCodes = current ? current.steps.map((step) => step.code) : ['DH0101', 'DH0112', ...thipCatalogue.map((entry) => entry.code).filter((code) => !['DH0101', 'DH0112'].includes(code))];
+  const visible = orderedCodes.map((code) => thipCatalogueByCode.get(code)!).filter((entry) => (group === 'all' || group === entry.group) && `${entry.code} ${entry.title}`.toLowerCase().includes(search.toLowerCase().trim()));
+  const nonNull = current?.steps.flatMap((step) => step.rows).filter((row) => row.sourceValue !== null).length ?? 0;
+  const years = [...new Set([fiscalYear, getCurrentFiscalYear(), ...Array.from({ length: 5 }, (_, i) => getCurrentFiscalYear() - i - 1)])].sort((a, b) => b - a);
+  const busy = current?.state === 'running' || current?.state === 'pausing';
+  const locked = Boolean(current?.blockedBySession) || (current?.retryAt ?? 0) > now;
+  return <div className="page-stack step-page">
+    <header className="monitoring-heading"><div><h1>ตรวจข้อมูลทีละ KPI</h1><p>หนึ่งคำขอต่อรหัส · เว้น 1 วินาที · ผลรายงวด THIP {formatFiscalYear(fiscalYear)}</p></div><button className="secondary-button" onClick={onMonitoring}>ตารางรายเดือน <ArrowRight size={16} /></button></header>
+    <div className="step-disclaimer"><strong>ข้อมูลจริงเพื่อสอบทาน — สูตรยังไม่รับรอง</strong><p>ผล query ไม่ใช่ผล THIP ที่รับรอง ไม่เพิ่ม approved coverage และไม่มีการส่งออกจากหน้านี้</p></div>
+    <ol className="step-stages"><li>1 · Session และ PostgreSQL {runtime ? 'ตรวจผ่าน' : 'รอเชื่อมต่อ'}</li><li>2 · {current ? `คิว ${current.total} รหัส native + 55 external รอ source` : 'รอสร้างคิว'}</li><li>3 · {current?.activeCode ? `กำลังโหลด ${current.activeCode}` : current?.state === 'complete' ? 'ประมวลผลครบคิว' : current?.state === 'paused' ? 'พักคิว' : current?.state === 'cancelled' ? 'ยกเลิกคิว' : 'รอเริ่มโหลด'}</li></ol>
+    <section className="monitoring-toolbar" aria-label="ค้นหาและกรองผลสอบทาน">
+      <label>ปีงบประมาณ<select aria-label="เลือกปีงบประมาณ" value={fiscalYear} onChange={(event) => onFiscalYearChange(Number(event.target.value))}>{years.map((year) => <option key={year} value={year}>{toBuddhistYear(year)}</option>)}</select></label>
+      <label className="monitoring-search">ค้นหารหัสหรือชื่อ<div><input aria-label="ค้นหารหัสหรือชื่อ KPI" value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="เช่น DH0101" /></div></label>
+      <label>กลุ่ม<select aria-label="กรองกลุ่ม KPI" value={group} onChange={(event) => onGroupChange(event.target.value as IndicatorGroup | 'all')}><option value="all">ทุกกลุ่ม</option>{Object.values(groupMeta).map((meta) => <option value={meta.key} key={meta.key}>{meta.key} · {meta.shortLabel}</option>)}</select></label>
+    </section>
+    {!runtime && <p className="monitoring-error">เปิดจาก BMS launcher หรือกรอก session ด้านบนเพื่อเริ่มตรวจ PostgreSQL และโหลดทีละ KPI</p>}
+    <section className="step-progress" aria-label="ความคืบหน้าการโหลด">
+      <p role="status" aria-live="polite">{current?.activeCode ? `กำลังโหลด ${current.activeCode} — ขั้นที่ ${current.finished + 1}/${current.total}` : `จบแล้ว ${current?.finished ?? 0}/${current?.total ?? 177} ขั้น`}{current?.state === 'pausing' && ' · จะพักหลังคำขอปัจจุบันจบ'}</p>
+      <progress max={current?.total ?? 177} value={current?.finished ?? 0} aria-label="จำนวน KPI ที่ประมวลผลแล้ว" />
+      <p className="step-counts">query สำเร็จ {current?.succeeded ?? 0} · ล้มเหลว {current?.failed ?? 0} · มีค่า {nonNull}/1,552 reporting cells · approved coverage จากหน้านี้ 0 · monitoring แยก 2,784 ช่อง</p>
+      <div className="step-controls">
+        <button className="secondary-button" disabled={!current || current.state !== 'running'} onClick={() => loader.current?.pause()}><Pause size={16} /> พัก</button>
+        <button className="secondary-button" disabled={!current || current.state !== 'paused' || locked} onClick={() => { void loader.current?.resume(); }}><Play size={16} /> ต่อ</button>
+        <button className="secondary-button" disabled={!current || !['running', 'pausing', 'paused'].includes(current.state)} onClick={() => loader.current?.cancel()}><Square size={16} /> ยกเลิก</button>
+        <button className="secondary-button" disabled={!current?.failed || busy || locked || current.state === 'cancelled'} onClick={() => { void loader.current?.retryFailed(); }}><RefreshCw size={16} /> ลองใหม่เฉพาะที่ล้มเหลว</button>
+        <button className="secondary-button" disabled={!runtime || busy || current?.blockedBySession || (current?.retryAt ?? 0) > now} onClick={() => setRefresh((value) => value + 1)}>เริ่มใหม่ทั้งคิว</button>
+      </div>
+      {current?.pauseReason && <p className={current.pauseReason === 'พักโดยผู้ใช้' ? 'step-pause-note' : 'monitoring-error'} role={current.pauseReason === 'พักโดยผู้ใช้' ? 'status' : 'alert'}>{current.pauseReason}{current.retryAt > now && ` · รออีก ${Math.ceil((current.retryAt - now) / 1000)} วินาที`}</p>}
+    </section>
+    <p className="monitoring-help">ขยายแถวเพื่อดูตัวตั้ง/ตัวหารและ source value เทียบค่าคำนวณ · ไม่แบ่งวันที่ · ค่ารายปี/ไตรมาสไม่ซ้ำเป็นรายเดือน</p>
+    <div className="step-table-scroll" role="region" aria-label="ผลการโหลดแต่ละ KPI" tabIndex={0}><table className="step-table"><caption className="sr-only">ผลสอบทาน KPI ทั้ง 232 รหัส</caption><thead><tr><th scope="col">รหัส / ตัวชี้วัด</th><th scope="col">สถานะ / เวลา</th><th scope="col">ผลและเหตุผล</th></tr></thead><tbody>{visible.map((entry) => {
+      const step = steps.get(entry.code);
+      return <tr key={entry.code} data-code={entry.code}><th scope="row"><strong>{entry.code}</strong><span>{entry.title}</span><small>{reportingCadenceLabels[getReportingCadence(entry.code)]}</small></th><td><strong>{step ? statusLabels[step.status] : 'รอโหลด'}</strong><small>{step?.latencyMs === null || step?.latencyMs === undefined ? '—' : `${(step.latencyMs / 1000).toFixed(2)} วินาที`}</small>{step?.status === 'failed' && <button className="secondary-button" disabled={busy || locked || current?.state === 'cancelled'} onClick={() => { void loader.current?.retryFailed(entry.code); }}>ลองใหม่ {entry.code}</button>}</td><td>
+        {step?.reason && <p>{step.reason}</p>}
+        {step?.rows.length ? <AggregateDetails rows={step.rows} /> : <span>{step?.status === 'pending' || !step ? 'ยังไม่โหลด; ค่าเป็น NULL' : step.status === 'running' ? 'รอคำขอจบ' : 'ไม่มีผลวัดที่ยืนยัน; ไม่เติมศูนย์'}</span>}
+      </td></tr>;
+    })}</tbody></table></div>
+    {!visible.length && <p>ไม่พบรหัสที่ตรงกับคำค้นหรือกลุ่มที่เลือก</p>}
+  </div>;
+}

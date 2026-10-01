@@ -14,7 +14,7 @@ import type { LucideIcon } from 'lucide-react';
 import type { BmsConnection, IndicatorGroup } from '@/types/thip';
 import { groupMeta } from '@/data/thipMeta';
 
-export type View = 'monitoring' | 'dashboard' | 'catalog' | 'detail';
+export type View = 'monitoring' | 'dashboard' | 'catalog' | 'detail' | 'validation';
 
 type Props = {
   view: View;
@@ -35,6 +35,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { label: 'ติดตามรายเดือน', hint: 'Monthly monitoring', icon: BarChart3, view: 'monitoring' },
+  { label: 'ตรวจข้อมูลทีละ KPI', hint: 'สอบทานก่อนรับรอง', icon: ClipboardCheck, view: 'validation' },
   { label: 'ภาพรวมคุณภาพ', hint: 'Quality overview', icon: LayoutDashboard, view: 'dashboard' },
   { label: 'คลังตัวชี้วัด', hint: 'Indicator library', icon: CalendarDays, view: 'catalog' },
 ];
@@ -124,7 +125,7 @@ export function Sidebar({
           <button
             type="button"
             className={`group-nav-item ${activeGroup === 'all' ? 'is-active' : ''}`}
-            onClick={() => { onGroupChange('all'); onNavigate(view === 'dashboard' ? 'dashboard' : 'monitoring'); onClose(); }}
+            onClick={() => { onGroupChange('all'); onNavigate(view === 'validation' ? 'validation' : view === 'dashboard' ? 'dashboard' : 'monitoring'); onClose(); }}
           >
             <span className="group-letter all-letter">Σ</span>
             <span>ทุกกลุ่ม</span>
@@ -135,7 +136,7 @@ export function Sidebar({
               key={group}
               type="button"
               className={`group-nav-item ${activeGroup === group ? 'is-active' : ''}`}
-              onClick={() => { onGroupChange(group); onNavigate(view === 'dashboard' ? 'dashboard' : 'monitoring'); onClose(); }}
+              onClick={() => { onGroupChange(group); onNavigate(view === 'validation' ? 'validation' : view === 'dashboard' ? 'dashboard' : 'monitoring'); onClose(); }}
             >
               <span className="group-letter" style={{ backgroundColor: groupMeta[group].color }}>{group}</span>
               <span>{groupMeta[group].shortLabel}</span>

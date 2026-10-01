@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Menu, RefreshCw, WifiOff } from 'lucide-react';
 import { Sidebar, type View } from '@/components/Sidebar';
 import { DashboardPage } from '@/components/DashboardPage';
 import { DetailView } from '@/components/DetailView';
 import { MonitoringPage } from '@/components/MonitoringPage';
+import { StepValidationPage } from '@/components/StepValidationPage';
 import { monitoringPreviewEnabled } from '@/monitoring/provider';
 import { publishApprovedThip } from '@/services/publication';
 import { stripLaunchCredentialsFromUrl } from '@/services/bmsSession';
@@ -35,7 +36,7 @@ const emptyCoverage: BmsCoverage = {
 function getInitialRoute(): { view: View; code: string | null } {
   const params = new URLSearchParams(window.location.search);
   const code = params.get('indicator');
-  const view = params.get('view') === 'catalog' ? 'catalog' : code ? 'detail' : params.get('view') === 'dashboard' ? 'dashboard' : 'monitoring';
+  const view = params.get('view') === 'validation' ? 'validation' : params.get('view') === 'catalog' ? 'catalog' : code ? 'detail' : params.get('view') === 'dashboard' ? 'dashboard' : 'monitoring';
   return { view, code };
 }
 
@@ -50,6 +51,8 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [connection, setConnection] = useState<BmsConnection>({ status: 'idle', message: 'ยังไม่ได้เปิดจาก BMS launcher จึงยังไม่มีข้อมูลจริง' });
   const [connectionAttempt, setConnectionAttempt] = useState(0);
+  const [sessionInput, setSessionInput] = useState('');
+  const manualSession = useRef<string | undefined>(undefined);
   const [runtime, setRuntime] = useState<BmsRuntimeConfig | null>(null);
   const [indicators, setIndicators] = useState<Indicator[]>(() => thipCatalogue.map((entry) => createNoDataIndicator(entry, getCurrentFiscalYear())));
   const [dataSource, setDataSource] = useState<DataSourceState>('unavailable');
@@ -64,8 +67,10 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false;
+    const controller = new AbortController();
     if (monitoringPreviewEnabled) { stripLaunchCredentialsFromUrl(); return; }
-    void connectBmsSession().then((result) => {
+    const requestedSession = manualSession.current; manualSession.current = undefined;
+    void connectBmsSession(requestedSession, controller.signal).then((result) => {
       if (cancelled) return;
       setConnection(result.connection);
       const connectedRuntime = result.connection.status === 'connected' ? result.runtime ?? null : null;
@@ -78,7 +83,7 @@ export default function App() {
         setDataMessage(result.connection.message ?? 'ยังไม่มี BMS live session');
       }
     });
-    return () => { cancelled = true; };
+    return () => { cancelled = true; controller.abort(); };
   }, [connectionAttempt]);
 
   useEffect(() => {
@@ -86,7 +91,7 @@ export default function App() {
   }, [defaultIndicators, runtime]);
 
   useEffect(() => {
-    if (!runtime || view === 'monitoring' || view === 'catalog') return;
+    if (!runtime || view === 'monitoring' || view === 'catalog' || view === 'validation') return;
     let cancelled = false;
     const controller = new AbortController();
     setIndicators(defaultIndicators); setCoverage(emptyCoverage); setRefreshedAt(null);
@@ -223,8 +228,14 @@ export default function App() {
           <span className="mobile-status"><span className={`connection-led connection-led-${connection.status}`} /></span>
         </div>
 
+        {view === 'validation' && !monitoringPreviewEnabled && <form className="step-session" onSubmit={(event) => { event.preventDefault(); if (!sessionInput.trim()) return; manualSession.current = sessionInput.trim(); setSessionInput(''); retryBms(); }}>
+          <label htmlFor="step-session-id">BMS Session ID</label><input id="step-session-id" type="password" autoComplete="off" value={sessionInput} onChange={(event) => setSessionInput(event.target.value)} placeholder="กรอก session เพื่อเชื่อมต่อหรือ reconnect" />
+          <button className="secondary-button" disabled={!sessionInput.trim() || connection.status === 'connecting'}>เชื่อมต่อ</button>
+          <span>เก็บใน memory เท่านั้น · Step 1 ตรวจ PostgreSQL ก่อนเริ่มคิว</span>
+        </form>}
+
         {connection.status === 'connected' && (
-          <div className={`connection-banner ${view !== 'monitoring' && dataSource === 'unavailable' ? 'connection-banner-warning' : 'connection-banner-success'}`} role="status" aria-live="polite"><RefreshCw size={15} /><span>{view === 'monitoring' ? connection.message : dataMessage ?? connection.message}</span><strong>{view === 'monitoring' ? 'BMS connected' : dataLabel}</strong><button className="connection-banner-action" type="button" onClick={retryBms}>{view === 'monitoring' ? 'รีเฟรช session' : dataSource === 'unavailable' ? 'ลองอีกครั้ง' : 'รีเฟรชข้อมูล'}</button></div>
+          <div className={`connection-banner ${!['monitoring', 'validation'].includes(view) && dataSource === 'unavailable' ? 'connection-banner-warning' : 'connection-banner-success'}`} role="status" aria-live="polite"><RefreshCw size={15} /><span>{['monitoring', 'validation'].includes(view) ? connection.message : dataMessage ?? connection.message}</span><strong>{['monitoring', 'validation'].includes(view) ? 'BMS connected' : dataLabel}</strong><button className="connection-banner-action" type="button" onClick={retryBms}>{['monitoring', 'validation'].includes(view) ? 'รีเฟรช session' : dataSource === 'unavailable' ? 'ลองอีกครั้ง' : 'รีเฟรชข้อมูล'}</button></div>
         )}
         {connection.status === 'idle' && !monitoringPreviewEnabled && (
           <div className="connection-banner connection-banner-warning" role="status" aria-live="polite"><WifiOff size={15} /><span>{connection.message}</span><strong>รอ BMS live session</strong><button className="connection-banner-action" type="button" onClick={retryBms}>ลองเชื่อมต่ออีกครั้ง</button></div>
@@ -233,7 +244,9 @@ export default function App() {
           <div className="connection-banner connection-banner-error" role="alert"><WifiOff size={15} /><span>{connection.message}</span><strong>ยังไม่มีข้อมูลจริง</strong><button className="connection-banner-action" type="button" onClick={retryBms}>ลองเชื่อมต่ออีกครั้ง</button></div>
         )}
 
-        {view === 'monitoring' ? (
+        {view === 'validation' ? (
+          <StepValidationPage runtime={runtime} fiscalYear={fiscalYear} onFiscalYearChange={changeYear} group={activeGroup} search={search} onSearchChange={changeSearch} onGroupChange={changeGroup} onMonitoring={() => navigate('monitoring', null)} />
+        ) : view === 'monitoring' ? (
           <MonitoringPage fiscalYear={fiscalYear} onFiscalYearChange={changeYear} group={activeGroup} onGroupChange={changeGroup} search={search} onSearchChange={changeSearch} runtime={runtime} onOverview={() => navigate('dashboard', null)} />
         ) : view === 'detail' && selectedIndicator ? (
           <DetailView indicator={selectedIndicator} onBack={() => navigate('dashboard', null)} />

@@ -19,6 +19,7 @@ type LaunchContext = {
 let inMemoryLaunchContext: LaunchContext | null = null;
 
 type RawSession = {
+  MessageCode?: number | string;
   result?: {
     user_info?: {
       name?: string;
@@ -45,7 +46,7 @@ export function getLaunchContext(): {
   marketplaceToken: string | null;
 } {
   const params = new URLSearchParams(window.location.search);
-  const urlSessionId = params.get('bms-session-id');
+  const urlSessionId = params.get('bms-session-id') ?? params.get('sessionId');
   const urlMarketplaceToken = params.get('marketplace-token') ?? params.get('marketplace_token');
   if (urlSessionId) {
     return { sessionId: urlSessionId, marketplaceToken: urlMarketplaceToken };
@@ -72,18 +73,21 @@ export function clearInMemoryLaunchContext(): void {
  */
 export function stripLaunchCredentialsFromUrl(): void {
   const params = new URLSearchParams(window.location.search);
-  if (!params.has('bms-session-id') && !params.has('marketplace-token') && !params.has('marketplace_token')) {
+  if (!params.has('bms-session-id') && !params.has('sessionId') && !params.has('marketplace-token') && !params.has('marketplace_token')) {
     return;
   }
   params.delete('bms-session-id');
+  params.delete('sessionId');
   params.delete('marketplace-token');
   params.delete('marketplace_token');
   const query = params.toString();
   window.history.replaceState({}, '', `${window.location.pathname}${query ? `?${query}` : ''}`);
 }
 
-async function retrieveSession(sessionId: string): Promise<RawSession> {
+async function retrieveSession(sessionId: string, parentSignal?: AbortSignal): Promise<RawSession> {
   const controller = new AbortController();
+  const cancel = () => controller.abort();
+  if (parentSignal?.aborted) controller.abort(); else parentSignal?.addEventListener('abort', cancel, { once: true });
   const timer = setTimeout(() => controller.abort(), SESSION_TIMEOUT_MS);
   try {
     const response = await abortable(fetch(`${pasteJsonUrl}?Action=GET&code=${encodeURIComponent(sessionId)}`, { signal: controller.signal }), controller.signal);
@@ -97,14 +101,16 @@ async function retrieveSession(sessionId: string): Promise<RawSession> {
     if (controller.signal.aborted) throw new BmsRequestError('session', 'timeout', `PasteJSON request timed out after ${SESSION_TIMEOUT_MS} ms`, undefined, { cause: error });
     if (error instanceof BmsRequestError) throw error;
     throw new BmsRequestError('session', 'network', 'PasteJSON request failed', undefined, { cause: error });
-  } finally { clearTimeout(timer); }
+  } finally { clearTimeout(timer); parentSignal?.removeEventListener('abort', cancel); }
 }
 
-export async function connectBmsSession(): Promise<{
+export async function connectBmsSession(manualSessionId?: string, signal?: AbortSignal): Promise<{
   connection: BmsConnection;
   runtime?: BmsRuntimeConfig;
 }> {
-  const { sessionId, marketplaceToken } = getLaunchContext();
+  const launch = getLaunchContext();
+  const sessionId = manualSessionId?.trim() || launch.sessionId;
+  const marketplaceToken = manualSessionId && manualSessionId.trim() !== launch.sessionId ? null : launch.marketplaceToken;
   if (!sessionId) {
     return { connection: { status: 'idle', message: 'ยังไม่ได้เปิดจาก BMS launcher จึงยังไม่มีข้อมูลจริง' } };
   }
@@ -115,11 +121,17 @@ export async function connectBmsSession(): Promise<{
   stripLaunchCredentialsFromUrl();
 
   try {
-    const raw = await retrieveSession(sessionId);
+    const raw = await retrieveSession(sessionId, signal);
+    const messageCode = Number(raw.MessageCode);
+    if (Number.isFinite(messageCode) && messageCode >= 400) throw new BmsRequestError('session', 'http', 'Session rejected', messageCode);
     const info = raw.result?.user_info;
-    const apiUrl = info?.bms_url?.trim();
+    const rawApiUrl = info?.bms_url?.trim();
     const bearerToken = info?.bms_session_code || raw.result?.key_value;
-    if (!apiUrl || !bearerToken) throw new Error('BMS session ไม่มี endpoint หรือ bearer token');
+    if (!rawApiUrl || !bearerToken) throw new Error('BMS session ไม่มี endpoint หรือ bearer token');
+    const parsedUrl = new URL(rawApiUrl);
+    const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(parsedUrl.hostname);
+    if ((parsedUrl.protocol !== 'https:' && !(parsedUrl.protocol === 'http:' && loopback)) || parsedUrl.username || parsedUrl.password || parsedUrl.search || parsedUrl.hash) throw new Error('Invalid BMS URL');
+    const apiUrl = parsedUrl.toString().replace(/\/+$/, '');
 
     const runtime: BmsRuntimeConfig = {
       apiUrl,
@@ -129,11 +141,11 @@ export async function connectBmsSession(): Promise<{
       hospitalCode: info?.hospital_code,
       userName: info?.name,
     };
-    const probe = await executeRegisteredQuery(queryRegistry.versionProbe, runtime, undefined, marketplaceToken ?? undefined);
+    const probe = await executeRegisteredQuery(queryRegistry.versionProbe, runtime, undefined, marketplaceToken ?? undefined, { signal });
     const version = String((probe.data?.[0] ?? probe.result?.[0])?.version ?? '');
-    const databaseType = /postgres/i.test(version) || /postgres/i.test(info?.bms_database_type ?? '')
+    const databaseType = /postgres/i.test(version)
       ? 'PostgreSQL'
-      : info?.bms_database_type || 'ไม่ทราบชนิดฐานข้อมูล';
+      : /mysql/i.test(version) ? 'MySQL' : version ? 'ฐานข้อมูลที่ยังไม่รองรับ' : 'ไม่ทราบชนิดฐานข้อมูล';
 
     return {
       runtime,
@@ -163,6 +175,7 @@ export async function connectBmsSession(): Promise<{
 
 function isExpiredOrRejectedSession(error: unknown): boolean {
   if (error instanceof BmsRequestError) {
+    if (error.messageCode === 401 || error.messageCode === 403) return true;
     if (error.phase === 'session' && error.failure === 'http') {
       return [401, 403, 404].includes(error.status ?? 0);
     }
