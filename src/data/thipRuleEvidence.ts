@@ -1,4 +1,6 @@
 import type { ThipKpiRuleEvidence } from '@/data/thipKpiRules';
+import rawCohorts from './thipCohortEvidence.json';
+import type { CohortDefinition } from './cohortTypes';
 
 /**
  * Curated rule evidence, keyed by indicator code.
@@ -9,7 +11,7 @@ import type { ThipKpiRuleEvidence } from '@/data/thipKpiRules';
  * foundation codes below have dictionary evidence but no hospital owner
  * sign-off yet, so `owner` is intentionally absent.
  */
-export const thipRuleEvidenceByCode: Readonly<Record<string, ThipKpiRuleEvidence>> = {
+const curatedEvidenceByCode: Readonly<Record<string, ThipKpiRuleEvidence>> = {
   DH0101: {
     episodeGrain: 'one-row-per-admission',
     periodField: 'discharge_date',
@@ -123,3 +125,9 @@ export const thipRuleEvidenceByCode: Readonly<Record<string, ThipKpiRuleEvidence
     evidence: ['THIP KPI.pdf:p.199', 'queryRegistry:thipIpdFoundation'],
   },
 };
+
+// Structural extraction never supplies a clinical owner, local code set or release approval.
+export const thipRuleEvidenceByCode: Record<string, ThipKpiRuleEvidence> = { ...curatedEvidenceByCode };
+for (const cohort of rawCohorts as CohortDefinition[]) {
+  thipRuleEvidenceByCode[cohort.code] = { ...curatedEvidenceByCode[cohort.code], cohortDefinition: cohort };
+}

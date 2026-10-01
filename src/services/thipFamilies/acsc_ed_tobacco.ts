@@ -70,7 +70,8 @@ const ED_LEVEL1_WHERE =
   'opd_periodized.enter_er_time IS NOT NULL' +
   ' AND opd_periodized.finish_time IS NOT NULL' +
   ' AND opd_periodized.finish_time > opd_periodized.enter_er_time' +
-  ' AND opd_periodized.er_emergency_level_id = 1';
+  ' AND opd_periodized.er_emergency_level_id = 1' +
+  ' AND EXTRACT(DAY FROM opd_periodized.enter_er_time) IN (5, 15, 25)';
 
 // --- Medication use code sets (dotless, from thipKpiRules tokens) ----------
 
@@ -541,14 +542,13 @@ export const ACSC_ED_TOBACCO_APPROXIMATIONS: Readonly<Record<string, string>> = 
     'Mean minutes from ER time-in (er_regist.enter_er_time) to time-out (finish_time) for ER ' +
     'visits flagged er_emergency_level_id = 1 (triage level 1 / 1A emergency). The printed ' +
     'definition samples only days 5, 15, 25 of each month and excludes deaths, off-hour clinic ' +
-    'patients and admissions held in the ED; the branch measures all level-1 visits with both ' +
-    'clocks stamped. The hospital owner must confirm the er_emergency_level_id value that maps ' +
-    'to triage 1A and whether the 3-day sampling window must be enforced.',
+    'patients and admissions held in the ED; the branch enforces days 5, 15, 25 using time-in ' +
+    'and both clocks. The hospital owner must confirm the er_emergency_level_id value that maps ' +
+    'to triage 1A, exclusions and vstdate versus time-in month boundaries.',
   CE0103:
     'Percent of level-1 (er_emergency_level_id = 1) ER visits whose time-in to time-out span is ' +
-    'at most 3600 seconds. Same sampling-window gap as CE0102 (printed definition collects only ' +
-    'days 5, 15, 25 and means 1A treated at the ED within 60 minutes); the hospital owner must ' +
-    'confirm the 1A level mapping and the sampling days.',
+    'at most 3600 seconds. Enforces days 5, 15, 25 using time-in as CE0102; the hospital owner must ' +
+    'confirm the 1A level mapping, exclusions and vstdate versus time-in month boundaries.',
   HC0101:
     'Per fiscal year: numerator = ER attendances (er_regist clock present on the ovst visit) of ' +
     'asthma patients (J45, J46 on the visit or anywhere in the reporting range, OPD or IPD); ' +

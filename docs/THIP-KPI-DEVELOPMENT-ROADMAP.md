@@ -10,6 +10,8 @@
 
 **Implemented เพิ่มเติม:** [Step loader](THIP-STEP-LOADING.md) โหลด native candidates ทีละหนึ่งรหัส เว้น 1 วินาที พร้อม progressive results/pause/resume/cancel/retry และหน้าสอบทานแยก. Source query manifest มี numeric arithmetic guard; source presence แยก 0/0 จาก missing facts. ยังไม่รวม direct monthly provider สำหรับ 71 additional rules หรือการรับรอง/เปิดข้อมูลจริงของแผนระยะถัดไป.
 
+**Implemented cache:** [Candidate cache](THIP-CANDIDATE-CACHE.md) เก็บ validated aggregates ใน IndexedDB 24 ชั่วโมง แยก verified context/FY/query/rule, restore หลังตรวจ session, โหลดต่อเฉพาะช่องที่ขาด และมี force reload/clear-all. Memory fallback ไม่หยุดคิว; cached candidates ยังไม่รับรองและไม่มี publication coverage เพิ่ม.
+
 ## เป้าหมาย
 
 พัฒนา dashboard ให้ติดตามผลงานรายเดือน **232 KPI × 12 เดือน** ควบคู่กับผลรายงาน THIP ตามรอบเดิม โดยแยก series และ rule version:
@@ -166,3 +168,14 @@ Read-only DB role, server-side registered query, aggregate limit, timeout คร
 | Performance/dependency backlog | หลัง correctness + baseline evidence | ประเมิน bundle warning และ test-tool advisory ที่ audit เดิมระบุ; ปรับโดยไม่ลด registered boundary หรือเปลี่ยนสูตร; dependency review/build/browser ผ่าน |
 
 ไม่มีการเปิด GitHub Issues, deploy หรือรัน source/DDL กับ HOSxP จริงในรุ่นนี้. งานค้างเดิมและ SQL family edits ที่ผู้ใช้มีอยู่ถูกเก็บไว้.
+## ยอดฐานและ cohort evidence — 2026-10-01
+
+ส่วนสอบทานเพิ่มยอดฐานหกชุดและหลักฐานตัวตั้ง/ตัวหารครบ 232 รหัสตาม [cohort contract](THIP-COHORT-PROFILES.md). งาน cache ที่ค้างเดิมถูกเก็บไว้; profile ใช้ namespace แยก. ไม่เปลี่ยน THIP 1,552 หรือ monitoring 2,784 ช่อง และทุก cohort evidence ยังรอรับรอง.
+
+| งาน | Dependency | Acceptance / สถานะ |
+|---|---|---|
+| ยอดฐานและ linkage quality | Session + schema JSON + Step/cache | Six aggregate SELECTs; registry snapshot/current-time, monthly VN/HN/AN dates, person conflict/fan-out, emp incomplete dates/CID; no identifiers in outer output/cache; manual load; synthetic SQL/browser checks |
+| Queue/cache isolation | Shared lane + validated aggregate repository | One request/1000ms gap across KPI/profile; auth/429/global failure hold; context/month abort + NULL snapshot; namespaces/FY/month/query/rule isolation; clear-all covers both |
+| Cohort mapping 232 | Dictionary + registered SQL + audit matrix | Definition/a/b/unit/population/grain/key/date/source/window/limits/status for every code; missing structured evidence explicit; generated drift gate; never fills hospital approval |
+| Evidence-based fixes | Representative fixture execution | CE0102/3 sampled days 5/15/25; invalid employee date ordering excluded from employee-month; SH0101 numeric annual average retained; generated reporting/step fingerprints updated |
+| Hospital certification (pending) | Mapping + aggregate comparison with owners | Confirm patient/ER cardinality, local codes, event dates, full observation windows, HR completeness and external population; compare official aggregates; sign rule/version/approval separately before publishing |

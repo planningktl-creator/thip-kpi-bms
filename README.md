@@ -8,7 +8,7 @@ THIP KPI quality intelligence frontend for BMS Marketplace. The default view is 
 
 เปิดเมนู **ตรวจข้อมูลทีละ KPI** (`?view=validation&fy=2026` สำหรับ FY2569). รับ launcher session หรือกรอก session ในหน้า; ตรวจ PostgreSQL แล้วโหลด DH0101, DH0112 และ native codes ที่เหลือทีละหนึ่งรหัส รวม 177 รหัส เว้น 1 วินาที พร้อมผลระหว่างทางและปุ่มพัก/ต่อ/ยกเลิก/retry เฉพาะ failed codes. External 55 รหัสยังแสดงรอ source. Candidate facts อยู่เฉพาะหน้าสอบทาน ไม่มี export และไม่เพิ่ม approved coverage. ดู [Step loading contract และการตรวจรับ](docs/THIP-STEP-LOADING.md).
 
-Candidate page ไม่ต้องมี source view และ Docker สร้างได้โดยไม่ตั้ง source variables. ผล THIP/monitoring ที่เผยแพร่ยังต้องผ่าน source/approval gates เดิม. เปลี่ยนปี/session หรือ refresh ไม่ใช้ snapshot/credentials ของ context เก่า. `pnpm steps:build` / `pnpm steps:check` สร้างและตรวจ single-code query manifest จาก source.
+Candidate page ไม่ต้องมี source view และ Docker สร้างได้โดยไม่ตั้ง source variables. ผล THIP/monitoring ที่เผยแพร่ยังต้องผ่าน source/approval gates เดิม. Aggregate ที่โหลดสำเร็จเก็บใน IndexedDB 24 ชั่วโมง ข้าม refresh/ปิดเว็บได้หลังตรวจ session เดิม; ปี/session/query/rule คนละ version ไม่ใช้ cache ปนกัน และไม่เก็บ credentials. มีปุ่มโหลดใหม่ทั้งคิวและล้าง cache ทั้งหมด; ดู [candidate cache contract](docs/THIP-CANDIDATE-CACHE.md). `pnpm steps:build` / `pnpm steps:check` สร้างและตรวจ single-code query manifest จาก source.
 
 Search codes/names, filter group/data state/assessment, open a cell's facts and rule, and export all twelve months of the filtered KPI rows. Filters and fiscal year persist in the URL. Mobile month columns scroll horizontally with sticky KPI identity; arrows move between cells, Enter opens details, Escape closes and restores focus. Missing facts stay NULL with a reason. Reporting retains 232 codes / 1,552 cadence cells; monitoring adds 2,784 cells without changing `Indicator.monthly`.
 
@@ -127,3 +127,6 @@ python scripts/thip_source_audit.py --input .\thip-kpi-export.json --fiscal-year
 ```
 
 It exits successfully only when the repository's 232-code/cadence manifest is covered by all 1,552 expected cells with unique periods, valid metadata, registered formula multipliers, value consistency, and safe denominator semantics.
+## Cohort validation
+
+The Step validation page now includes manual **ยอดฐานและคุณภาพการเชื่อมข้อมูล** for patient registry, ovst services, ipt admission/discharge, person linkage, emp staff and opduser accounts. Only counts leave SQL; profile requests share the KPI lane and use a separate 24-hour aggregate cache namespace. All 232 KPI rows expose dictionary numerator/denominator and candidate counting evidence. These profiles remain unapproved and do not change THIP/monitoring coverage. See [contract and acceptance](docs/THIP-COHORT-PROFILES.md), [human mapping](docs/THIP-COHORT-MAPPING.md), and [machine mapping](src/data/thipCohortEvidence.json). Generate/check with `pnpm cohorts:build` / `pnpm cohorts:check`.

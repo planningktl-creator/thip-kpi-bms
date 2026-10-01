@@ -8,6 +8,8 @@ import { BmsRequestError } from './bmsErrors';
 import type { BmsRuntimeConfig } from './bmsSession';
 import { executeRegisteredQuery, hosxpRegisteredCodes, externalRegisteredCodes } from './queryRegistry';
 import { planFoundationRequests } from './thipFoundationPlan';
+import type { StepCachePort } from './thipStepCache';
+import { aggregateQueryLane } from './aggregateQueryLane';
 
 export type CandidateAggregate = {
   code: string; fiscalYear: number; fiscalMonth: number; periodStart: string;
@@ -18,11 +20,12 @@ export type CandidateAggregate = {
   dataThrough: null; refreshedAt: null; approval: 'unapproved'; series: 'thip-report';
 };
 export type StepStatus = 'pending' | 'running' | 'success' | 'failed' | 'skipped';
-export type StepResult = { code: string; status: StepStatus; rows: CandidateAggregate[]; reason: string | null; latencyMs: number | null; attempts: number };
+export type StepResult = { code: string; status: StepStatus; rows: CandidateAggregate[]; reason: string | null; latencyMs: number | null; attempts: number; origin?: 'cache' | 'query'; cachedAt?: string; expiresAt?: number };
 export type StepSnapshot = {
   fiscalYear: number; series: 'thip-report'; state: 'idle' | 'running' | 'pausing' | 'paused' | 'cancelled' | 'complete';
   steps: StepResult[]; total: number; succeeded: number; failed: number; finished: number;
   activeCode: string | null; pauseReason: string | null; blockedBySession: boolean; retryAt: number;
+  cacheHits: number; querySucceeded: number;
 };
 export type StepTask = { code: string; run: (signal: AbortSignal) => Promise<unknown[]> };
 
@@ -103,15 +106,16 @@ export class ThipStepLoader {
   private retryAt = 0;
   private nextAt = 0;
   private consecutiveFailures = 0;
+  private hydrated = false;
 
-  constructor(private readonly fiscalYear: number, private readonly tasks: StepTask[], private readonly onProgress: (snapshot: StepSnapshot) => void, private readonly gapMs = 1000, skipped = externalRegisteredCodes) {
+  constructor(private readonly fiscalYear: number, private readonly tasks: StepTask[], private readonly onProgress: (snapshot: StepSnapshot) => void, private readonly gapMs = 1000, skipped = externalRegisteredCodes, private readonly cache?: StepCachePort) {
     if (!Number.isInteger(fiscalYear) || fiscalYear < 2000 || fiscalYear > 2100 || new Set(tasks.map((task) => task.code)).size !== tasks.length) throw new Error('Invalid step plan');
     this.steps = [...tasks.map((task): StepResult => ({ code: task.code, status: 'pending', rows: [], reason: null, latencyMs: null, attempts: 0 })), ...skipped.map((code): StepResult => ({ code, status: 'skipped', rows: [], reason: 'รอ external aggregate source; ไม่เติมศูนย์', latencyMs: null, attempts: 0 }))];
   }
 
   snapshot(): StepSnapshot {
     const succeeded = this.steps.filter((step) => step.status === 'success').length, failed = this.steps.filter((step) => step.status === 'failed').length;
-    return { fiscalYear: this.fiscalYear, series: 'thip-report', state: this.state, steps: this.steps.map((step) => ({ ...step, rows: step.rows.map((row) => ({ ...row })) })), total: this.tasks.length, succeeded, failed, finished: succeeded + failed, activeCode: this.activeCode, pauseReason: this.pauseReason, blockedBySession: this.blockedBySession, retryAt: this.retryAt };
+    return { fiscalYear: this.fiscalYear, series: 'thip-report', state: this.state, steps: this.steps.map((step) => ({ ...step, rows: step.rows.map((row) => ({ ...row })) })), total: this.tasks.length, succeeded, failed, finished: succeeded + failed, activeCode: this.activeCode, pauseReason: this.pauseReason, blockedBySession: this.blockedBySession, retryAt: this.retryAt, cacheHits: this.steps.filter((step) => step.origin === 'cache').length, querySucceeded: this.steps.filter((step) => step.status === 'success' && step.origin === 'query').length };
   }
   private emit() { this.onProgress(this.snapshot()); }
   start(): Promise<void> { return this.resume(); }
@@ -123,9 +127,15 @@ export class ThipStepLoader {
     this.gapController?.abort();
     this.emit();
   }
+  holdSource(error: BmsRequestError): void {
+    const info = failure(error);
+    this.paused = true; this.pauseReason = info.reason; this.blockedBySession = info.session;
+    this.retryAt = info.rateLimit ? Date.now() + info.retryMs : 0;
+    this.state = this.activeCode ? 'pausing' : 'paused'; this.gapController?.abort(); this.emit();
+  }
   cancel(): void {
     this.state = 'cancelled'; this.controller.abort(); this.gapController?.abort();
-    if (this.activeCode) { const step = this.steps.find((item) => item.code === this.activeCode)!; step.status = 'pending'; step.reason = 'ยกเลิกคำขอ'; }
+    if (this.activeCode) { const step = this.steps.find((item) => item.code === this.activeCode)!; if (step.status === 'running') { step.status = 'pending'; step.reason = 'ยกเลิกคำขอ'; } }
     this.activeCode = null; this.emit();
   }
   resume(): Promise<void> {
@@ -160,6 +170,17 @@ export class ThipStepLoader {
     this.gapController = null;
   }
   private async drain(): Promise<void> {
+    if (!this.hydrated) {
+      this.hydrated = true;
+      const cached = await this.cache?.read(this.controller.signal).catch(() => []) ?? [];
+      if (this.controller.signal.aborted) return;
+      for (const entry of cached) {
+        const step = this.steps.find((item) => item.code === entry.code && item.status === 'pending');
+        if (!step || entry.expiresAt <= Date.now()) continue;
+        Object.assign(step, { status: 'success', rows: entry.rows, origin: 'cache', cachedAt: entry.observedAt, expiresAt: entry.expiresAt, reason: entry.rows.length ? null : 'query สำเร็จแต่ไม่พบแถว; ไม่เติมศูนย์' });
+      }
+      this.emit();
+    }
     while (!this.controller.signal.aborted) {
       if (this.paused) { this.state = 'paused'; this.emit(); return; }
       const step = this.steps.find((item) => item.status === 'pending');
@@ -174,8 +195,14 @@ export class ThipStepLoader {
         const inputs = await task.run(this.controller.signal);
         if (this.controller.signal.aborted) return;
         step.rows = validateCandidateRows(inputs, step.code, this.fiscalYear);
+        step.origin = 'query';
         step.status = 'success'; step.reason = step.rows.length ? null : 'query สำเร็จแต่ไม่พบแถว; ไม่เติมศูนย์';
         this.consecutiveFailures = 0;
+        step.latencyMs = Date.now() - started;
+        this.emit();
+        const saved = await this.cache?.write(step.code, step.rows, this.controller.signal).catch(() => null);
+        if (this.controller.signal.aborted) return;
+        if (saved) { step.cachedAt = saved.observedAt; step.expiresAt = saved.expiresAt; }
       } catch (error) {
         if (this.controller.signal.aborted) return;
         const info = failure(error);
@@ -187,7 +214,8 @@ export class ThipStepLoader {
           this.retryAt = info.rateLimit ? Date.now() + info.retryMs : 0;
         }
       }
-      step.latencyMs = Date.now() - started; this.activeCode = null;
+      if (step.status !== 'success') step.latencyMs = Date.now() - started;
+      this.activeCode = null;
       this.nextAt = Date.now() + this.gapMs;
       if (this.paused) this.state = 'paused';
       this.emit();
@@ -204,17 +232,17 @@ export function planThipSteps(fiscalYear: number) {
   });
 }
 
-export function createThipStepLoader(runtime: BmsRuntimeConfig, fiscalYear: number, onProgress: (snapshot: StepSnapshot) => void): ThipStepLoader {
+export function createThipStepLoader(runtime: BmsRuntimeConfig, fiscalYear: number, onProgress: (snapshot: StepSnapshot) => void, cache?: StepCachePort): ThipStepLoader {
   const tasks = planThipSteps(fiscalYear).map((request): StepTask => {
     const code = request.code;
     return { code, run: async (signal) => {
-      const payload = await executeRegisteredQuery(request.query, runtime, { start_date: { value: request.start, value_type: 'date' }, end_date: { value: request.end, value_type: 'date' } }, runtime.marketplaceToken, { signal });
+      const payload = await aggregateQueryLane(runtime).run(signal, () => executeRegisteredQuery(request.query, runtime, { start_date: { value: request.start, value_type: 'date' }, end_date: { value: request.end, value_type: 'date' } }, runtime.marketplaceToken, { signal }));
       const rows = payload.data ?? payload.result;
       if (!Array.isArray(rows)) throw new BmsRequestError('data', 'response', 'Missing aggregate array');
       return rows;
     } };
   });
-  return new ThipStepLoader(fiscalYear, tasks, onProgress);
+  return new ThipStepLoader(fiscalYear, tasks, onProgress, 1000, externalRegisteredCodes, cache);
 }
 
 export { getReportingCadence };

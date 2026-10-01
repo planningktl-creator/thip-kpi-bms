@@ -1,0 +1,304 @@
+{
+  "schemaVersion": "cohort-profile/1",
+  "approval": "unapproved",
+  "profiles": [
+    {
+      "key": "patient",
+      "title": "ทะเบียนผู้ป่วย",
+      "scope": "current-register",
+      "explanation": "ทะเบียน ณ เวลาตรวจ; HN ไม่ซ้ำไม่เท่ากับคนไม่ซ้ำตาม CID และไม่ใช่ยอดย้อนหลัง",
+      "sql": "WITH base AS (SELECT NULLIF(TRIM(hn), '') AS hn_key, NULLIF(TRIM(cid), '') AS cid_key FROM patient), stats AS (SELECT (COUNT(*))::bigint AS rows,\n(COUNT(DISTINCT hn_key))::bigint AS distinct_hn,\n(COUNT(DISTINCT cid_key))::bigint AS distinct_cid,\n(COUNT(*) FILTER (WHERE hn_key IS NULL))::bigint AS missing_hn,\n(COUNT(*) FILTER (WHERE cid_key IS NULL))::bigint AS missing_cid,\n(COUNT(hn_key) - COUNT(DISTINCT hn_key))::bigint AS duplicate_hn_rows,\n(COUNT(cid_key) - COUNT(DISTINCT cid_key))::bigint AS duplicate_cid_rows FROM base)\nSELECT 'patient'::text AS profile_key, metric.metric_key::text, metric.count_value\nFROM stats CROSS JOIN LATERAL (VALUES ('rows', stats.rows),\n('distinct_hn', stats.distinct_hn),\n('distinct_cid', stats.distinct_cid),\n('missing_hn', stats.missing_hn),\n('missing_cid', stats.missing_cid),\n('duplicate_hn_rows', stats.duplicate_hn_rows),\n('duplicate_cid_rows', stats.duplicate_cid_rows)) AS metric(metric_key, count_value)",
+      "sqlSha256": "510bc9ca1d98469debad21ddf0579eb8d3b988babf4beb1ac48396e9c20b51ac",
+      "metrics": [
+        {
+          "key": "rows",
+          "label": "จำนวนแถวทะเบียน"
+        },
+        {
+          "key": "distinct_hn",
+          "label": "HN ไม่ซ้ำ"
+        },
+        {
+          "key": "distinct_cid",
+          "label": "CID ไม่ซ้ำที่ไม่ว่าง"
+        },
+        {
+          "key": "missing_hn",
+          "label": "แถวที่ HN ว่าง"
+        },
+        {
+          "key": "missing_cid",
+          "label": "แถวที่ CID ว่าง"
+        },
+        {
+          "key": "duplicate_hn_rows",
+          "label": "แถว HN ซ้ำเพิ่มเติม"
+        },
+        {
+          "key": "duplicate_cid_rows",
+          "label": "แถว CID ซ้ำเพิ่มเติม"
+        }
+      ]
+    },
+    {
+      "key": "visits",
+      "title": "บริการจาก ovst",
+      "scope": "selected-month",
+      "explanation": "นับตาม vstdate; แยก VN ที่ผูก/ไม่ผูก AN ไม่ถือว่าทุกแถวเป็น OPD เฉพาะ และห้ามบวกคนรายเดือนเป็นคนทั้งปี",
+      "sql": "WITH base AS (SELECT NULLIF(TRIM(vn), '') AS visit_key, NULLIF(TRIM(hn), '') AS hn_key, NULLIF(TRIM(an), '') AS admission_key FROM ovst WHERE vstdate >= :start_date AND vstdate < :end_date), stats AS (SELECT (COUNT(*))::bigint AS rows,\n(COUNT(DISTINCT visit_key))::bigint AS distinct_visits,\n(COUNT(DISTINCT hn_key))::bigint AS distinct_patients,\n(COUNT(DISTINCT visit_key) FILTER (WHERE admission_key IS NOT NULL))::bigint AS linked_admission_visits,\n(COUNT(DISTINCT visit_key) FILTER (WHERE admission_key IS NULL))::bigint AS unlinked_admission_visits,\n((SELECT COUNT(*) FROM (SELECT visit_key FROM base WHERE visit_key IS NOT NULL GROUP BY visit_key HAVING BOOL_OR(admission_key IS NULL) AND BOOL_OR(admission_key IS NOT NULL)) inconsistent))::bigint AS mixed_admission_visits,\n(COUNT(*) FILTER (WHERE visit_key IS NULL))::bigint AS missing_vn,\n(COUNT(*) FILTER (WHERE hn_key IS NULL))::bigint AS missing_hn,\n(COUNT(visit_key) - COUNT(DISTINCT visit_key))::bigint AS duplicate_vn_rows FROM base)\nSELECT 'visits'::text AS profile_key, metric.metric_key::text, metric.count_value\nFROM stats CROSS JOIN LATERAL (VALUES ('rows', stats.rows),\n('distinct_visits', stats.distinct_visits),\n('distinct_patients', stats.distinct_patients),\n('linked_admission_visits', stats.linked_admission_visits),\n('unlinked_admission_visits', stats.unlinked_admission_visits),\n('mixed_admission_visits', stats.mixed_admission_visits),\n('missing_vn', stats.missing_vn),\n('missing_hn', stats.missing_hn),\n('duplicate_vn_rows', stats.duplicate_vn_rows)) AS metric(metric_key, count_value)",
+      "sqlSha256": "3232b4ac974abcd84599d3449a5e8d5299055bbb35e7cc5b26c483e4a6480170",
+      "metrics": [
+        {
+          "key": "rows",
+          "label": "แถวบริการในเดือน"
+        },
+        {
+          "key": "distinct_visits",
+          "label": "VN ไม่ซ้ำ"
+        },
+        {
+          "key": "distinct_patients",
+          "label": "HN ไม่ซ้ำในเดือน"
+        },
+        {
+          "key": "linked_admission_visits",
+          "label": "VN ที่ผูก AN"
+        },
+        {
+          "key": "unlinked_admission_visits",
+          "label": "VN ที่ไม่ผูก AN"
+        },
+        {
+          "key": "mixed_admission_visits",
+          "label": "VN ซ้ำที่มีทั้งผูก/ไม่ผูก AN"
+        },
+        {
+          "key": "missing_vn",
+          "label": "แถวที่ VN ว่าง"
+        },
+        {
+          "key": "missing_hn",
+          "label": "แถวที่ HN ว่าง"
+        },
+        {
+          "key": "duplicate_vn_rows",
+          "label": "แถว VN ซ้ำเพิ่มเติม"
+        }
+      ]
+    },
+    {
+      "key": "admissions",
+      "title": "ผู้ป่วยใน: รับเข้า/จำหน่าย",
+      "scope": "selected-month",
+      "explanation": "รับเข้าตาม regdate และจำหน่ายตาม dchdate เป็นคนละยอด; นับ AN สำหรับครั้งนอน และ HN สำหรับคน ไม่บวกสองยอดเป็นผู้ป่วยทั้งหมด",
+      "sql": "WITH base AS (SELECT NULLIF(TRIM(an), '') AS admission_key, NULLIF(TRIM(hn), '') AS hn_key, regdate >= :start_date AND regdate < :end_date AS admitted, dchdate >= :start_date AND dchdate < :end_date AS discharged FROM ipt WHERE (regdate >= :start_date AND regdate < :end_date) OR (dchdate >= :start_date AND dchdate < :end_date)), stats AS (SELECT (COUNT(*))::bigint AS rows,\n(COUNT(DISTINCT admission_key) FILTER (WHERE admitted))::bigint AS admitted_episodes,\n(COUNT(DISTINCT admission_key) FILTER (WHERE discharged))::bigint AS discharged_episodes,\n(COUNT(DISTINCT hn_key) FILTER (WHERE admitted))::bigint AS admitted_patients,\n(COUNT(DISTINCT hn_key) FILTER (WHERE discharged))::bigint AS discharged_patients,\n(COUNT(*) FILTER (WHERE hn_key IS NULL))::bigint AS missing_hn,\n(COUNT(*) FILTER (WHERE admission_key IS NULL))::bigint AS missing_an,\n(COUNT(admission_key) - COUNT(DISTINCT admission_key))::bigint AS duplicate_an_rows FROM base)\nSELECT 'admissions'::text AS profile_key, metric.metric_key::text, metric.count_value\nFROM stats CROSS JOIN LATERAL (VALUES ('rows', stats.rows),\n('admitted_episodes', stats.admitted_episodes),\n('discharged_episodes', stats.discharged_episodes),\n('admitted_patients', stats.admitted_patients),\n('discharged_patients', stats.discharged_patients),\n('missing_hn', stats.missing_hn),\n('missing_an', stats.missing_an),\n('duplicate_an_rows', stats.duplicate_an_rows)) AS metric(metric_key, count_value)",
+      "sqlSha256": "50698001ba8d75f8c4ac7eee60f9d1cd2418b5bea6b2e3d45b61109a7ef6e720",
+      "metrics": [
+        {
+          "key": "rows",
+          "label": "แถว admission ที่เกี่ยวข้อง"
+        },
+        {
+          "key": "admitted_episodes",
+          "label": "AN รับเข้าในเดือน"
+        },
+        {
+          "key": "discharged_episodes",
+          "label": "AN จำหน่ายในเดือน"
+        },
+        {
+          "key": "admitted_patients",
+          "label": "HN รับเข้าไม่ซ้ำ"
+        },
+        {
+          "key": "discharged_patients",
+          "label": "HN จำหน่ายไม่ซ้ำ"
+        },
+        {
+          "key": "missing_hn",
+          "label": "แถวที่ HN ว่าง"
+        },
+        {
+          "key": "missing_an",
+          "label": "แถวที่ AN ว่าง"
+        },
+        {
+          "key": "duplicate_an_rows",
+          "label": "แถว AN ซ้ำเพิ่มเติม"
+        }
+      ]
+    },
+    {
+      "key": "person",
+      "title": "บุคคลและการเชื่อมทะเบียน",
+      "scope": "current-register",
+      "explanation": "เชื่อม patient_hn กับ hn หลัง aggregate คู่เชื่อมให้เหลือหนึ่งแถวต่อ HN; CID ใช้ตรวจความสอดคล้อง ไม่รวมคนหรือ fallback CID อัตโนมัติ จำนวนกลุ่มตรวจสอบอาจซ้อนกัน",
+      "sql": "WITH people AS (SELECT person_id, NULLIF(TRIM(patient_hn), '') AS hn_key, NULLIF(TRIM(cid), '') AS cid_key FROM person),\npatients AS (SELECT NULLIF(TRIM(hn), '') AS hn_key, NULLIF(TRIM(cid), '') AS cid_key FROM patient),\npatient_groups AS (SELECT hn_key, COUNT(*) AS patient_rows, ARRAY_AGG(DISTINCT cid_key) FILTER (WHERE cid_key IS NOT NULL) AS cid_keys FROM patients WHERE hn_key IS NOT NULL GROUP BY hn_key),\nperson_groups AS (SELECT hn_key, COUNT(*) AS person_rows FROM people WHERE hn_key IS NOT NULL GROUP BY hn_key),\nbase AS (SELECT p.*, t.hn_key IS NOT NULL AS linked, COALESCE(p.cid_key = ANY(t.cid_keys), FALSE) AS agrees,\np.cid_key IS NOT NULL AND COALESCE(CARDINALITY(t.cid_keys), 0) > CASE WHEN COALESCE(p.cid_key = ANY(t.cid_keys), FALSE) THEN 1 ELSE 0 END AS conflicts,\nCOALESCE(t.patient_rows, 0) > 1 OR COALESCE(g.person_rows, 0) > 1 AS ambiguous, COALESCE(CARDINALITY(t.cid_keys), 0) > 0 AS has_patient_cid\nFROM people p LEFT JOIN patient_groups t ON t.hn_key=p.hn_key LEFT JOIN person_groups g ON g.hn_key=p.hn_key), stats AS (SELECT (COUNT(*))::bigint AS rows,\n(COUNT(DISTINCT hn_key))::bigint AS distinct_hn,\n(COUNT(DISTINCT cid_key))::bigint AS distinct_cid,\n(COUNT(*) FILTER (WHERE hn_key IS NULL))::bigint AS missing_hn,\n(COUNT(*) FILTER (WHERE cid_key IS NULL))::bigint AS missing_cid,\n(COUNT(hn_key) - COUNT(DISTINCT hn_key))::bigint AS duplicate_hn_rows,\n(COUNT(cid_key) - COUNT(DISTINCT cid_key))::bigint AS duplicate_cid_rows,\n(COUNT(DISTINCT person_id))::bigint AS distinct_persons,\n(COUNT(*) FILTER (WHERE linked))::bigint AS linked_hn,\n(COUNT(*) FILTER (WHERE NOT linked))::bigint AS unlinked_hn,\n(COUNT(*) FILTER (WHERE agrees))::bigint AS cid_agreement,\n(COUNT(*) FILTER (WHERE conflicts))::bigint AS cid_conflict,\n(COUNT(*) FILTER (WHERE ambiguous))::bigint AS ambiguous_link,\n(COUNT(*) FILTER (WHERE cid_key IS NULL OR NOT has_patient_cid))::bigint AS cid_unassessable FROM base)\nSELECT 'person'::text AS profile_key, metric.metric_key::text, metric.count_value\nFROM stats CROSS JOIN LATERAL (VALUES ('rows', stats.rows),\n('distinct_hn', stats.distinct_hn),\n('distinct_cid', stats.distinct_cid),\n('missing_hn', stats.missing_hn),\n('missing_cid', stats.missing_cid),\n('duplicate_hn_rows', stats.duplicate_hn_rows),\n('duplicate_cid_rows', stats.duplicate_cid_rows),\n('distinct_persons', stats.distinct_persons),\n('linked_hn', stats.linked_hn),\n('unlinked_hn', stats.unlinked_hn),\n('cid_agreement', stats.cid_agreement),\n('cid_conflict', stats.cid_conflict),\n('ambiguous_link', stats.ambiguous_link),\n('cid_unassessable', stats.cid_unassessable)) AS metric(metric_key, count_value)",
+      "sqlSha256": "9decbe4290cbae478941004428a5c45e9a009956b5f703d360dc160df5bea0e0",
+      "metrics": [
+        {
+          "key": "rows",
+          "label": "จำนวนแถวทะเบียน"
+        },
+        {
+          "key": "distinct_hn",
+          "label": "HN ไม่ซ้ำ"
+        },
+        {
+          "key": "distinct_cid",
+          "label": "CID ไม่ซ้ำที่ไม่ว่าง"
+        },
+        {
+          "key": "missing_hn",
+          "label": "แถวที่ HN ว่าง"
+        },
+        {
+          "key": "missing_cid",
+          "label": "แถวที่ CID ว่าง"
+        },
+        {
+          "key": "duplicate_hn_rows",
+          "label": "แถว HN ซ้ำเพิ่มเติม"
+        },
+        {
+          "key": "duplicate_cid_rows",
+          "label": "แถว CID ซ้ำเพิ่มเติม"
+        },
+        {
+          "key": "distinct_persons",
+          "label": "person_id ไม่ซ้ำ"
+        },
+        {
+          "key": "linked_hn",
+          "label": "แถว person ที่เชื่อม HN ได้"
+        },
+        {
+          "key": "unlinked_hn",
+          "label": "แถว person ที่เชื่อม HN ไม่ได้"
+        },
+        {
+          "key": "cid_agreement",
+          "label": "เชื่อม HN และพบ CID ตรงกัน"
+        },
+        {
+          "key": "cid_conflict",
+          "label": "เชื่อม HN แต่พบ CID ขัดแย้ง"
+        },
+        {
+          "key": "ambiguous_link",
+          "label": "แถวที่มีความสัมพันธ์หนึ่งต่อหลาย"
+        },
+        {
+          "key": "cid_unassessable",
+          "label": "CID ของ person/คู่เชื่อมไม่ครบ"
+        }
+      ]
+    },
+    {
+      "key": "employees",
+      "title": "ทะเบียนบุคลากร emp",
+      "scope": "selected-month",
+      "explanation": "Candidate headcount ณ วันสุดท้ายของเดือน: เริ่มงานไม่เกินวันนั้นและยังไม่สิ้นสุดงาน; end date ว่างถือว่ายังทำงานแบบ candidate ต้องเทียบ HR ก่อนใช้เป็นตัวหาร",
+      "sql": "WITH base AS (SELECT emp_id, NULLIF(TRIM(emp_cid), '') AS cid_key, emp_work_begindate AS started, emp_resign_enddate AS ended FROM emp), stats AS (SELECT (COUNT(*))::bigint AS rows,\n(COUNT(DISTINCT emp_id))::bigint AS distinct_staff,\n(COUNT(DISTINCT cid_key))::bigint AS distinct_cid,\n(COUNT(*) FILTER (WHERE cid_key IS NULL))::bigint AS missing_cid,\n(COUNT(cid_key) - COUNT(DISTINCT cid_key))::bigint AS duplicate_cid_rows,\n(COUNT(*) FILTER (WHERE started IS NULL))::bigint AS missing_start,\n(COUNT(*) FILTER (WHERE ended IS NULL))::bigint AS missing_end,\n(COUNT(*) FILTER (WHERE ended < started))::bigint AS invalid_dates,\n(COUNT(DISTINCT emp_id) FILTER (WHERE started IS NULL OR ended < started))::bigint AS unknown_temporal_staff,\n(COUNT(DISTINCT emp_id) FILTER (WHERE started IS NOT NULL AND started <= CAST(:end_date AS date) - 1 AND (ended IS NULL OR ended >= CAST(:end_date AS date) - 1) AND (ended IS NULL OR ended >= started)))::bigint AS candidate_month_end_headcount FROM base)\nSELECT 'employees'::text AS profile_key, metric.metric_key::text, metric.count_value\nFROM stats CROSS JOIN LATERAL (VALUES ('rows', stats.rows),\n('distinct_staff', stats.distinct_staff),\n('distinct_cid', stats.distinct_cid),\n('missing_cid', stats.missing_cid),\n('duplicate_cid_rows', stats.duplicate_cid_rows),\n('missing_start', stats.missing_start),\n('missing_end', stats.missing_end),\n('invalid_dates', stats.invalid_dates),\n('unknown_temporal_staff', stats.unknown_temporal_staff),\n('candidate_month_end_headcount', stats.candidate_month_end_headcount)) AS metric(metric_key, count_value)",
+      "sqlSha256": "886a55b209c543d3f0fac19552a4c555804fc00e0c6993e0ecd1026557edaff7",
+      "metrics": [
+        {
+          "key": "rows",
+          "label": "แถวทะเบียน emp ปัจจุบัน"
+        },
+        {
+          "key": "distinct_staff",
+          "label": "emp_id ไม่ซ้ำในทะเบียน"
+        },
+        {
+          "key": "distinct_cid",
+          "label": "CID ไม่ซ้ำที่ไม่ว่าง"
+        },
+        {
+          "key": "missing_cid",
+          "label": "เจ้าหน้าที่ที่ CID ว่าง"
+        },
+        {
+          "key": "duplicate_cid_rows",
+          "label": "แถว CID ซ้ำเพิ่มเติม"
+        },
+        {
+          "key": "missing_start",
+          "label": "ไม่ระบุวันที่เริ่มงาน"
+        },
+        {
+          "key": "missing_end",
+          "label": "ไม่ระบุวันสิ้นสุดงาน (อาจยังทำงาน)"
+        },
+        {
+          "key": "invalid_dates",
+          "label": "วันสิ้นสุดก่อนเริ่มงาน"
+        },
+        {
+          "key": "unknown_temporal_staff",
+          "label": "emp_id ที่ยังจัดกลุ่มตามเวลาไม่ได้"
+        },
+        {
+          "key": "candidate_month_end_headcount",
+          "label": "Candidate emp_id ที่ทำงาน ณ สิ้นเดือน"
+        }
+      ]
+    },
+    {
+      "key": "accounts",
+      "title": "บัญชีผู้ใช้ HOSxP",
+      "scope": "current-register",
+      "explanation": "บัญชี opduser ณ เวลาตรวจ ไม่ใช่จำนวนบุคลากรทั้งหมด ไม่อ่าน password หรือข้อมูลสิทธิ์",
+      "sql": "WITH base AS (SELECT NULLIF(TRIM(loginname), '') AS account_key, NULLIF(TRIM(cid), '') AS cid_key FROM opduser), stats AS (SELECT (COUNT(*))::bigint AS rows,\n(COUNT(DISTINCT account_key))::bigint AS distinct_accounts,\n(COUNT(DISTINCT cid_key))::bigint AS distinct_cid,\n(COUNT(*) FILTER (WHERE cid_key IS NULL))::bigint AS missing_cid,\n(COUNT(cid_key) - COUNT(DISTINCT cid_key))::bigint AS duplicate_cid_rows FROM base)\nSELECT 'accounts'::text AS profile_key, metric.metric_key::text, metric.count_value\nFROM stats CROSS JOIN LATERAL (VALUES ('rows', stats.rows),\n('distinct_accounts', stats.distinct_accounts),\n('distinct_cid', stats.distinct_cid),\n('missing_cid', stats.missing_cid),\n('duplicate_cid_rows', stats.duplicate_cid_rows)) AS metric(metric_key, count_value)",
+      "sqlSha256": "4ce77afb2bd88722fcb187f41256d6cea1552a8915e9397ff55ff0267a881a6c",
+      "metrics": [
+        {
+          "key": "rows",
+          "label": "แถวบัญชี"
+        },
+        {
+          "key": "distinct_accounts",
+          "label": "loginname ไม่ซ้ำ"
+        },
+        {
+          "key": "distinct_cid",
+          "label": "CID ไม่ซ้ำที่ไม่ว่าง"
+        },
+        {
+          "key": "missing_cid",
+          "label": "บัญชีที่ CID ว่าง"
+        },
+        {
+          "key": "duplicate_cid_rows",
+          "label": "แถว CID ซ้ำเพิ่มเติม"
+        }
+      ]
+    }
+  ],
+  "representativeBranches": [
+    {
+      "code": "CE0102",
+      "sql": "\n      SELECT\n        'CE0102' AS indicator_code,\n        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,\n        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,\n        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,\n        SUM(EXTRACT(EPOCH FROM (opd_periodized.finish_time - opd_periodized.enter_er_time)) / NULLIF(60, 0)) AS numerator,\n        COUNT(*) AS denominator,\n        ROUND((SUM(EXTRACT(EPOCH FROM (opd_periodized.finish_time - opd_periodized.enter_er_time)) / NULLIF(60, 0)) * 1.0) / NULLIF(COUNT(*), 0), 2) AS value\n      FROM opd_periodized\n      WHERE opd_periodized.enter_er_time IS NOT NULL AND opd_periodized.finish_time IS NOT NULL AND opd_periodized.finish_time > opd_periodized.enter_er_time AND opd_periodized.er_emergency_level_id = 1 AND EXTRACT(DAY FROM opd_periodized.enter_er_time) IN (5, 15, 25)\n      GROUP BY 2, 3, 4"
+    },
+    {
+      "code": "DH0101",
+      "sql": "\n      SELECT\n        'DH0101' AS indicator_code,\n        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,\n        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,\n        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,\n        COUNT(*) FILTER (WHERE (pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') AND died) OR (has_acs_sdx AND died_from_acs)) AS numerator,\n        COUNT(*) AS denominator,\n        ROUND((COUNT(*) FILTER (WHERE (pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') AND died) OR (has_acs_sdx AND died_from_acs)) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value\n      FROM periodized\n      WHERE age_y >= 18 AND (pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') OR has_acs_sdx)\n      GROUP BY 2, 3, 4"
+    },
+    {
+      "code": "DH0112",
+      "sql": "\n      SELECT\n        'DH0112' AS indicator_code,\n        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END)) AS period_start,\n        CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END AS fiscal_month,\n        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,\n        ROUND(SUM(los)::numeric, 2) AS numerator,\n        COUNT(*) AS denominator,\n        ROUND(AVG(los), 2) AS value\n      FROM periodized\n      WHERE age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')\n      GROUP BY 2, 3, 4"
+    },
+    {
+      "code": "HE0101",
+      "sql": "\n      SELECT\n        'HE0101' AS indicator_code,\n        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (1)) AS period_start,\n        1 AS fiscal_month,\n        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,\n        COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.had_checkup) AS numerator,\n        COUNT(DISTINCT hr.staff_key) AS denominator,\n        ROUND((COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.had_checkup)) * 100.0 / NULLIF(COUNT(DISTINCT hr.staff_key), 0), 2) AS value\n      FROM (\n        SELECT\n          e.emp_id AS staff_key,\n          DATE_TRUNC('month', months.work_month)::date AS period_start,\n          EXTRACT(MONTH FROM months.work_month)::integer AS calendar_month,\n          (EXISTS (\n            SELECT 1\n            FROM patient pp\n            JOIN opdscreen scr ON scr.hn = pp.hn\n            WHERE pp.cid = e.emp_cid\n              AND scr.vstdate >= months.work_month\n              AND scr.vstdate < months.work_month + INTERVAL '1 month'\n              AND scr.checkup = '1'\n          )) AS had_checkup\n        FROM emp e\n        LEFT JOIN emp_position_main pm ON pm.emp_position_main_id = e.emp_position_main_id\n        JOIN GENERATE_SERIES(\n          DATE_TRUNC('month', GREATEST(COALESCE(e.emp_work_begindate, :start_date), :start_date)),\n          DATE_TRUNC('month', LEAST(COALESCE(e.emp_resign_enddate, :end_date), :end_date) - INTERVAL '1 day'),\n          INTERVAL '1 month'\n        ) AS months(work_month) ON TRUE\n        WHERE e.emp_work_begindate IS NULL OR e.emp_resign_enddate IS NULL\n          OR e.emp_resign_enddate >= e.emp_work_begindate\n      ) hr\n      WHERE TRUE\n      GROUP BY 2, 3, 4"
+    },
+    {
+      "code": "HH0102",
+      "sql": "\n      SELECT\n        'HH0102' AS indicator_code,\n        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (CASE WHEN (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) <= 6 THEN 1 ELSE 7 END)) AS period_start,\n        CASE WHEN (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) <= 6 THEN 1 ELSE 7 END AS fiscal_month,\n        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,\n        COUNT(DISTINCT opd_periodized.hn) FILTER (WHERE (\n      EXISTS (\n        SELECT 1\n        FROM ovstdiag sd\n        WHERE sd.vn = opd_periodized.vn\n          AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'Z716'\n      )\n      OR EXISTS (\n          SELECT 1\n          FROM iptdiag idg\n          WHERE idg.an = opd_periodized.an\n            AND REPLACE(UPPER(TRIM(idg.icd10)), '.', '') = 'Z716'\n        )\n      OR EXISTS (\n        SELECT 1\n        FROM opdscreen scr\n        WHERE scr.vn = opd_periodized.vn\n          AND (\n            scr.advice1 = 'Y' OR scr.advice2 = 'Y' OR scr.advice3 = 'Y'\n            OR scr.advice4 = 'Y' OR scr.advice5 = 'Y' OR scr.advice6 = 'Y'\n            OR scr.advice7 = 'Y' OR scr.advice8 = 'Y'\n            OR scr.advice7_note ILIKE '%smoke%'\n            OR scr.advice7_note ILIKE '%สูบ%'\n          )\n      )\n      OR EXISTS (\n        SELECT 1\n        FROM opitemrece oi\n        JOIN drugitems di ON di.icode = oi.icode\n        WHERE oi.vn = opd_periodized.vn\n          AND (\n            di.name ILIKE '%bupropion%'\n            OR di.name ILIKE '%varenicline%'\n            OR di.name ILIKE '%nicotine%'\n          )\n      )\n    )) AS numerator,\n        COUNT(DISTINCT opd_periodized.hn) AS denominator,\n        ROUND((COUNT(DISTINCT opd_periodized.hn) FILTER (WHERE (\n      EXISTS (\n        SELECT 1\n        FROM ovstdiag sd\n        WHERE sd.vn = opd_periodized.vn\n          AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'Z716'\n      )\n      OR EXISTS (\n          SELECT 1\n          FROM iptdiag idg\n          WHERE idg.an = opd_periodized.an\n            AND REPLACE(UPPER(TRIM(idg.icd10)), '.', '') = 'Z716'\n        )\n      OR EXISTS (\n        SELECT 1\n        FROM opdscreen scr\n        WHERE scr.vn = opd_periodized.vn\n          AND (\n            scr.advice1 = 'Y' OR scr.advice2 = 'Y' OR scr.advice3 = 'Y'\n            OR scr.advice4 = 'Y' OR scr.advice5 = 'Y' OR scr.advice6 = 'Y'\n            OR scr.advice7 = 'Y' OR scr.advice8 = 'Y'\n            OR scr.advice7_note ILIKE '%smoke%'\n            OR scr.advice7_note ILIKE '%สูบ%'\n          )\n      )\n      OR EXISTS (\n        SELECT 1\n        FROM opitemrece oi\n        JOIN drugitems di ON di.icode = oi.icode\n        WHERE oi.vn = opd_periodized.vn\n          AND (\n            di.name ILIKE '%bupropion%'\n            OR di.name ILIKE '%varenicline%'\n            OR di.name ILIKE '%nicotine%'\n          )\n      )\n    )) * 100.0) / NULLIF(COUNT(DISTINCT opd_periodized.hn), 0), 2) AS value\n      FROM opd_periodized\n      WHERE opd_periodized.age_y >= 15 AND (\n      LEFT(pdx, 3) = 'F17'\n      OR pdx = 'Z720'\n      OR EXISTS (\n        SELECT 1\n        FROM ovstdiag sd\n        WHERE sd.vn = opd_periodized.vn\n          AND (\n            LEFT(REPLACE(UPPER(TRIM(sd.icd10)), '.', ''), 3) = 'F17'\n            OR REPLACE(UPPER(TRIM(sd.icd10)), '.', '') = 'Z720'\n          )\n      )\n      OR EXISTS (\n          SELECT 1\n          FROM iptdiag idg\n          WHERE idg.an = opd_periodized.an\n            AND (\n              LEFT(REPLACE(UPPER(TRIM(idg.icd10)), '.', ''), 3) = 'F17'\n              OR REPLACE(UPPER(TRIM(idg.icd10)), '.', '') = 'Z720'\n            )\n        )\n    ) AND 1 = 1\n      GROUP BY 2, 3, 4"
+    },
+    {
+      "code": "SH0101",
+      "sql": "\n      SELECT\n        'SH0101' AS indicator_code,\n        DATE_TRUNC('month', period_start)::date - MAKE_INTERVAL(months => (CASE WHEN calendar_month >= 10 THEN calendar_month - 9 ELSE calendar_month + 3 END) - (1)) AS period_start,\n        1 AS fiscal_month,\n        CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,\n        SUM(hr.voluntary_resign_cnt) / NULLIF(12, 0) AS numerator,\n        (COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_start) + COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_end)) / NULLIF(2.0, 0) AS denominator,\n        ROUND((SUM(hr.voluntary_resign_cnt) / NULLIF(12, 0)) * 100.0 / NULLIF((COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_start) + COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_end)) / NULLIF(2.0, 0), 0), 2) AS value\n      FROM (\n        SELECT\n          e.emp_id AS staff_key,\n          DATE_TRUNC('month', months.work_month)::date AS period_start,\n          EXTRACT(MONTH FROM months.work_month)::integer AS calendar_month,\n          (SELECT COUNT(*)\n            FROM emp_resign rr\n            LEFT JOIN emp_resign_type rt ON rt.emp_resign_type_id = rr.emp_resign_type_id\n            WHERE rr.emp_id = e.emp_id\n              AND rr.emp_resign_date >= months.work_month\n              AND rr.emp_resign_date < months.work_month + INTERVAL '1 month'\n              AND (rt.emp_resign_type_name IS NULL OR rt.emp_resign_type_name NOT ILIKE ANY (ARRAY['%ให้ออก%', '%ไล่ออก%', '%ปลด%', '%เกษียณ%', '%เสียชีวิต%', '%ถึงแก่กรรม%', '%โอน%', '%ย้าย%', '%ตาย%']))) AS voluntary_resign_cnt,\n          ((e.emp_work_begindate IS NULL OR e.emp_work_begindate <= CASE WHEN EXTRACT(MONTH FROM months.work_month) >= 10 THEN DATE_TRUNC('year', months.work_month)::date + INTERVAL '9 months' ELSE DATE_TRUNC('year', months.work_month)::date - INTERVAL '3 months' END) AND (e.emp_resign_enddate IS NULL OR e.emp_resign_enddate >= CASE WHEN EXTRACT(MONTH FROM months.work_month) >= 10 THEN DATE_TRUNC('year', months.work_month)::date + INTERVAL '9 months' ELSE DATE_TRUNC('year', months.work_month)::date - INTERVAL '3 months' END)) AS active_at_fy_start,\n          ((e.emp_work_begindate IS NULL OR e.emp_work_begindate <= (CASE WHEN EXTRACT(MONTH FROM months.work_month) >= 10 THEN DATE_TRUNC('year', months.work_month)::date + INTERVAL '9 months' ELSE DATE_TRUNC('year', months.work_month)::date - INTERVAL '3 months' END + INTERVAL '1 year' - INTERVAL '1 day')) AND (e.emp_resign_enddate IS NULL OR e.emp_resign_enddate >= (CASE WHEN EXTRACT(MONTH FROM months.work_month) >= 10 THEN DATE_TRUNC('year', months.work_month)::date + INTERVAL '9 months' ELSE DATE_TRUNC('year', months.work_month)::date - INTERVAL '3 months' END + INTERVAL '1 year' - INTERVAL '1 day'))) AS active_at_fy_end\n        FROM emp e\n        LEFT JOIN emp_position_main pm ON pm.emp_position_main_id = e.emp_position_main_id\n        JOIN GENERATE_SERIES(\n          DATE_TRUNC('month', GREATEST(COALESCE(e.emp_work_begindate, :start_date), :start_date)),\n          DATE_TRUNC('month', LEAST(COALESCE(e.emp_resign_enddate, :end_date), :end_date) - INTERVAL '1 day'),\n          INTERVAL '1 month'\n        ) AS months(work_month) ON TRUE\n        WHERE e.emp_work_begindate IS NULL OR e.emp_resign_enddate IS NULL\n          OR e.emp_resign_enddate >= e.emp_work_begindate\n      ) hr\n      WHERE TRUE\n      GROUP BY 2, 3, 4"
+    }
+  ]
+}

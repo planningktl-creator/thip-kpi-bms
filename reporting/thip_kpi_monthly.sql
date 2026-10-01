@@ -918,7 +918,7 @@ fact_events AS (
         COUNT(*) AS denominator,
         ROUND((SUM(EXTRACT(EPOCH FROM (opd_periodized.finish_time - opd_periodized.enter_er_time)) / NULLIF(60, 0)) * 1.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM opd_periodized
-      WHERE opd_periodized.enter_er_time IS NOT NULL AND opd_periodized.finish_time IS NOT NULL AND opd_periodized.finish_time > opd_periodized.enter_er_time AND opd_periodized.er_emergency_level_id = 1
+      WHERE opd_periodized.enter_er_time IS NOT NULL AND opd_periodized.finish_time IS NOT NULL AND opd_periodized.finish_time > opd_periodized.enter_er_time AND opd_periodized.er_emergency_level_id = 1 AND EXTRACT(DAY FROM opd_periodized.enter_er_time) IN (5, 15, 25)
       GROUP BY 2, 3, 4
 
   UNION ALL
@@ -932,7 +932,7 @@ fact_events AS (
         COUNT(*) AS denominator,
         ROUND((COUNT(*) FILTER (WHERE EXTRACT(EPOCH FROM (opd_periodized.finish_time - opd_periodized.enter_er_time)) <= 3600) * 100.0) / NULLIF(COUNT(*), 0), 2) AS value
       FROM opd_periodized
-      WHERE opd_periodized.enter_er_time IS NOT NULL AND opd_periodized.finish_time IS NOT NULL AND opd_periodized.finish_time > opd_periodized.enter_er_time AND opd_periodized.er_emergency_level_id = 1
+      WHERE opd_periodized.enter_er_time IS NOT NULL AND opd_periodized.finish_time IS NOT NULL AND opd_periodized.finish_time > opd_periodized.enter_er_time AND opd_periodized.er_emergency_level_id = 1 AND EXTRACT(DAY FROM opd_periodized.enter_er_time) IN (5, 15, 25)
       GROUP BY 2, 3, 4
 
   UNION ALL
@@ -6123,6 +6123,8 @@ fact_events AS (
           DATE_TRUNC('month', LEAST(COALESCE(e.emp_resign_enddate, :end_date), :end_date) - INTERVAL '1 day'),
           INTERVAL '1 month'
         ) AS months(work_month) ON TRUE
+        WHERE e.emp_work_begindate IS NULL OR e.emp_resign_enddate IS NULL
+          OR e.emp_resign_enddate >= e.emp_work_begindate
       ) hr
       WHERE TRUE
       GROUP BY 2, 3, 4
@@ -6167,6 +6169,8 @@ fact_events AS (
           DATE_TRUNC('month', LEAST(COALESCE(e.emp_resign_enddate, :end_date), :end_date) - INTERVAL '1 day'),
           INTERVAL '1 month'
         ) AS months(work_month) ON TRUE
+        WHERE e.emp_work_begindate IS NULL OR e.emp_resign_enddate IS NULL
+          OR e.emp_resign_enddate >= e.emp_work_begindate
       ) hr
       WHERE TRUE
       GROUP BY 2, 3, 4
@@ -6202,6 +6206,8 @@ fact_events AS (
           DATE_TRUNC('month', LEAST(COALESCE(e.emp_resign_enddate, :end_date), :end_date) - INTERVAL '1 day'),
           INTERVAL '1 month'
         ) AS months(work_month) ON TRUE
+        WHERE e.emp_work_begindate IS NULL OR e.emp_resign_enddate IS NULL
+          OR e.emp_resign_enddate >= e.emp_work_begindate
       ) hr
       WHERE TRUE
       GROUP BY 2, 3, 4
@@ -6247,6 +6253,8 @@ fact_events AS (
           DATE_TRUNC('month', LEAST(COALESCE(e.emp_resign_enddate, :end_date), :end_date) - INTERVAL '1 day'),
           INTERVAL '1 month'
         ) AS months(work_month) ON TRUE
+        WHERE e.emp_work_begindate IS NULL OR e.emp_resign_enddate IS NULL
+          OR e.emp_resign_enddate >= e.emp_work_begindate
       ) hr
       WHERE TRUE
       GROUP BY 2, 3, 4
@@ -6292,6 +6300,8 @@ fact_events AS (
           DATE_TRUNC('month', LEAST(COALESCE(e.emp_resign_enddate, :end_date), :end_date) - INTERVAL '1 day'),
           INTERVAL '1 month'
         ) AS months(work_month) ON TRUE
+        WHERE e.emp_work_begindate IS NULL OR e.emp_resign_enddate IS NULL
+          OR e.emp_resign_enddate >= e.emp_work_begindate
       ) hr
       WHERE TRUE
       GROUP BY 2, 3, 4
@@ -6329,6 +6339,8 @@ fact_events AS (
           DATE_TRUNC('month', LEAST(COALESCE(e.emp_resign_enddate, :end_date), :end_date) - INTERVAL '1 day'),
           INTERVAL '1 month'
         ) AS months(work_month) ON TRUE
+        WHERE e.emp_work_begindate IS NULL OR e.emp_resign_enddate IS NULL
+          OR e.emp_resign_enddate >= e.emp_work_begindate
       ) hr
       WHERE TRUE
       GROUP BY 2, 3, 4
@@ -8634,6 +8646,8 @@ fact_events AS (
           DATE_TRUNC('month', LEAST(COALESCE(e.emp_resign_enddate, :end_date), :end_date) - INTERVAL '1 day'),
           INTERVAL '1 month'
         ) AS months(work_month) ON TRUE
+        WHERE e.emp_work_begindate IS NULL OR e.emp_resign_enddate IS NULL
+          OR e.emp_resign_enddate >= e.emp_work_begindate
       ) hr
       WHERE TRUE
       GROUP BY 2, 3, 4
@@ -8669,6 +8683,8 @@ fact_events AS (
           DATE_TRUNC('month', LEAST(COALESCE(e.emp_resign_enddate, :end_date), :end_date) - INTERVAL '1 day'),
           INTERVAL '1 month'
         ) AS months(work_month) ON TRUE
+        WHERE e.emp_work_begindate IS NULL OR e.emp_resign_enddate IS NULL
+          OR e.emp_resign_enddate >= e.emp_work_begindate
       ) hr
       WHERE TRUE
       GROUP BY 2, 3, 4
@@ -8704,6 +8720,8 @@ fact_events AS (
           DATE_TRUNC('month', LEAST(COALESCE(e.emp_resign_enddate, :end_date), :end_date) - INTERVAL '1 day'),
           INTERVAL '1 month'
         ) AS months(work_month) ON TRUE
+        WHERE e.emp_work_begindate IS NULL OR e.emp_resign_enddate IS NULL
+          OR e.emp_resign_enddate >= e.emp_work_begindate
       ) hr
       WHERE TRUE
       GROUP BY 2, 3, 4
@@ -8739,6 +8757,8 @@ fact_events AS (
           DATE_TRUNC('month', LEAST(COALESCE(e.emp_resign_enddate, :end_date), :end_date) - INTERVAL '1 day'),
           INTERVAL '1 month'
         ) AS months(work_month) ON TRUE
+        WHERE e.emp_work_begindate IS NULL OR e.emp_resign_enddate IS NULL
+          OR e.emp_resign_enddate >= e.emp_work_begindate
       ) hr
       WHERE hr.is_physician
       GROUP BY 2, 3, 4
@@ -8774,6 +8794,8 @@ fact_events AS (
           DATE_TRUNC('month', LEAST(COALESCE(e.emp_resign_enddate, :end_date), :end_date) - INTERVAL '1 day'),
           INTERVAL '1 month'
         ) AS months(work_month) ON TRUE
+        WHERE e.emp_work_begindate IS NULL OR e.emp_resign_enddate IS NULL
+          OR e.emp_resign_enddate >= e.emp_work_begindate
       ) hr
       WHERE hr.is_nurse
       GROUP BY 2, 3, 4
@@ -8809,6 +8831,8 @@ fact_events AS (
           DATE_TRUNC('month', LEAST(COALESCE(e.emp_resign_enddate, :end_date), :end_date) - INTERVAL '1 day'),
           INTERVAL '1 month'
         ) AS months(work_month) ON TRUE
+        WHERE e.emp_work_begindate IS NULL OR e.emp_resign_enddate IS NULL
+          OR e.emp_resign_enddate >= e.emp_work_begindate
       ) hr
       WHERE hr.is_allied_health
       GROUP BY 2, 3, 4
@@ -8844,6 +8868,8 @@ fact_events AS (
           DATE_TRUNC('month', LEAST(COALESCE(e.emp_resign_enddate, :end_date), :end_date) - INTERVAL '1 day'),
           INTERVAL '1 month'
         ) AS months(work_month) ON TRUE
+        WHERE e.emp_work_begindate IS NULL OR e.emp_resign_enddate IS NULL
+          OR e.emp_resign_enddate >= e.emp_work_begindate
       ) hr
       WHERE hr.is_back_office
       GROUP BY 2, 3, 4
@@ -9101,6 +9127,8 @@ fact_events AS (
           DATE_TRUNC('month', LEAST(COALESCE(e.emp_resign_enddate, :end_date), :end_date) - INTERVAL '1 day'),
           INTERVAL '1 month'
         ) AS months(work_month) ON TRUE
+        WHERE e.emp_work_begindate IS NULL OR e.emp_resign_enddate IS NULL
+          OR e.emp_resign_enddate >= e.emp_work_begindate
       ) hr
       WHERE TRUE
       GROUP BY 2, 3, 4
@@ -9144,6 +9172,8 @@ fact_events AS (
           DATE_TRUNC('month', LEAST(COALESCE(e.emp_resign_enddate, :end_date), :end_date) - INTERVAL '1 day'),
           INTERVAL '1 month'
         ) AS months(work_month) ON TRUE
+        WHERE e.emp_work_begindate IS NULL OR e.emp_resign_enddate IS NULL
+          OR e.emp_resign_enddate >= e.emp_work_begindate
       ) hr
       WHERE hr.is_direct_contact
       GROUP BY 2, 3, 4
@@ -9187,6 +9217,8 @@ fact_events AS (
           DATE_TRUNC('month', LEAST(COALESCE(e.emp_resign_enddate, :end_date), :end_date) - INTERVAL '1 day'),
           INTERVAL '1 month'
         ) AS months(work_month) ON TRUE
+        WHERE e.emp_work_begindate IS NULL OR e.emp_resign_enddate IS NULL
+          OR e.emp_resign_enddate >= e.emp_work_begindate
       ) hr
       WHERE hr.is_back_office
       GROUP BY 2, 3, 4
@@ -9237,6 +9269,8 @@ fact_events AS (
           DATE_TRUNC('month', LEAST(COALESCE(e.emp_resign_enddate, :end_date), :end_date) - INTERVAL '1 day'),
           INTERVAL '1 month'
         ) AS months(work_month) ON TRUE
+        WHERE e.emp_work_begindate IS NULL OR e.emp_resign_enddate IS NULL
+          OR e.emp_resign_enddate >= e.emp_work_begindate
       ) hr
       WHERE hr.is_direct_contact
       GROUP BY 2, 3, 4
@@ -9287,6 +9321,8 @@ fact_events AS (
           DATE_TRUNC('month', LEAST(COALESCE(e.emp_resign_enddate, :end_date), :end_date) - INTERVAL '1 day'),
           INTERVAL '1 month'
         ) AS months(work_month) ON TRUE
+        WHERE e.emp_work_begindate IS NULL OR e.emp_resign_enddate IS NULL
+          OR e.emp_resign_enddate >= e.emp_work_begindate
       ) hr
       WHERE hr.is_back_office
       GROUP BY 2, 3, 4

@@ -622,3 +622,20 @@ h1, h2, h3, p { margin: 0; }
   .step-session input { min-width: 0; width: 100%; flex-basis: 100%; }
   .step-progress { padding: 12px; }
 }
+.cohort-panel { padding: 20px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+.cohort-heading { display: flex; align-items: start; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+.cohort-heading h2 { margin: 0; font-size: 19px; }
+.cohort-heading p, .cohort-card p { color: var(--muted); font-size: 12px; line-height: 1.6; }
+.cohort-heading label { display: grid; gap: 5px; font-size: 12px; }
+.cohort-heading select { padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--ink); }
+.cohort-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.cohort-card { padding: 15px; border: 1px solid var(--line); border-radius: 8px; min-width: 0; }
+.cohort-card h3 { margin: 0; font-size: 15px; }
+.cohort-card strong, .cohort-card small { display: block; font-size: 12px; line-height: 1.6; }
+.cohort-card summary { padding: 10px 0; cursor: pointer; }
+.cohort-card dl { margin: 0; }
+.cohort-card dl div { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 12px; }
+.cohort-card dd { margin: 0; font-variant-numeric: tabular-nums; }
+.cohort-card .cohort-highlights { margin-top: 8px; }
+.cohort-card .cohort-highlights dd { font-size: 20px; font-weight: 600; color: var(--ink); }
+@media (max-width: 700px) { .cohort-heading { flex-direction: column; } .cohort-grid { grid-template-columns: minmax(0, 1fr); } .cohort-panel { padding: 14px; } }

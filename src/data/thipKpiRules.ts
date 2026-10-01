@@ -1,5 +1,6 @@
 import { thipRuleEvidenceByCode } from '@/data/thipRuleEvidence';
 import type { IndicatorGroup, IndicatorUnit } from '@/types/thip';
+import type { CohortDefinition } from '@/data/cohortTypes';
 
 /**
  * Lifecycle of a KPI rule. Only `ready` may be published as production data.
@@ -19,6 +20,8 @@ export type ThipKpiRuleStatus =
  * to `ready`. `getRuleReadiness()` reports what is still missing.
  */
 export type ThipKpiRuleEvidence = {
+  /** Structural candidate evidence; never supplies hospital approval/readiness by itself. */
+  cohortDefinition?: CohortDefinition;
   /** Hospital release approval is separate from SQL registration/readiness. */
   publicationApproval?: { version: string; from: string; until: string; evidence: string };
   hospitalTargetApproval?: { source: string; from: string; until: string; unit: IndicatorUnit };

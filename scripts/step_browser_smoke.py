@@ -4,17 +4,20 @@ import json
 import os
 import re
 import time
+from urllib.parse import urlparse, parse_qs
 from pathlib import Path
 from playwright.async_api import async_playwright, expect
 
 BASE = os.environ.get('THIP_STEP_SMOKE_URL', 'http://127.0.0.1:5183')
+PROFILES = {p['key']:p for p in json.loads((Path(__file__).resolve().parents[1]/'reporting/cohort_profiles.manifest.json').read_text(encoding='utf-8'))['profiles']}
 OUT = Path(__file__).resolve().parents[1] / 'tmp' / 'step-browser'
 OUT.mkdir(parents=True, exist_ok=True)
 
 async def fixtures(context, scenario='normal'):
     calls = []
     async def paste(route):
-        await route.fulfill(json={'result': {'user_info': {'hospital_code': '10929', 'bms_url': 'https://step.mock.invalid/', 'bms_session_code': 'SYNTHETIC_STEP_TOKEN', 'bms_database_type': 'PostgreSQL'}}}, headers={'Access-Control-Allow-Origin': '*'})
+        session = parse_qs(urlparse(route.request.url).query)['code'][0]
+        await route.fulfill(json={'result': {'user_info': {'hospital_code': '10929', 'bms_url': 'https://step.mock.invalid/', 'bms_session_code': f'SYNTHETIC_STEP_TOKEN_{session}', 'bms_database_type': 'PostgreSQL'}}}, headers={'Access-Control-Allow-Origin': '*'})
     async def api(route):
         headers = {'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Authorization, Content-Type', 'Access-Control-Allow-Methods': 'POST, OPTIONS'}
         if route.request.method == 'OPTIONS':
@@ -25,6 +28,21 @@ async def fixtures(context, scenario='normal'):
         assert not re.search(r'\b(INSERT|DELETE|UPDATE|CREATE|DROP)\b', sql, re.I)
         if 'SELECT VERSION()' in sql:
             await route.fulfill(json={'result': [{'version': 'PostgreSQL 16 SYNTHETIC'}]}, headers=headers)
+            return
+        profile = re.search(r"SELECT '(\w+)'::text AS profile_key", sql)
+        if profile:
+            key = profile.group(1)
+            call = {'code':'profile:'+key,'start':payload['params']['start_date']['value'],'at':time.monotonic(),'end':None}
+            calls.append(call)
+            try:
+                await asyncio.sleep(2 if scenario=='profile-stale' else .25)
+                if scenario=='profile-auth': await route.fulfill(status=401,json={},headers=headers)
+                elif scenario=='profile-rate': await route.fulfill(status=429,json={},headers={**headers,'Retry-After':'2'})
+                elif scenario=='profile-failure' and key=='person': await route.fulfill(status=404,json={},headers=headers)
+                else: await route.fulfill(json={'result':[{'profile_key':key,'metric_key':m['key'],'count_value':7 if m['key']=='rows' else 2} for m in PROFILES[key]['metrics']]},headers=headers)
+            except Exception:
+                if scenario!='profile-stale' and context.pages and not all(page.is_closed() for page in context.pages): raise
+            finally: call['end']=time.monotonic()
             return
         codes = re.findall(r"'([A-Z]{2}\d{4}(?:\.\d)?)' AS indicator_code", sql)
         assert len(codes) == 1
@@ -74,7 +92,7 @@ async def main():
         await page.get_by_role('button', name='พัก', exact=True).click()
         await expect(page.get_by_role('button', name='ต่อ', exact=True)).to_be_enabled()
         count = len(calls); await asyncio.sleep(1.2); assert len(calls) == count
-        await page.locator('[data-code="DH0101"] summary').click()
+        await page.locator('[data-code="DH0101"] details:not(.cohort-evidence) summary').click()
         await expect(page.locator('[data-code="DH0101"] details table')).to_contain_text('2025-10-01')
         await expect(page.locator('.step-disclaimer')).to_contain_text('สูตรยังไม่รับรอง')
         await page.screenshot(path=str(OUT / 'desktop-details.png'))
@@ -98,7 +116,7 @@ async def main():
         await page.get_by_label('เลือกปีงบประมาณ').select_option('2027')
         await expect(page.locator('[data-code="DH0101"]')).to_contain_text('query สำเร็จ')
         await page.get_by_role('button', name='พัก', exact=True).click()
-        await page.locator('[data-code="DH0101"] summary').click()
+        await page.locator('[data-code="DH0101"] details:not(.cohort-evidence) summary').click()
         await expect(page.locator('[data-code="DH0101"] details table')).not_to_contain_text('2025-10-01')
         assert await page.evaluate("!JSON.stringify({...localStorage,...sessionStorage}).includes('SYNTHETIC_')")
         await page.reload(wait_until='networkidle')
@@ -118,9 +136,9 @@ async def main():
         await expect(page.locator('[data-code="DH0101"]')).to_contain_text('query สำเร็จ')
         await page.get_by_role('button', name='พัก', exact=True).click()
         assert await page.evaluate('document.documentElement.scrollWidth <= innerWidth')
-        await page.locator('[data-code="DH0101"] summary').focus()
+        await page.locator('[data-code="DH0101"] details:not(.cohort-evidence) summary').focus()
         await page.keyboard.press('Enter')
-        await expect(page.locator('[data-code="DH0101"] details')).to_have_attribute('open', '')
+        await expect(page.locator('[data-code="DH0101"] details:not(.cohort-evidence)')).to_have_attribute('open', '')
         await page.screenshot(path=str(OUT / 'mobile-details.png'))
         await page.evaluate('scrollTo(0, 0)')
         await page.screenshot(path=str(OUT / 'mobile.png'))
@@ -139,9 +157,11 @@ async def main():
                 await expect(page.locator('[data-code="DH0101"]')).to_contain_text('query สำเร็จ')
                 await page.get_by_role('button', name='พัก', exact=True).click()
                 await asyncio.sleep(2)
-                await page.locator('[data-code="DH0101"] summary').click()
-                await expect(page.locator('[data-code="DH0101"] details')).to_contain_text('2026-10-01')
-                await expect(page.locator('[data-code="DH0101"] details')).not_to_contain_text('2025-10-01')
+                await page.locator('[data-code="DH0101"] details:not(.cohort-evidence) summary').click()
+                await expect(page.locator('[data-code="DH0101"] details:not(.cohort-evidence)')).to_contain_text('2026-10-01')
+                await expect(page.locator('[data-code="DH0101"] details:not(.cohort-evidence)')).not_to_contain_text('2025-10-01')
+                cached_years = await page.evaluate("""async () => {const db=await new Promise(resolve=>{const r=indexedDB.open('thip-candidate-cache',1);r.onsuccess=()=>resolve(r.result);});const entries=await new Promise(resolve=>{const r=db.transaction('entries').objectStore('entries').getAll();r.onsuccess=()=>resolve(r.result);});db.close();return entries.map(e=>e.fiscalYear);}""")
+                assert cached_years and all(year == 2027 for year in cached_years)
             else:
                 await expect(page.locator('[data-code="DH0101"]')).to_contain_text('ล้มเหลว')
                 await expect(page.get_by_role('button', name='ต่อ', exact=True)).to_be_disabled()

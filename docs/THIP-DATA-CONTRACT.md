@@ -4,6 +4,8 @@ This document describes the official THIP reporting series (232 codes / 1,552 ca
 
 The separate [Step validation page](THIP-STEP-LOADING.md) consumes seven-column candidates from registered per-code queries with progress/pause/resume/cancel. It never feeds candidate facts into official screens/export, and does not weaken this strict normalized source or publication contract. `observedAt` is query observation time; unknown source freshness remains NULL. Production Docker builds may include this page without source-view configuration; official runtime gates still apply.
 
+Its [24-hour browser cache](THIP-CANDIDATE-CACHE.md) stores only validated aggregate projections after successful queries. Cache reads require a verified PostgreSQL session and matching context/query/rule versions. Cached candidates retain unapproved status and do not become official reporting or monitoring measurements.
+
 ## Indicator
 
 ```ts
@@ -118,3 +120,6 @@ The dashboard may show a target-attainment summary, but it is not an additional 
 Launcher credentials are transient capabilities. The app removes `bms-session-id` and marketplace tokens from the URL before the PasteJSON request, keeps them only in page memory for retry after a transient transport failure, and discards them after an explicit session rejection. They are not persisted or logged.
 
 Transport deadlines cover fetch and response-body parsing and respond to cancellation. Year changes discard old data/coverage immediately; stale requests cannot replace the selected year's snapshot or enable export. Nginx access logs use method/URI path/status without query strings, Referer or headers; HTTP error logging is disabled to avoid raw capability-bearing request lines. Safe access logs and health checks remain available. CSV escapes formula-like text while retaining typed numeric values.
+## Cohort profiles and rule evidence (2026-10-01)
+
+Validation-only `cohort-profile` aggregates have an independent contract and cache namespace, documented in [THIP-COHORT-PROFILES.md](THIP-COHORT-PROFILES.md). Six registered SELECTs return only profile_key/metric_key/count_value, share the single-request Step lane, and never populate reporting or monitoring. Current registry snapshots are labelled at read time; monthly service/admission/headcount cohorts preserve their own dates and units. `CohortDefinition` evidence covers all 232 codes; structural mapping cannot satisfy publication approval or hospital readiness. Generated human/machine mapping and profile manifests are checked with `pnpm cohorts:check`.

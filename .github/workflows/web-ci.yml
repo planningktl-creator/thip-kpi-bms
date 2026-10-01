@@ -27,6 +27,9 @@ jobs:
       - run: pnpm test
       - run: pnpm fixture:export
       - run: pnpm sourceview:check
+      - run: pnpm steps:check
+      - run: pnpm cohorts:check
+      - run: python scripts/cohort_sql_smoke.py
       - run: python scripts/check-thip-fixtures.py
       - run: pnpm run build
       - run: pnpm monitoring:release-check
@@ -46,3 +49,4 @@ jobs:
       - run: VITE_BMS_KPI_SOURCE_VIEW=reporting.thip_kpi_monthly VITE_BMS_MONITORING_SOURCE_VIEW=reporting.thip_monthly_monitoring pnpm exec vite --host 127.0.0.1 --port 5175 > /tmp/thip-kpi-mocked-source.log 2>&1 &
       - run: python scripts/visual_smoke.py
       - run: python scripts/monitoring_browser_smoke.py
+      - run: THIP_STEP_SMOKE_URL=http://127.0.0.1:5173 python scripts/cohort_browser_smoke.py

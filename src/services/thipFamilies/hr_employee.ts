@@ -257,6 +257,8 @@ function empMonthSource(extraColumns: string, extraJoin = ''): string {
           DATE_TRUNC('month', LEAST(COALESCE(e.emp_resign_enddate, :end_date), :end_date) - INTERVAL '1 day'),
           INTERVAL '1 month'
         ) AS months(work_month) ON TRUE
+        WHERE e.emp_work_begindate IS NULL OR e.emp_resign_enddate IS NULL
+          OR e.emp_resign_enddate >= e.emp_work_begindate
       ) hr`;
 }
 

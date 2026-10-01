@@ -8,11 +8,11 @@
 - Step 3 ส่ง registered SELECT ครั้งละหนึ่งรหัส เว้นอย่างน้อย 1 วินาทีหลัง request/body/validation จบ. ใช้ observation window เต็ม FY และ reporting cadence เดิม; ไม่มี time bisection หรือ annual/12.
 - แต่ละผลผ่าน validator แล้วแสดงทันทีในตารางตามลำดับคิว ทั้ง source value, อัตราคำนวณสอบทาน, ตัวตั้ง/ตัวหาร, หน่วย, candidate version, latency และเวลาที่อ่านผล. ฟิลเตอร์ไม่เปลี่ยนคิว; ตารางไม่รอครบทั้งปี/ทั้งชุด.
 - พักรอ active request จบแล้วหยุด; ต่อทำเฉพาะงานที่เหลือและรักษาเวลารอเดิม. ยกเลิก abort request/เวลารอ เก็บผลสำเร็จที่เห็นอยู่จนเริ่มใหม่หรือเปลี่ยน context.
-- Retry เป็นคำสั่งจากผู้ใช้เท่านั้น เลือกเฉพาะ failed codes; ไม่เรียก successful codes ซ้ำ. เปลี่ยน FY/session, ออกจากหน้า หรือ reconnect ยกเลิกคิวเดิม; กลับเข้าหน้าเริ่มคิวใหม่. ไม่มี durable result cache.
+- Retry ในคิวเดียวกันเป็นคำสั่งจากผู้ใช้เท่านั้น เลือกเฉพาะ failed codes; ไม่เรียก successful codes ซ้ำ. เปลี่ยน FY/session, ออกจากหน้า หรือ reconnect ยกเลิกคิวเดิม. กลับเข้าหน้าเริ่มคิวใหม่โดยคืน successful aggregates จาก IndexedDB อายุ 24 ชั่วโมงหลังตรวจ session แล้ว และโหลดเฉพาะผลที่ขาด/หมดอายุ. Failed results ไม่ถูก cache. ดู [candidate cache contract](THIP-CANDIDATE-CACHE.md).
 
 ## การจำแนกข้อมูลและข้อผิดพลาด
 
-`ThipStepLoader` ส่ง `StepSnapshot` ผ่าน progress callback; มี state idle/running/pausing/paused/cancelled/complete และ step pending/running/success/failed/skipped. Snapshot เป็นสำเนาของ aggregate objects และไม่มี runtime/session config. Query success, non-NULL value cells และ approved coverage เป็นคนละตัวเลข
+`ThipStepLoader` ส่ง `StepSnapshot` ผ่าน progress callback; มี state idle/running/pausing/paused/cancelled/complete และ step pending/running/success/failed/skipped. Snapshot เป็นสำเนาของ aggregate objects และไม่มี runtime/session config. Cache hits, query success รอบนี้, non-NULL value cells และ approved coverage เป็นคนละตัวเลข. แถว cached แสดงเวลาอ่านผล/หมดอายุ; source freshness ยังไม่ยืนยัน
 
 Candidate validator รับเจ็ดคอลัมน์ `indicator_code, period_start, fiscal_month, fiscal_year, numerator, denominator, value` และ optional `fact_present` เท่านั้น. ตรวจ code/FY/cadence/date, duplicate periods, numeric facts และ positive denominator สำหรับ non-NULL rates. Registered per-code SELECT เพิ่ม fact-presence flag เพื่อให้ absent facts ที่ outer grid เติม 0 ไม่ถูกตีความเป็น cohort ว่าง. Seven-column exports ที่ไม่มี flag ยังคง unknown เมื่อเป็น 0/0
 
@@ -45,6 +45,8 @@ python scripts/thip_source_audit.py --input test-fixtures/thip-kpi-complete-2026
 `pnpm steps:build` สร้าง `reporting/thip_step_queries.manifest.json` จาก source (key/code/cadence/full-window/query bytes/SHA256) ไม่มีข้อมูลคน/credentials. `steps:check` ตรวจ 177 native/55 external, one-code SELECT, numeric ratio และ generated drift. Manifest ใช้ FY2026 เป็น canonical validation window ไม่ล็อก UI ให้โหลดเฉพาะปีนี้
 
 เปิด dev server ที่ port5183 แล้วรัน `python scripts/step_browser_smoke.py` (หรือกำหนด `THIP_STEP_SMOKE_URL`). Script mock BMS ทั้งหมด: desktop/mobile, progress-before-complete, gap/controls/retry, filtering, manual session/reload, FY/stale responses, auth/429, keyboard details และ console canary. Screenshots/results อยู่ใน ignored `tmp/step-browser/`
+
+รัน `python scripts/step_cache_browser_smoke.py` เพิ่มเพื่อตรวจ IndexedDB/persistent browser profile, session/FY isolation, TTL, reload/clear controls และ storage-denied fallback. Chromium profile อยู่ใน OS temporary directory เพื่อหลีกเลี่ยงไฟล์ที่ล็อกชน Vite watcher
 
 การตรวจรับโรงพยาบาลจริงยังไม่ทำ: ต้องยืนยัน cohort/join/date/population/targets/version และเทียบกับรายงาน aggregate ก่อนเปิดผลเผยแพร่. รอบนี้ไม่ deploy ไม่เปิด Issues และไม่เรียก BMS/HOSxP สด
 
