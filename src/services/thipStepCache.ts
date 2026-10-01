@@ -1,21 +1,23 @@
 import type { BmsRuntimeConfig } from './bmsSession';
-import { planThipSteps, validateCandidateRows, type CandidateAggregate } from './thipStepLoader';
-import { thipKpiRulesByCode } from '@/data/thipKpiRules';
+import { validateCandidateRows, type CandidateAggregate } from './thipStepLoader';
+import { runtimeRulesByCode as thipKpiRulesByCode, runtimeSignatures } from '@/data/thipRuntime';
 import { monitoringRulesByCode } from '@/monitoring/rules';
+import { recordAppPerformance } from './appPerformance';
 import { getCurrentFiscalYear } from '@/utils/fiscal';
 
 export const STEP_CACHE_DB = 'thip-candidate-cache';
-export const STEP_CACHE_VERSION = 1;
+export const STEP_CACHE_VERSION = 2;
 export const STEP_CACHE_TTL = 24 * 60 * 60 * 1000;
 type Fact = { indicator_code: string; fiscal_year: number; fiscal_month: number; period_start: string; numerator: number | null; denominator: number | null; value: number | null; fact_present?: boolean };
 export type CacheEntry = { key: string; scope: string; version: number; fiscalYear: number; code: string; fingerprint: string; ruleVersion: string; observedAt: string; expiresAt: number; facts: Fact[] };
 export type CachedStep = { code: string; rows: CandidateAggregate[]; observedAt: string; expiresAt: number };
 export interface StepCachePort {
   read(signal: AbortSignal): Promise<CachedStep[]>;
-  write(code: string, rows: CandidateAggregate[], signal: AbortSignal): Promise<CachedStep | null>;
+  write(code: string, rows: readonly CandidateAggregate[], signal: AbortSignal): Promise<CachedStep | null>;
 }
 export interface CacheRepository {
   read(key: string): Promise<unknown>;
+  readMany?(keys: readonly string[]): Promise<unknown[]>;
   write(entry: CacheEntry, signal: AbortSignal): Promise<void>;
   clear(scope?: string, fiscalYear?: number, namespace?: string): Promise<void>;
   prune(now: number): Promise<void>;
@@ -24,6 +26,7 @@ const clone = <T,>(value: T): T => structuredClone(value);
 export class MemoryCacheRepository implements CacheRepository {
   private entries = new Map<string, CacheEntry>();
   async read(key: string) { return clone(this.entries.get(key)); }
+  async readMany(keys: readonly string[]) { return keys.map(key => clone(this.entries.get(key))); }
   async write(entry: CacheEntry, signal: AbortSignal) { if (!signal.aborted) this.entries.set(entry.key, clone(entry)); }
   async clear(scope?: string, fiscalYear?: number, namespace?: string) { for (const [key, entry] of this.entries) if ((!scope || (entry.scope === scope && entry.fiscalYear === fiscalYear)) && (!namespace || key.includes(`:${namespace}:`))) this.entries.delete(key); }
   async prune(now: number) { for (const [key, entry] of this.entries) if (!Number.isFinite(entry.expiresAt) || entry.expiresAt <= now) this.entries.delete(key); }
@@ -32,15 +35,21 @@ export class MemoryCacheRepository implements CacheRepository {
 /** Transactions are bounded; blocked/private-mode storage must not block the KPI queue. */
 export class IndexedDbCacheRepository implements CacheRepository {
   private database: Promise<IDBDatabase> | null = null;
+  private lastPruned = -Infinity;
   private open(): Promise<IDBDatabase> {
     if (!this.database) this.database = new Promise((resolve, reject) => {
       const request = indexedDB.open(STEP_CACHE_DB, STEP_CACHE_VERSION);
       let abandoned = false;
       const timer = setTimeout(() => { abandoned = true; reject(new Error('Cache open timeout')); }, 3000);
-      request.onupgradeneeded = () => { if (!request.result.objectStoreNames.contains('entries')) request.result.createObjectStore('entries', { keyPath: 'key' }); };
+      request.onupgradeneeded = () => {
+        const store = request.result.objectStoreNames.contains('entries') ? request.transaction!.objectStore('entries') : request.result.createObjectStore('entries', { keyPath: 'key' });
+        store.clear(); // v1 fingerprints cannot prove compatibility with the new descriptor contract.
+        if (!store.indexNames.contains('context')) store.createIndex('context', ['scope', 'fiscalYear']);
+        if (!store.indexNames.contains('expiry')) store.createIndex('expiry', 'expiresAt');
+      };
       request.onerror = () => { abandoned = true; clearTimeout(timer); reject(new Error('Cache unavailable')); };
       request.onblocked = () => { abandoned = true; clearTimeout(timer); reject(new Error('Cache blocked')); };
-      request.onsuccess = () => { clearTimeout(timer); if (abandoned) { request.result.close(); return; } request.result.onversionchange = () => request.result.close(); resolve(request.result); };
+      request.onsuccess = () => { clearTimeout(timer); if (abandoned) { request.result.close(); return; } request.result.onversionchange = () => { request.result.close(); this.database = null; }; resolve(request.result); };
     });
     return this.database;
   }
@@ -60,17 +69,20 @@ export class IndexedDbCacheRepository implements CacheRepository {
     });
   }
   read(key: string) { return this.transaction<unknown>('readonly', (store, set) => { store.get(key).onsuccess = (event) => set((event.target as IDBRequest).result); }); }
+  readMany(keys: readonly string[]) { return this.transaction<unknown[]>('readonly', (store, set) => { const values: unknown[] = Array(keys.length); set(values); keys.forEach((key, index) => { store.get(key).onsuccess = event => { values[index] = (event.target as IDBRequest).result; }; }); }); }
   write(entry: CacheEntry, signal: AbortSignal) { return this.transaction<void>('readwrite', (store) => { store.put(entry); }, signal); }
   clear(scope?: string, fiscalYear?: number, namespace?: string) {
     return this.transaction<void>('readwrite', (store) => {
       if (!scope && !namespace) { store.clear(); return; }
-      store.openCursor().onsuccess = (event) => { const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result; if (!cursor) return; if ((!scope || (cursor.value.scope === scope && cursor.value.fiscalYear === fiscalYear)) && (!namespace || cursor.key.toString().includes(`:${namespace}:`))) cursor.delete(); cursor.continue(); };
+      (scope ? store.index('context').openCursor(IDBKeyRange.only([scope, fiscalYear!])) : store.openCursor()).onsuccess = (event) => { const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result; if (!cursor) return; if ((!scope || (cursor.value.scope === scope && cursor.value.fiscalYear === fiscalYear)) && (!namespace || cursor.primaryKey.toString().includes(`:${namespace}:`))) cursor.delete(); cursor.continue(); };
     });
   }
-  prune(now: number) {
-    return this.transaction<void>('readwrite', (store) => {
-      store.openCursor().onsuccess = (event) => { const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result; if (!cursor) return; if (!Number.isFinite(cursor.value.expiresAt) || cursor.value.expiresAt <= now) cursor.delete(); cursor.continue(); };
+  async prune(now: number) {
+    if (now - this.lastPruned < 60000) return;
+    await this.transaction<void>('readwrite', (store) => {
+      store.index('expiry').openCursor(IDBKeyRange.upperBound(now)).onsuccess = (event) => { const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result; if (!cursor) return; cursor.delete(); cursor.continue(); };
     });
+    this.lastPruned = now;
   }
 }
 
@@ -83,6 +95,7 @@ export class ResilientCacheRepository implements CacheRepository {
     try { return await work(); } catch { if (this.persistent) { this.persistent = false; this.onUnavailable(); } }
   }
   async read(key: string) { return await this.attempt(() => this.disk.read(key)) ?? this.memory.read(key); }
+  async readMany(keys: readonly string[]) { return await this.attempt(() => this.disk.readMany ? this.disk.readMany(keys) : Promise.all(keys.map(key => this.disk.read(key)))) ?? this.memory.readMany(keys); }
   async write(entry: CacheEntry, signal: AbortSignal) {
     if (signal.aborted) return;
     // Cancellation is not a storage failure. Aborted disk transactions never fall back to a stale write.
@@ -113,14 +126,16 @@ export function candidateCacheScope(runtime: BmsRuntimeConfig): Promise<string> 
 
 export async function createStepCache(runtime: BmsRuntimeConfig, fiscalYear: number, repository: CacheRepository, signal: AbortSignal): Promise<StepCachePort & { clear(): Promise<void> }> {
   // Persist only an opaque digest of the verified capability, never runtime/session fields.
+  const started = performance.now();
   const scope = await candidateCacheScope(runtime);
-  const descriptors = await Promise.all(planThipSteps(fiscalYear).map(async (plan) => {
+  const descriptors = await Promise.all(runtimeSignatures.map(async (plan) => {
     const ruleVersion = thipKpiRulesByCode.get(plan.code)?.ruleVersion ?? 'candidate-unversioned';
-    const fingerprint = await cacheDigest([plan.query.sql, plan.start, plan.end, thipKpiRulesByCode.get(plan.code), monitoringRulesByCode.get(plan.code)?.unit]);
+    const fingerprint = await cacheDigest([plan.sqlHash, plan.ruleHash, `${fiscalYear - 1}-10-01`, `${fiscalYear}-10-01`, monitoringRulesByCode.get(plan.code)?.unit]);
     return { code: plan.code, fingerprint, ruleVersion, key: `${scope}:${fiscalYear}:thip-report:${plan.code}:${fingerprint}` };
   }));
   if (signal.aborted) throw new DOMException('Cancelled', 'AbortError');
   await repository.prune(Date.now());
+  recordAppPerformance({ phase: 'cache-prepare', key: 'thip-report', durationMs: performance.now() - started, success: true });
   function restore(value: unknown, descriptor: typeof descriptors[number]): CachedStep | null {
     try {
       if (!value || typeof value !== 'object') return null;
@@ -135,9 +150,13 @@ export async function createStepCache(runtime: BmsRuntimeConfig, fiscalYear: num
   }
   return {
     async read(readSignal) {
-      const entries = await Promise.all(descriptors.map(async (descriptor) => ({ descriptor, value: await repository.read(descriptor.key) })));
+      const started = performance.now();
+      const values = repository.readMany ? await repository.readMany(descriptors.map(descriptor => descriptor.key)) : await Promise.all(descriptors.map(descriptor => repository.read(descriptor.key)));
+      const entries = descriptors.map((descriptor, index) => ({ descriptor, value: values[index] }));
       if (signal.aborted || readSignal.aborted) return [];
-      return entries.map(({ value, descriptor }) => restore(value, descriptor)).filter((entry): entry is CachedStep => entry !== null);
+      const restored = entries.map(({ value, descriptor }) => restore(value, descriptor)).filter((entry): entry is CachedStep => entry !== null);
+      recordAppPerformance({ phase: 'cache-read', key: 'thip-report', durationMs: performance.now() - started, success: true });
+      return restored;
     },
     async write(code, rows, writeSignal) {
       const descriptor = descriptors.find((entry) => entry.code === code);

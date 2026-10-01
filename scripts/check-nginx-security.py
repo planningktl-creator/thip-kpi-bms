@@ -1,6 +1,8 @@
 """Check capability-safe logs on an isolated localhost container; no BMS access."""
 import argparse
 import json
+import gzip
+import re
 import subprocess
 import time
 import urllib.request
@@ -17,14 +19,30 @@ try:
         try:
             with urllib.request.urlopen(request, timeout=2) as response:
                 assert response.status == 200
+                assert 'no-store' in response.headers.get('Cache-Control', '')
+                html = response.read().decode('utf-8')
             break
         except (OSError, AssertionError):
             time.sleep(.1)
     else:
         raise AssertionError('Local test container did not respond')
+    asset = re.search(r'src="([^"]*/assets/[^"/]+\.js)"', html)
+    assert asset, 'Hashed application entry missing'
+    asset_path = asset.group(1)
+    identity = urllib.request.Request(f'http://127.0.0.1:{args.port}{asset_path}', headers={'Accept-Encoding':'identity'})
+    with urllib.request.urlopen(identity, timeout=2) as response:
+        original = response.read()
+        assert 'immutable' in ','.join(response.headers.get_all('Cache-Control',[]))
+    compressed = urllib.request.Request(f'http://127.0.0.1:{args.port}{asset_path}', headers={'Accept-Encoding':'gzip'})
+    with urllib.request.urlopen(compressed, timeout=2) as response:
+        assert response.headers.get('Content-Encoding') == 'gzip'
+        assert 'Accept-Encoding' in response.headers.get('Vary','')
+        body = response.read()
+        assert gzip.decompress(body) == original
+    subprocess.run(['docker','exec',container,'test','-f',f'/usr/share/nginx/html{asset_path}.gz'],check=True)
     logs = subprocess.check_output(['docker', 'logs', container], stderr=subprocess.STDOUT, text=True)
     assert '"GET /index.html HTTP/1.1"' in logs or '"GET / HTTP/1.1"' in logs, 'Safe request log missing'
     assert not any(canary in logs for canary in canaries), 'Synthetic credential canary leaked into logs'
-    print(json.dumps({'safe_access_log': True, 'credential_canary_absent': True, 'local_container_only': True}))
+    print(json.dumps({'safe_access_log': True, 'credential_canary_absent': True, 'html_no_store':True, 'assets_immutable':True, 'precompressed_gzip':True, 'local_container_only': True}))
 finally:
     subprocess.run(['docker', 'rm', '-f', container], check=True, stdout=subprocess.DEVNULL)

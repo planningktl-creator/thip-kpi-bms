@@ -1,5 +1,5 @@
 import type { Indicator, MonthlyResult } from '@/types/thip';
-import { getFormulaScale, thipKpiRulesByCode } from '@/data/thipKpiRules';
+import { getFormulaScale, thipKpiRulesByCode } from '@/data/thipRuleSource';
 
 /**
  * Per-indicator statistical process control chart.

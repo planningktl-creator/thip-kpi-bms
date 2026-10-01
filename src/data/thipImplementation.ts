@@ -1,4 +1,4 @@
-import { thipKpiRules } from '@/data/thipKpiRules';
+import { thipKpiRules } from '@/data/thipRuleSource';
 
 /**
  * Implementation tier for each THIP code.

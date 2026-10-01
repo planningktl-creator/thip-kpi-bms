@@ -35,7 +35,7 @@ LEFT(pdx, 3) IN ('G40', 'G41')
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - patient HN ปัจจุบันไม่ใช่ population กลางปีอายุ 15–74 ในพื้นที่รับผิดชอบ; ต้องใช้ population denominator ภายนอก
 
-Source tables: an_stat, death, ipt, iptdiag, patient. SQL SHA256: e397fb5417825fc2d8e2132d60a9180a4cb407c8637caee016a3cb4173b93e36
+Source tables: an_stat, death, ipt, iptdiag, patient. SQL SHA256: 7603f8dc48f091a99ad814b1e225137db6931f7f61ce0d06cb6e0c792d3b758c
 
 ## AA0102
 
@@ -77,7 +77,7 @@ periodized
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - patient HN ปัจจุบันไม่ใช่ population กลางปีอายุ 15–74 ในพื้นที่รับผิดชอบ; ต้องใช้ population denominator ภายนอก
 
-Source tables: an_stat, death, ipt, iptdiag, patient. SQL SHA256: 075d892658b645e9ed9cedf243a9492dcee8e2c95f12a053935213685424bce9
+Source tables: an_stat, death, ipt, iptdiag, patient. SQL SHA256: 7c744fe618c4d29e2e27d6c2886a6d36162369c71919549b3267011a41c9fee0
 
 ## AA0103
 
@@ -108,7 +108,7 @@ LEFT(pdx, 3) IN ('J45', 'J46')
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - patient HN ปัจจุบันไม่ใช่ population กลางปีอายุ 15–74 ในพื้นที่รับผิดชอบ; ต้องใช้ population denominator ภายนอก
 
-Source tables: an_stat, death, ipt, iptdiag, patient. SQL SHA256: fa24e18f777b9ece094c4e816945e38faf5894f4a1e05c4c1fcd7990d0195d28
+Source tables: an_stat, death, ipt, iptdiag, patient. SQL SHA256: 5b65b9e0acb40f91cf1194318a0ea4477a9439ce1316c6e1c087b296810f8bb0
 
 ## AA0104
 
@@ -139,7 +139,7 @@ pdx IN ('E100', 'E101', 'E106', 'E109', 'E110', 'E111', 'E116', 'E119', 'E130', 
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - patient HN ปัจจุบันไม่ใช่ population กลางปีอายุ 15–74 ในพื้นที่รับผิดชอบ; ต้องใช้ population denominator ภายนอก
 
-Source tables: an_stat, death, ipt, iptdiag, patient. SQL SHA256: d8e0a438748b3eb3f8b885210c9cd2ac35deac80e11464de636aaf11f38abbc6
+Source tables: an_stat, death, ipt, iptdiag, patient. SQL SHA256: 1e6b7395c14f9656780759812554408c867c206f7813b20cc7dc8ecfc262052f
 
 ## AA0105
 
@@ -170,7 +170,7 @@ pdx IN ('I10', 'I110', 'I119')
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - patient HN ปัจจุบันไม่ใช่ population กลางปีอายุ 15–74 ในพื้นที่รับผิดชอบ; ต้องใช้ population denominator ภายนอก
 
-Source tables: an_stat, death, ipt, iptdiag, patient. SQL SHA256: 304f2b1c18c25b017958026f30de5f322197b230d25af2167ca8e4691ef49e61
+Source tables: an_stat, death, ipt, iptdiag, patient. SQL SHA256: a539398fb5b4b45496749ab0ed166b233ab54a5a5fc88024d68fbe9da464b01b
 
 ## CA0101
 
@@ -235,7 +235,7 @@ TRUE
 - Measures IPD admissions with an operation_list case carrying ASA physical status I or II (operation_anes_physical_status_id IN (1,2) or operation_anes_detail.asa_id IN (1,2)) whose intra-operative cardiac arrest is evidenced by an operation_cpr record or a cardiac-arrest note in operation_list.intra_anes_operation_note. PDF needs: arrests among ASA I or II patients only, counted per anesthetized patient, with event time strictly inside the operation. Confirm with the hospital owner: the id-to-ASA mapping of operation_anes_physical_status (assumed 1 = ASA I, 2 = ASA II), that operation_cpr is filled for every intra-operative arrest, and that arrests documented only in anesthesia free text are captured by the note keywords. OPD-only operations are out of scope of the IPD discharge base.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, operation_anes_detail, operation_cpr, operation_list. SQL SHA256: c9954925433279d276432b6fdfd759cb9a8af467197bc584313f9feec42f7e5b
+Source tables: an_stat, death, ipt, iptdiag, operation_anes_detail, operation_cpr, operation_list. SQL SHA256: f8e91d85ab76c9f32b2fcf4f1e156249059337f2e3202036ff8dbb676bfaf26c
 
 ## CA0102
 
@@ -321,7 +321,7 @@ TRUE
 - Measures the share of elective anesthetized IPD operation cases with a documented pre-anesthetic visit (operation_list.pre_anes_operation_note or operation_visit_list rows with pre_anes_note or operation_visit_anes_type_id). PDF needs: major elective operations only and a true pre-anesthetic visit within the recommended pre-operative window. Confirm with the hospital owner: the operation_emergency name convention used to flag emergency cases (matched on "ฉุกเฉิน" or "emergen"), how major operations are marked (oper_type lookup), and that pre-anesthetic visits are recorded in operation_visit_list rather than paper forms.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, operation_anes, operation_emergency, operation_list, operation_visit_list. SQL SHA256: 083ae263467537f7d6f46db6d77b7c6be9b0b6278e17e4ea45dfc6aef1b05680
+Source tables: an_stat, death, ipt, iptdiag, operation_anes, operation_emergency, operation_list, operation_visit_list. SQL SHA256: 4e4568b2ab170ba6f8aa6f2f5ca2b6d3d47550ea454f011f2c4dc9863d92f3cf
 
 ## CA0103
 
@@ -382,7 +382,7 @@ TRUE
 - Measures the share of anesthetized IPD operation cases with a recovery-room record (operation_recovery_room rows for the operation). PDF needs: care in the recovery room for the clinically appropriate duration per anesthesia type. Confirm with the hospital owner: that every post-anesthesia recovery stay is charted in operation_recovery_room (enter/leave times present) and whether direct-to-ICU transfers should be excluded.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, operation_anes, operation_list, operation_recovery_room. SQL SHA256: e22b6b30e7e904d71df57abc23506774901a2efdb3b3dffd395653f03bc7e19d
+Source tables: an_stat, death, ipt, iptdiag, operation_anes, operation_list, operation_recovery_room. SQL SHA256: 36a4480049bc19813c7bfdc95cd1dd75b8ea37fe905a412d12e3c31ab5ba66f1
 
 ## CA0104
 
@@ -466,7 +466,7 @@ TRUE
 - Measures re-intubation within 2 hours after extubation among intubated general-anesthesia IPD cases (operation_anes with tube type or intubation time), detecting the event from operation_anes_problem rows whose comment or operation_airway_solution lookup name mentions intubation, timestamped within 2 hours after the recorded anesthesia end. PDF needs: true extubation time and any re-intubation for any reason. Confirm with the hospital owner: that extubation is recorded (operation_anes.end), that airway problems and their solutions are charted in operation_anes_problem, and the lookup wording in operation_airway_solution used for re-intubation.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, operation_airway_solution, operation_anes, operation_anes_problem, operation_list. SQL SHA256: 918f5bb7152db853d82d3be9a86b52fad804a558eb65123aa6a06c67fa7e26c7
+Source tables: an_stat, death, ipt, iptdiag, operation_airway_solution, operation_anes, operation_anes_problem, operation_list. SQL SHA256: f8e7ad8b5db3abb9390be2bd8ee49ada4d1cb6ae03862f007edce336d4f05ff1
 
 ## CA0105
 
@@ -536,7 +536,7 @@ TRUE
 - Measures the share of intubated general-anesthesia IPD cases with exhaled-CO2 (capnometry) monitoring, evidenced by the operation_anes_detail.monitor text (capno, etco, คาพโน) or a recorded ipd_nurse_note.etco2 value. PDF needs: capnometry use for the whole intubated general-anesthesia period. Confirm with the hospital owner: the monitor naming convention in operation_anes_detail, and whether capnometry is charted elsewhere (for example an anesthesia record sheet outside HOSxP).
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipd_nurse_note, ipt, iptdiag, operation_anes, operation_anes_detail, operation_list. SQL SHA256: 3a121a1beffd9e2d992cee7597e3932e9ecb759820b6c8b139b4230ae77df6a0
+Source tables: an_stat, death, ipd_nurse_note, ipt, iptdiag, operation_anes, operation_anes_detail, operation_list. SQL SHA256: 30a2dee096f59e054ccc7a47bcdf14b2ba47eedf8b433eace9aa378324859c6a
 
 ## CE0101
 
@@ -573,7 +573,7 @@ pdx IN ('A400', 'A419', 'R572', 'R651') OR has_ce0101_sepsis
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, drugitems, ipt, iptdiag, opitemrece. SQL SHA256: 58e6cd0eb575b6a2cb5dc5dc254686cd4c21874988db36853ac8178747b2cb14
+Source tables: an_stat, death, drugitems, ipt, iptdiag, opitemrece. SQL SHA256: 5c67541e11ebffb7cdd0b937253558c3cb9ed94ee08b928a2adf79096ba7b051
 
 ## CE0102
 
@@ -605,7 +605,7 @@ opd_periodized.enter_er_time IS NOT NULL AND opd_periodized.finish_time IS NOT N
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - base LEFT JOIN patient.hn และ er_regist.vn อาจเพิ่มแถวถ้าคีย์ซ้ำ; principal diagnosis LIMIT 1 ยังต้องยืนยันลำดับ/ความครบ
 
-Source tables: er_regist, ovst, ovstdiag, patient. SQL SHA256: 4436f22230e93641d3af36522f14df66f235c8baf4f24ebc9cc58bf727d5fe6b
+Source tables: er_regist, ovst, ovstdiag, patient. SQL SHA256: 7474177a72c97ee5ce489f203535f70760e980d518b3a5c028dc654f8c1c0ec6
 
 ## CE0103
 
@@ -637,7 +637,7 @@ opd_periodized.enter_er_time IS NOT NULL AND opd_periodized.finish_time IS NOT N
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - base LEFT JOIN patient.hn และ er_regist.vn อาจเพิ่มแถวถ้าคีย์ซ้ำ; principal diagnosis LIMIT 1 ยังต้องยืนยันลำดับ/ความครบ
 
-Source tables: er_regist, ovst, ovstdiag, patient. SQL SHA256: a4dc704d54cc5148fe03116b5c03381b8c8181ad663ae7e8e5ef236b80a2247c
+Source tables: er_regist, ovst, ovstdiag, patient. SQL SHA256: 379a89ade10aaa6e46409cd93dc4dd46bfa902f3cd9df890cfb51a33025e6ee9
 
 ## CE0104
 
@@ -676,7 +676,7 @@ age_y >= 18 AND (
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - base LEFT JOIN patient.hn และ er_regist.vn อาจเพิ่มแถวถ้าคีย์ซ้ำ; principal diagnosis LIMIT 1 ยังต้องยืนยันลำดับ/ความครบ
 
-Source tables: er_regist, ovst, ovstdiag, patient. SQL SHA256: c8005cbcc0ff184ad253c8d4e97db457a6e5359861d586dd57a48afdad0578cb
+Source tables: er_regist, ovst, ovstdiag, patient. SQL SHA256: 54b80c1aa43578d54956a5dca44c1a631794a6e06b8f24024788432cca846a81
 
 ## CG0101
 
@@ -726,7 +726,7 @@ TRUE
 - Measures new hospital-acquired pressure ulcers stage 1 or worse per 1000 patient-days: numerator is IPD admissions whose secondary diagnosis carries dotless L89 codes or whose nursing notes mention a pressure ulcer strictly after the admission date (with principal diagnosis outside L89), denominator is SUM(an_stat.los) over the same discharge cohort. PDF needs: true present-on-admission status, UHNDC staging (1-4, unstageable, deep tissue injury) and onset date. Confirm with the hospital owner: the L89 staging convention, that patient-days should be census days rather than discharged-cohort length of stay, and whether ulcers present on admission are distinguishable in ipd_nurse_note. Staging and POA precision likely require the UHNDC survey forms loaded via branchExternal.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipd_nurse_note, ipt, iptdiag. SQL SHA256: 2866a3f62893222f142c786064c962347e09c38ed128b8a8d6da6a8818b4bd3b
+Source tables: an_stat, death, ipd_nurse_note, ipt, iptdiag. SQL SHA256: 791830f4c26660697d287f4e707b268c5f4736e98b98f859785b5b0a9a647d80
 
 ## CG0102
 
@@ -794,7 +794,7 @@ TRUE
 - Same rate restricted to risk-assessed patients: a risk assessment is approximated by nursing notes mentioning Braden or pressure-ulcer risk, the denominator being their total length of stay and the numerator the CG0101 evidence within that group. PDF needs: the documented Braden (or local) risk assessment population and their patient-days. Confirm with the hospital owner: where the risk assessment is recorded (structured Braden scores are not standard HOSxP columns) and the accepted wording; otherwise stage the risk-patient counts via branchExternal.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipd_nurse_note, ipt, iptdiag. SQL SHA256: 2d513073c381b187e784ce64a6b24011cc2aee0720986f8934d0f87adeb3195e
+Source tables: an_stat, death, ipd_nurse_note, ipt, iptdiag. SQL SHA256: e7bccf0e53ebc628fcfe4e7bd12a24f915d262e5bc3ac5c4a3944ef17f16d338
 
 ## CG0103
 
@@ -884,7 +884,7 @@ pdx IN ('A400', 'A409', 'A410', 'A419', 'R572', 'R651') OR has_ci0101_sepsis
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 709c4afb5fdadabc2b9e3352a62295813c27680d3a351b26e9709f752de4064f
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: ce4ef4ffa59f07612c6893b1892c2221408015179ccec87d5784bbb169495b91
 
 ## CM0101
 
@@ -944,7 +944,7 @@ TRUE
 - Measures maternal deaths tied to a delivery record of this hospital from labour start to 42 days after delivery with a pregnancy related cause (death_preg_42_day flag or O cause code, external V W X Y causes excluded), per 100,000 live newborns counted from ipt_newborn rows not flagged dead (babies counted individually). The printed definition also needs deaths during pregnancy before any hospital delivery and deaths of mothers referred out and lost to follow up, which no HOSxP table links back to the delivery. Confirm with the hospital owner: death_preg_42_day flag semantics, ipt_newborn.dead values as the stillbirth marker, and how referred out maternal deaths are recorded.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: death, ipt, ipt_newborn, labor. SQL SHA256: 0abf391e1258889ce195e5058ea27dcf70087bc240f3d1b98624ebaaae21afd1
+Source tables: death, ipt, ipt_newborn, labor. SQL SHA256: 29e32becebed83ded132479ead540ddede839dd7c9ed1b8a36fcecf3d73519a9
 
 ## CM0104
 
@@ -981,7 +981,7 @@ pdx IN ('O820', 'O821', 'O822', 'O828', 'O829', 'O842')
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 0b839e02941c80623fac6dd6abc6a13d692f908918ffbe5ef5db3d0885793e46
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 75b455074572081c5ac4584ad25b217f46010e6bce59d3ca5dd5d39b9a83394e
 
 ## CM0105
 
@@ -1011,7 +1011,7 @@ pdx IN ('O820', 'O821', 'O822', 'O828', 'O829', 'O842')
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: f88161a893c48338e6c490b33af22698fa7cc0845bc1c62cbbdf7a34aafbf4db
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 6899180cd606e1a041b18025da51954c1f2b8d8ac93c81203f419453b0cc1cc7
 
 ## CM0107
 
@@ -1053,7 +1053,7 @@ periodized
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, labor. SQL SHA256: 9fec227db32ab6f57d43ebdef86a931060dd594f21be2d1df8bfc1b8a0ef541c
+Source tables: an_stat, death, ipt, iptdiag, labor. SQL SHA256: 5f3115a9e15f4df24d54eae27d74aeca5b89e912994b0fe6854cbdf4e4e5f22d
 
 ## CM0109
 
@@ -1090,7 +1090,7 @@ LEFT(pdx, 1) = 'O'
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 12d1c99723bb361dfa3eb24a496d0db0cd46adfc05aaecf6f57bc2c456ea84b9
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: a18b9132abaf002dc17e287572f31516373b67ed406954e757e927ce8e54d982
 
 ## CM0110
 
@@ -1127,7 +1127,7 @@ LEFT(pdx, 1) = 'O'
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 2a3dac693379f948b967817d1f9496af95e5f93f13b40547cb386eb5c71155f0
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 1d900b074b07f539bb3a5e8c821aba9a1fde135214fd3f9099841c4235de16f3
 
 ## CM0116
 
@@ -1172,7 +1172,7 @@ EXISTS (
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, drugitems, ipt, iptdiag, iptoprt, opitemrece. SQL SHA256: 8f264d78eae3f61338f926bffb22076ef9ffefe43d96056752c22bb3ba259781
+Source tables: an_stat, death, drugitems, ipt, iptdiag, iptoprt, opitemrece. SQL SHA256: ed09b80563233335a3b4575b292523f97bdc5d350d8269bc21a779beba072056
 
 ## CM0117
 
@@ -1223,7 +1223,7 @@ EXISTS (
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: 241a340ccd59082a1ca6985e0bd194f234b8f13c02aa0e42d0996f7e06169fcc
+Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: 36099c354c0ec94de7cbea0b2973729a9312e24adb9b13739eacaa3a9484da05
 
 ## CM0118
 
@@ -1253,7 +1253,7 @@ LEFT(pdx, 3) BETWEEN 'O80' AND 'O84'
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: 05cc52b7cffc8a481b0dfe7b6c5d56b9e539055ce4e4e1dad234b25ac637c007
+Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: 7997daa8004d3eee48054528bbafaa4c1c1e3499dfbcd14cb028a029118eda88
 
 ## CM0119
 
@@ -1283,7 +1283,7 @@ LEFT(pdx, 3) BETWEEN 'O80' AND 'O84'
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: 1d0ecc81c5f2e6fa8c6284f6236a10fbe819aba3a24aaf6c64a4f736e647c328
+Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: c643b4ff450fbe2d5a25c6e7f6c2eabfe88ef1722f357488bd864ba99cd60a17
 
 ## CM0201
 
@@ -1325,7 +1325,7 @@ TRUE
 - Measures perinatal deaths per 1,000 births: newborn rows flagged dead (stillbirth proxy) or with a death record within 7 days of born_date among births of at least 500 g, or gestational age at least 24 weeks from ipt_pregnancy.ga of the mother admission when birth weight is missing. The printed WHO rule also needs follow up of transferred out infants to day 7 and exclusion of infants referred in from other hospitals, which HOSxP does not flag. Confirm ipt_newborn.dead semantics and that ipt_pregnancy.ga is gestational weeks at delivery.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: death, ipt_newborn, ipt_pregnancy. SQL SHA256: b949b272d66ba4bcdbadf8c606bdf1d7ece6a8fc6dc7becef3dee7ebc787f679
+Source tables: death, ipt_newborn, ipt_pregnancy. SQL SHA256: 443224d8039075baf341914e0072bb419a86fca17e6a06c7766eb97bfa84d0d1
 
 ## CM0202
 
@@ -1367,7 +1367,7 @@ TRUE
 - Measures perinatal deaths per 1,000 births at the 28 week or 1000 g threshold: newborn rows flagged dead or with a death record within 7 days of born_date among births of at least 1000 g, or gestational age at least 28 weeks from ipt_pregnancy.ga when birth weight is missing. The printed definition adds sent out infant follow up and referred in exclusions that need local tracking. Confirm ipt_newborn.dead semantics and ipt_pregnancy.ga units with the hospital owner.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: death, ipt_newborn, ipt_pregnancy. SQL SHA256: 01230f2533e850fd49dd0c6e11e2bd0ccfb0172d1e2faf777c8c48103aeca1b5
+Source tables: death, ipt_newborn, ipt_pregnancy. SQL SHA256: c0ec1995d01be1a77fd46efc3c40b5cd933279ec9e50cc229303a8e44e5190ef
 
 ## CM0203
 
@@ -1404,7 +1404,7 @@ COALESCE(newborn_periodized.dead, 'N') <> 'Y'
 - Measures neonatal deaths per 1,000 live births: newborn rows not flagged dead with a death record between born_date and 28 days after. The printed definition needs follow up of transferred out infants to day 28 including deaths after discharge, and excludes births referred in from other hospitals. Confirm that post discharge neonatal deaths land in the death table with the newborn admission number and that ipt_newborn.dead marks stillbirth only.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: death, ipt_newborn. SQL SHA256: 23143d99ce55d0a36868b276797a42139e96056560e1e961a0e86e184628e05b
+Source tables: death, ipt_newborn. SQL SHA256: e224aaad81e528ee70a4aaea0630eb0fff47cfe1051bc30f4384228e59e6be9a
 
 ## CM0204
 
@@ -1438,7 +1438,7 @@ periodized
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, ipt_newborn, iptdiag. SQL SHA256: 5f909b94c9dd959f487b56ee8bb868c5d05763a337118b41f1df23fe1b680b96
+Source tables: an_stat, death, ipt, ipt_newborn, iptdiag. SQL SHA256: 91b7256895daaad558650987d084af3ef87df1ed79931a9469bf516f801e1f58
 
 ## CM0205
 
@@ -1472,7 +1472,7 @@ periodized
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, ipt_newborn, iptdiag. SQL SHA256: a41256dad3a6fb2a449b86e0b66e5063e7dbc10d40e56f62cf85c2f5d5ecc1c5
+Source tables: an_stat, death, ipt, ipt_newborn, iptdiag. SQL SHA256: b97fc48c65359902a66e7fa2e42fd8b14e827925e86dee0de252b3f7fc6e95f0
 
 ## CM0206
 
@@ -1505,7 +1505,7 @@ periodized
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, ipt_newborn, iptdiag. SQL SHA256: 5b681b31af684f9749f081d25498f7b1f437c90258f263f4e9233ca7fb35bf62
+Source tables: an_stat, death, ipt, ipt_newborn, iptdiag. SQL SHA256: 770dc1b97aff1f053d4afeb1951b3b164cc1b51abe4dd671f21b66fac487fb5e
 
 ## CM0207
 
@@ -1543,7 +1543,7 @@ periodized
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, ipt_newborn, iptdiag. SQL SHA256: 4fee27d6fd287809e7305769863fd3dfc117822d91f1cef6f0fdbbfeb6a0ecdc
+Source tables: an_stat, death, ipt, ipt_newborn, iptdiag. SQL SHA256: 5e975c301aad809a7a1fe5d9df99a89f88a6d75368d7081715bb9095c414ab28
 
 ## CM0208
 
@@ -1581,7 +1581,7 @@ periodized
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, ipt_newborn, iptdiag. SQL SHA256: 5f1440dd72c74eec0cfac174858b4275e37e2f57c72885f6cd02ea019915ec6e
+Source tables: an_stat, death, ipt, ipt_newborn, iptdiag. SQL SHA256: 3f3d433eb3180a88265e2c7ff79f8b33629d5aaa39c806307c65b650e3d84358
 
 ## CM0209
 
@@ -1619,7 +1619,7 @@ periodized
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, ipt_newborn, iptdiag. SQL SHA256: 9cb8e4ef02d904bc9fc0a63feb097a6c2af4a80ddca07813d9d0e328e4a77da2
+Source tables: an_stat, death, ipt, ipt_newborn, iptdiag. SQL SHA256: 084ba55858786ef7cb3757eba1084a7ec66ebfa7c1e94fde6ed8bdb36b45386d
 
 ## CO0101
 
@@ -1666,7 +1666,7 @@ TRUE
 - Measures the share of operating-room occasions with a complete surgical safety checklist: operation_list.operation_check_date set, an operation_detail row with time_out_datetime (time-out), and operation_screen_in rows with preoperative, perioperative and postoperative nursing records (sign in, time out, sign out). Denominator counts operation_list.operation_id occasions of IPD cases discharged in the period. PDF needs: every procedure in every OR, with each of the three parts completed correctly. Confirm with the hospital owner: the confirm_receive and confirm_complete flag semantics on operation_list, whether checklist completion is verified against paper checklists, and that OPD-only procedures (no admission) are out of scope here.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, operation_detail, operation_list, operation_screen_in. SQL SHA256: 113fec4e223e90bc5055bebe39209976cf7683e7777bf173d7ad56282e169200
+Source tables: an_stat, death, ipt, iptdiag, operation_detail, operation_list, operation_screen_in. SQL SHA256: 38e5ca268c2e1d83951816efc17ba19c0ce64ccfaa3406a953be8c2c4080e6af
 
 ## CO0105
 
@@ -1748,7 +1748,7 @@ TRUE
 - Measures peri-operative mortality within 24 hours for elective anesthetized IPD operation cases: death (death table) timestamped between the first operation_detail begin time (falling back to operation_list operation_date + operation_time) and that anchor plus 24 hours. PDF needs: major elective operations only, with the window covering anesthesia induction through 24 hours after surgery. Confirm with the hospital owner: the operation_emergency name convention for emergency cases, the major-operation marker (oper_type lookup), and whether deaths between induction and incision would be missed by the incision-time anchor.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, operation_anes, operation_detail, operation_emergency, operation_list. SQL SHA256: 6f447be66ce92be2db50d3b33b1b85104c4df1b580088034855edd55b766b450
+Source tables: an_stat, death, ipt, iptdiag, operation_anes, operation_detail, operation_emergency, operation_list. SQL SHA256: ca901f94c0cccbd49fe5970ef31150fa3e78ac6969c0cbd8fc14b5f52dffaf00
 
 ## CO0107
 
@@ -1779,7 +1779,7 @@ TRUE
 - Measures the share of operating-room occasions flagged as re-operation (operation_list.re_operation = Y) among all operation occasions of IPD cases discharged in the period. PDF needs: unplanned re-operations for the same disease within one admission plus outpatient operations that force an immediate unplanned admission, excluding planned staged procedures. Confirm with the hospital owner: that re_operation is actively maintained (it is a char(1) flag whose Y convention must be verified), how planned staged operations are marked, and how the OPD-to-admission cases are recorded.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, operation_list. SQL SHA256: 43a2cb3732c7cdd32647704362123bfe44b0750cc66c3c3c633047a689beb02a
+Source tables: an_stat, death, ipt, iptdiag, operation_list. SQL SHA256: 12c96e2145d3af6fafd54df3ade10f2da01a1fcd93f0f2bfde95322b97cecb34
 
 ## CP0101
 
@@ -1839,7 +1839,7 @@ chronic_periodized.age_y <= 18
 - Measures members aged 18 or under with an ADHD, LD or MDD diagnosis (F80-F83, F90, F32, F33, F341) and a psych_plan in the trailing 6 months who attended care: a psych_therapy session or a finished psych_plan in the same window. The PDF is about carers keeping every scheduled appointment in the 6-month period; HOSxP has no appointment-kept ledger here, so attendance is approximated by recorded therapy or plan completion and the owner must confirm the appointment source (clinic_app or psychiatric_clinic_psychia_appointment).
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: clinicmember, ovst, ovstdiag, psych_plan, psych_therapy. SQL SHA256: 3cbe2eb1405a61dba539472aebecb3efac0428bef55ed29c5fd0796625deaddd
+Source tables: clinicmember, ovst, ovstdiag, psych_plan, psych_therapy. SQL SHA256: f5a4d7263b8c1c1592853ce519b7981d1a20145e8156e85c8a3d267de2da5665
 
 ## CP0201
 
@@ -1886,7 +1886,7 @@ chronic_periodized.age_y <= 6
 - Measures members aged 6 or under with a child development screen (psych_screen_child) around registration who received a neurodevelopmental diagnosis (F83, R62, F84, G80) within 90 days after registration. The PDF starts the 90-day clock at the first service visit for suspected delay and excludes therapy-only contacts; the screen date stands in for the suspicion entry, so the owner must confirm the suspicion flag and the first-visit anchor.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: clinicmember, ovstdiag, psych_screen_child. SQL SHA256: 71170143b7a0e23d17f9b73d41d88bdda584a7138c1b81fa395b05fde0a058c7
+Source tables: clinicmember, ovstdiag, psych_screen_child. SQL SHA256: ea9267eef3ed4cee2ad6e92338ea6fd7897d4525b5ba4ded9a706d75601e226e
 
 ## DC0103
 
@@ -1929,7 +1929,7 @@ LEFT(pdx, 3) IN ('E10', 'E11', 'E12', 'E13', 'E14')
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, iptoprt, ovst, ovstdiag. SQL SHA256: 302181a8c4246c8c1a2cfde59ea8babea12980e699ce0f554dd5163b5bc913c1
+Source tables: an_stat, death, ipt, iptdiag, iptoprt, ovst, ovstdiag. SQL SHA256: 432d083caa325f926174aef12bb29c7302d72f6c04386166a94216ec90223bc6
 
 ## DC0107
 
@@ -1965,7 +1965,7 @@ LEFT(pdx, 3) IN ('E10', 'E11', 'E12', 'E13', 'E14')
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: 3443a643923e1e7912c268ef1e4d8be22e57f96df573bcdd955f5c8092a45d32
+Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: c762077a4ea16c6acc2653146f8f9e3383fb2f1347459472a834089f09ac7dcb
 
 ## DC0108
 
@@ -2014,7 +2014,7 @@ age_y >= 18 AND LEFT(pdx, 3) IN ('E10', 'E11', 'E12', 'E13', 'E14')
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, lab_head, lab_items, lab_order. SQL SHA256: 072ba0089024690f462850b6b289ca4b3796f7f9e57256c91769459574aa1c12
+Source tables: an_stat, death, ipt, iptdiag, lab_head, lab_items, lab_order. SQL SHA256: 7c4fda6a0a4d38c7441a60036dc59635d66e92d7886ef03ab8b1a7373ed3e348
 
 ## DC0108.1
 
@@ -2052,7 +2052,7 @@ age_y >= 60 AND LEFT(pdx, 3) IN ('E10', 'E11', 'E12', 'E13', 'E14')
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, lab_head, lab_items, lab_order. SQL SHA256: 53fd203b245a542b9b059ecbcd7e1efe09ba29f590b752b8ffeb8ec51f670525
+Source tables: an_stat, death, ipt, iptdiag, lab_head, lab_items, lab_order. SQL SHA256: a126f13464b252b90ce95f2d1782eb62a37a8debe3a5f894c2e1d11f91d3c0f7
 
 ## DC0108.2
 
@@ -2090,7 +2090,7 @@ age_y >= 18 AND age_y < 60 AND LEFT(pdx, 3) IN ('E10', 'E11', 'E12', 'E13', 'E14
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, lab_head, lab_items, lab_order. SQL SHA256: cf2a48204b5f1d81638c83e477dfeef2f360d50178d20853d6d53164c83b85e6
+Source tables: an_stat, death, ipt, iptdiag, lab_head, lab_items, lab_order. SQL SHA256: cfee64a7c0f608479a11269c9bd8d25d7932a93a13c587d5a2300cc9c1fcb703
 
 ## DC0201
 
@@ -2131,7 +2131,7 @@ age_y >= 18 AND LEFT(pdx, 3) IN ('I10', 'I11', 'I12', 'I13', 'I14', 'I15')
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, opdscreen, ovst. SQL SHA256: ee15758d34ae5fbafe8f3ae9d935d0e5d055d568ce2dd9bafeada7a1b13f828b
+Source tables: an_stat, death, ipt, iptdiag, opdscreen, ovst. SQL SHA256: 9ebaa270f9d837f28eeef145f7a13750c4306285f54f6eaf37ed289f26873b7b
 
 ## DC0201.1
 
@@ -2165,7 +2165,7 @@ age_y >= 18 AND age_y < 65 AND LEFT(pdx, 3) IN ('I10', 'I11', 'I12', 'I13', 'I14
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, opdscreen, ovst. SQL SHA256: 97b8410f197ffb74f16185fc742b98558f7594a3000654583d154fb48c5d6235
+Source tables: an_stat, death, ipt, iptdiag, opdscreen, ovst. SQL SHA256: 02bc34cfc0a1293927805fe7ba4c3fd3a41ba87009bd8a5fbdba916604b69f14
 
 ## DC0201.2
 
@@ -2199,7 +2199,7 @@ age_y >= 65 AND LEFT(pdx, 3) IN ('I10', 'I11', 'I12', 'I13', 'I14', 'I15')
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, opdscreen, ovst. SQL SHA256: c375130b4db65623c211d817f50b2e3722f4b39f69687f59f8d9577c50273277
+Source tables: an_stat, death, ipt, iptdiag, opdscreen, ovst. SQL SHA256: 15acc27470b64c37a76945d5d161b8a9ef144e7e2368e5a38861529919e9359d
 
 ## DC0301
 
@@ -2256,7 +2256,7 @@ chronic_periodized
 - Measures clinicmember registrations of PLHIV (arv_tx row or B20-B24, Z21 diagnosis) whose ARV record predates registration by more than 6 months and who have at least one viral-load lab item (name match) in the trailing 12 months. The PDF wants all PLHIV on ARV for more than 6 months during the reporting year with one VL in that year; the hospital owner must confirm arv_tx.date_entry as the ARV start date, the VL lab item set (arv_lab_map is the candidate refinement) and whether the cohort must be widened from the registration year to every member active in the year.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: arv_tx, clinicmember, lab_head, lab_items, lab_order, ovstdiag. SQL SHA256: 64d8b759afbacbae0705d302da9b39ab35d5e7a139d54e79150f63421efcc8bc
+Source tables: arv_tx, clinicmember, lab_head, lab_items, lab_order, ovstdiag. SQL SHA256: ae19c37d6b20d4fefbdd392dd55aaaa45f091966dca39d3efb8cdb22b619632e
 
 ## DC0302
 
@@ -2314,7 +2314,7 @@ chronic_periodized
 - Measures members on ARV for at least 12 months (arv_tx.date_entry) with a numeric viral-load result below 50 copies in the trailing 12 months. The PDF wants VL below 50 at 12 months after ART start; the branch cannot tie the lab to the exact ART month, so the owner must confirm the VL item codes, the numeric-cast tolerance for result text and the 12-month window anchor.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: arv_tx, clinicmember, lab_head, lab_items, lab_order, ovstdiag. SQL SHA256: b7c844296f6fbdd65fcf20fbf642aa67eb54a332db0552e0750cac181f017b8f
+Source tables: arv_tx, clinicmember, lab_head, lab_items, lab_order, ovstdiag. SQL SHA256: 7ffe687b4688e606f32a824c56fb589596042b6be25808f60067c47ca1e5ce52
 
 ## DC0306
 
@@ -2366,7 +2366,7 @@ chronic_periodized.sex = '2'
 - Measures female PLHIV registrations with a Pap-smear lab item (name match) in the trailing 12 months. The PDF accepts Pap smear or VIA and counts each woman once per year; VIA procedures recorded outside the lab (for example sti_patient_register_lab) are missed, so the owner must confirm the Pap and VIA procedure coding and the sex field mapping.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: arv_tx, clinicmember, lab_head, lab_items, lab_order, ovstdiag. SQL SHA256: 65fa4e345ea62d4015f0e66c434806e62688f294439ff1a562bb61dfd9d4cc2e
+Source tables: arv_tx, clinicmember, lab_head, lab_items, lab_order, ovstdiag. SQL SHA256: d41c6d91b28dcd46b6111ced08df612b95919da4057f6b8ebf63f6e4f8dc95ee
 
 ## DC0307
 
@@ -2417,7 +2417,7 @@ chronic_periodized
 - Measures newly registered PLHIV (registration rows in the period) with a syphilis serology lab item (VDRL, RPR, TPHA, TPPA or name match) within 12 months after registration. The PDF asks for syphilis screening within the reporting year for new cases; repeat registrations of the same member can double count and pre-registration tests are excluded, so the owner must confirm the new-case rule and the screening window.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: arv_tx, clinicmember, lab_head, lab_items, lab_order, ovstdiag. SQL SHA256: ee8665977e1eb30f42a05834d7a778708a2e84ebe5562b73f19e26b3bc71acb9
+Source tables: arv_tx, clinicmember, lab_head, lab_items, lab_order, ovstdiag. SQL SHA256: a42dfd1775018cf28868c562cf61c5a22ddd0b5336385b67b3f3b272957b4723
 
 ## DC0308
 
@@ -2467,7 +2467,7 @@ chronic_periodized
 - Measures PLHIV registrations with at least one ARV dispensing (opitemrece plus drugitems name set) in the trailing 12 months. The PDF wants all registered PLHIV in the denominator and those collecting ARV at least once in the year in the numerator; the denominator is limited to members registered in the period and the ARV name list must be signed off against the local formulary (arv_tx rows are the alternative signal).
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: arv_tx, clinicmember, drugitems, opitemrece, ovstdiag. SQL SHA256: 94b8d5c662b1d71c7fa5ccaa70d16a1013ad93bfec36f3b0e39725544dec063d
+Source tables: arv_tx, clinicmember, drugitems, opitemrece, ovstdiag. SQL SHA256: 00cfa354d07368d6be21fb6f9e5c7e1b4047b5b394f3b5570cc78c2991c31b94
 
 ## DC0309
 
@@ -2524,7 +2524,7 @@ chronic_periodized
 - Measures newly registered PLHIV without concurrent TB who received TB preventive therapy (isoniazid, rifapentine, rifampicin or INAH dispensing) within 6 months after registration. The PDF denominator needs the TPT indication (CD4 below 200, TST above 5 mm, IGRA or doctor decision), which has no HOSxP column, so the denominator approximates all new PLHIV without active TB; the owner must confirm the indication register or accept external staging.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: arv_tx, clinicmember, drugitems, opitemrece, ovstdiag, tb_register. SQL SHA256: af2d2fb283a1ab311ff2b7049ecc6d3364a729fed2a015075010fb36c700311f
+Source tables: arv_tx, clinicmember, drugitems, opitemrece, ovstdiag, tb_register. SQL SHA256: 982efab725bc64faf1847fec65b580fa658f9393af455ca59e0364fd6714b578
 
 ## DC0401
 
@@ -2554,7 +2554,7 @@ pdx IN ('C00','C01','C02','C03','C04','C05','C06','C07','C08','C09','C10','C11',
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 94899be2c74fba45a5e13bcb2a699506a852d8176bf7373349f18904fffd1ed7
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 9c1198eba578f9fe6748988fed59de337a8c601dfadcbbb1fb4d6994bd8a9040
 
 ## DC0402
 
@@ -2607,7 +2607,7 @@ periodized
 - Measures percent of cancer inpatient episodes (pdx or sdx malignant neoplasm C00 to C97, in situ D00 to D09, or Z510 Z511) that are readmissions within 28 days after a previous cancer discharge of the same patient. The printed definition counts unplanned returns BEFORE the booked appointment date, which HOSxP does not store. Confirm with the hospital owner the appointment date source and the planned versus unplanned flag; until then 28 days is the documented proxy used across this repo.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: e56ec0a202724ec0f765f31d488b47d74dc110c3554584326828d9d7e629ad0d
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 29fbe3d7421c2fa97485a6e1a2ed889d081a380407f721eefe75ef9912321e63
 
 ## DC0403
 
@@ -2642,7 +2642,7 @@ periodized
 - Measures percent of liver cancer inpatient episodes (pdx or sdx in C220, C222 to C229 per the thipKpiRules token list) discharged dead, all causes. The printed definition mixes death from any cause with death caused by liver cancer. Confirm whether C221 (intrahepatic bile duct carcinoma) belongs in the cohort, and whether deaths shortly after discharge should be attributed back to the admission.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: d74c9b29ec53aec8570f793c8bf34d60d3d9c8cbf269654f662d2d99e5f6d29d
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 52864729fbe749e7666e2a3d1c517585689f3409d7cab17155a31dacfb935b50
 
 ## DC0501
 
@@ -2694,7 +2694,7 @@ EXISTS (
 - Measures CKD registry members (clinic_ckd_member) with at least two numeric eGFR lab results in the trailing 12 months and baseline eGFR between 15 and 59 (stages 3-4) whose first-to-last decline is below 4. The PDF wants the mean annual change in ml per min per 1.73 m2 below 4; the branch approximates the annual slope with first minus last over a 12-month window, so the owner must confirm the eGFR item set, the stage boundary values and the slope convention.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: clinic_ckd_member, clinicmember, lab_head, lab_items, lab_order. SQL SHA256: 0a6a24099712f5c35a6da0abfce5642d4e76551187ecebd59bdebc7b10623691
+Source tables: clinic_ckd_member, clinicmember, lab_head, lab_items, lab_order. SQL SHA256: 2b6a6a23b5663ac3ac7da03932934def9912da251bb20753eff8d00967410fc9
 
 ## DC0502
 
@@ -2755,7 +2755,7 @@ EXISTS (
 - Measures CKD registry members with a last eGFR of at least 15 (stages 1-4) in the trailing 6 months who collected an ACE inhibitor or ARB (drugitems name set) in the same window. The PDF wants current use of ACEi or ARB among CKD stages 1-4; the owner must confirm the antihypertensive name list against the local formulary and the eGFR item set.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: clinic_ckd_member, clinicmember, drugitems, lab_head, lab_items, lab_order, opitemrece. SQL SHA256: c4963cfb831bea924aab62e705407dd03ccb02792047fbe606866026e3ddf882
+Source tables: clinic_ckd_member, clinicmember, drugitems, lab_head, lab_items, lab_order, opitemrece. SQL SHA256: 07eac7751bdbd7d1d66588c023af630fece6bca46a2e8a1c6ed4f9bf56ddee9f
 
 ## DE0101
 
@@ -2806,7 +2806,7 @@ opd_periodized
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - base LEFT JOIN patient.hn และ er_regist.vn อาจเพิ่มแถวถ้าคีย์ซ้ำ; principal diagnosis LIMIT 1 ยังต้องยืนยันลำดับ/ความครบ
 
-Source tables: er_regist, ovst, ovstdiag, patient, patient_cancer_registeration, person, person_bc_screen. SQL SHA256: c6159947eb35338f25c7ad75e63c5117169c3e6e348d56e7b6a5fe7c92905756
+Source tables: er_regist, ovst, ovstdiag, patient, patient_cancer_registeration, person, person_bc_screen. SQL SHA256: ca210dc1cccbfa0357529e2de4adc1a0808db07d51c285bd4ccace18abb33e2c
 
 ## DE0103
 
@@ -2848,7 +2848,7 @@ EXISTS (
 - Measures percent of new breast cancer clinic registrations (clinicmember regdate inside the year with clinicmember_cancer.f53_topography starting C50) whose patient_cancer_registeration TNM values give an early stage reading (t_value at most 2, n_value at most 1, m_value 0 or null). The printed stage groups 1 and 2 per AJCC are broader (for example T3 N0 stage 2B) and the registry may encode the group directly in cancer_stage2_id or f53_cm_stage_code instead of TNM numbers. Confirm the TNM column coding and which field carries the final stage group at diagnosis.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: clinicmember, clinicmember_cancer, patient_cancer_registeration. SQL SHA256: 7cf6baf997b748c493fdc03438c60ef34c6e58e2ec98880cbabd2774db4c57b1
+Source tables: clinicmember, clinicmember_cancer, patient_cancer_registeration. SQL SHA256: bdef284524a5dfda03da772632c2ec0ed3a0277c0acbffd18828253e8d7d4469
 
 ## DE0501
 
@@ -2906,7 +2906,7 @@ EXISTS (
 - Measures percent of stem cell or bone marrow transplant admissions (operation_detail.icdcode ICD-9 41.0x) showing an engraftment proxy within 45 days of the operation: a neutrophil lab item (name matching neutrophil) with numeric result at least 500. The printed definition needs true engraftment (ANC at least 500 for 3 consecutive days) and graft failure counting from a transplant registry that HOSxP lacks. Confirm the local lab item names for absolute neutrophil count, the value unit, and the procedure codes booked for transplants.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, lab_head, lab_items, lab_order, operation_detail, operation_item, operation_list. SQL SHA256: bedfb3e75c22f8dfcb59be26ab640883ba426e892eaf4005fd367808d0ac8032
+Source tables: an_stat, death, ipt, iptdiag, lab_head, lab_items, lab_order, operation_detail, operation_item, operation_list. SQL SHA256: 7039b52de02299ffff29814d24b4ad10cadab4f37dd54c19cc8548dbf8ab9c3c
 
 ## DE0801
 
@@ -2966,7 +2966,7 @@ age_y > 2 AND age_y <= 15 AND (LEFT(pdx, 3) = 'D56' OR EXISTS (
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - base LEFT JOIN patient.hn และ er_regist.vn อาจเพิ่มแถวถ้าคีย์ซ้ำ; principal diagnosis LIMIT 1 ยังต้องยืนยันลำดับ/ความครบ
 
-Source tables: drugitems, er_regist, lab_head, lab_items, lab_order, opitemrece, ovst, ovstdiag, patient. SQL SHA256: d09d16d67fc8c0fe4980c7f7bf361b765c7a605996d82a0c578664493a1bf495
+Source tables: drugitems, er_regist, lab_head, lab_items, lab_order, opitemrece, ovst, ovstdiag, patient. SQL SHA256: 056552cbd360697e3ab8315b08ef482102dce1a5c49940f50a8edd268272c4fa
 
 ## DE1201
 
@@ -3021,7 +3021,7 @@ periodized
 - Measures percent of patients with ICD-10 Q35 to Q37 (pdx or sdx) whose cleft lip repair on operation_list and operation_detail (ICD-9 30.4x or an operation_item name matching cleft lip or the Thai term) happened at age 6 months or younger (operation_date versus patient.birthday), counted once per patient per quarter. The printed cohort also includes pre surgical alveolar moulding cases and referred in children born outside the district. Confirm the local procedure item names and icdcode values for cleft repair and how referred in cases are booked.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, operation_detail, operation_item, operation_list, patient. SQL SHA256: 5551c9ce179048dab3d32dab2219b7c8b7aa14b3d325eab63b890fbf19c3e311
+Source tables: an_stat, death, ipt, iptdiag, operation_detail, operation_item, operation_list, patient. SQL SHA256: 22f7b1026c3dd87b03381cc874874d0fdf1ee6e04fb19977a01c4a1fa5e519da
 
 ## DE1202
 
@@ -3076,7 +3076,7 @@ periodized
 - Measures percent of patients with ICD-10 Q35 to Q37 (pdx or sdx) whose cleft palate repair on operation_list and operation_detail (ICD-9 2754 or an operation_item name matching cleft palate or the Thai term) happened at age 18 months or younger, counted once per patient per quarter. The printed cohort counts complete and incomplete unilateral and bilateral cleft lip palate and excludes late presenters only from review, not from the denominator. Confirm the local procedure item names and icdcode values for palatoplasty.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, operation_detail, operation_item, operation_list, patient. SQL SHA256: c755c790ea5a26b727598b5442bb219f5bd5ca7ec1568bf369861285c28d06b6
+Source tables: an_stat, death, ipt, iptdiag, operation_detail, operation_item, operation_list, patient. SQL SHA256: 41654b7a1cc5115687c60fe542c9f93b78c9a046e40259e8b70645565129d368
 
 ## DE1301
 
@@ -3292,7 +3292,7 @@ age_y >= 18 AND pdx IN ('K250', 'K251', 'K252', 'K254', 'K255', 'K256', 'K260', 
 - Counts UGIH admissions (Pdx K250 to K286, K290, K920, K921, K922 families) with an upper endoscopy (iptoprt icd9 4513 to 4516) performed within 24 hours of the admit timestamp (opdate and optime). The PDF times from admission or symptom onset to esophagogastroduodenoscopy; the local EGD icd9 coding and whether optime is maintained need owner confirmation.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: f9ff40abe6f01ca7c739025d48d92a3332d93e440a08d46e31c655ced1dc7467
+Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: 144c08937ccd337c4f6d3d89598d7a4714d34a420433f444e3b600dac11f28c2
 
 ## DE1402
 
@@ -3351,7 +3351,7 @@ age_y >= 18 AND pdx IN ('K250', 'K251', 'K252', 'K254', 'K255', 'K256', 'K260', 
 - High risk UGIH branch: same cohort plus a high risk flag (age 60 or over, or comorbidity secondary diagnosis N18, K74, I50, I25, J43, J44, or a hemoglobin lab result of 8 or lower from lab_order, lab_head and lab_items with a safe numeric cast of lab_order_result), denominator restricted to live discharges, numerator with EGD within 24 hours as in DE1401. The PDF high risk list also includes fresh blood from a nasogastric tube, shock signs and a 2 g per dl hemoglobin drop, which are not structured, and the hemoglobin threshold assumes the site stores grams per dl. Owner must confirm the high risk definition mapping and the lab unit.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, iptoprt, lab_head, lab_items, lab_order. SQL SHA256: d36ae84f83857c1f078064b776d236779566e17110f4f752892b77854cbcce50
+Source tables: an_stat, death, ipt, iptdiag, iptoprt, lab_head, lab_items, lab_order. SQL SHA256: 1aa986db5a7c53a895521a66b686e50a6c5a74b5b0a73cb7a4a69472256726a4
 
 ## DE1403
 
@@ -3467,7 +3467,7 @@ age_y >= 18 AND pdx IN ('K250', 'K251', 'K252', 'K254', 'K255', 'K256', 'K260', 
 - Non-variceal UGIH (Pdx K250 to K286 and K290 families) with endoscopic hemostasis (EGD plus a hemostasis adjunct: hemoclip, heater probe, bipolar or argon coagulation, band ligation or histoacryl evidenced by iptoprt oper_note_text, or an adrenaline, epinephrine, histoacryl or thrombin item in opitemrece) as the denominator; numerator excludes cases with early rebleeding evidence (repeat upper endoscopy from admission day 2 onward or a red cell transfusion after admission). The PDF success judgement comes from the endoscopy report (Forrest class, visible vessel, successful hemostasis), which HOSxP does not store. Owner must confirm how hemostasis modalities are charted or load the endoscopy registry aggregates into reporting.thip_external_facts.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, drugitems, ipt, iptdiag, iptoprt, opitemrece. SQL SHA256: 4ce78c0d9ab8bf88c9c515b1818338d25d02ff1f9b6ba9720659c04c25c170fe
+Source tables: an_stat, death, drugitems, ipt, iptdiag, iptoprt, opitemrece. SQL SHA256: c2ee78f1c820a2f78236fdf98bf6aa8b296bdd70f03eccdc131d26814b030434
 
 ## DE1404
 
@@ -3583,7 +3583,7 @@ age_y >= 18 AND pdx IN ('K250', 'K251', 'K252', 'K254', 'K255', 'K256', 'K260', 
 - Rebleeding rate after endoscopic hemostasis: non-variceal UGIH with endoscopic hemostasis (as in DE1403) as the denominator and rebleeding evidence (repeat upper endoscopy from admission day 2 onward or red cell transfusion after admission) as the numerator. The PDF defines rebleeding by hematemesis or melena with shock or a hemoglobin drop after initial hemostasis success; those events are not structured so the proxy may over count (transfusions given for initial resuscitation) or under count (rebleeding managed without repeat endoscopy). Owner must confirm the rebleeding evidence convention.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, drugitems, ipt, iptdiag, iptoprt, opitemrece. SQL SHA256: a2efb2df9a5ad3b98e9cae34c20a9cbc841f4679d562b54d4a767a6f312eec58
+Source tables: an_stat, death, drugitems, ipt, iptdiag, iptoprt, opitemrece. SQL SHA256: ce55f7f1fc67bcb98d1d89967e34cdfdd6767dd9555b43cef69b4e76f458c73d
 
 ## DE1405
 
@@ -3626,7 +3626,7 @@ age_y >= 18 AND pdx IN ('K250', 'K251', 'K252', 'K254', 'K255', 'K256', 'K260', 
 - Complication rate of upper endoscopy for UGIH: UGIH admissions with an EGD as the denominator and a procedural complication secondary diagnosis (T810 to T819 family, K631 perforation of intestine, or J690 aspiration pneumonitis) during the stay as the numerator. The PDF lists perforation, bleeding, sedation complications and aspiration within the endoscopy episode; HOSxP relies on the coder adding the complication diagnosis. Owner must confirm the complication code list and the observation window.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: 5bcf9308fea7b8c92828a9ae38c5f21a52a2b213a6b2f11dd831da9df0747b06
+Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: 29f3342d7889e2e6b09ff363d28af8d9c6b7dd2c76e5ee71decf75377d483484
 
 ## DE1601
 
@@ -3693,7 +3693,7 @@ pdx IN ('K250', 'K251', 'K252', 'K254', 'K255', 'K256', 'K260', 'K261', 'K262', 
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 816a9b04f8126be3f7cdc03fc5a974c03020143e89ccdf75f631afba12dceab9
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 6edd9110e4c653d3da2afee84eaef041baaa0e8efe75042e7109b60f0e4c0a4a
 
 ## DG0102
 
@@ -3723,7 +3723,7 @@ pdx IN ('K250', 'K251', 'K252', 'K254', 'K255', 'K256', 'K260', 'K261', 'K262', 
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: cb0c3e753cd0fab044eb3d0c1147667d14dcb78691d71cb3d3491a1c5833adab
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 0adcb1bd4aa67de609d10002893948134bae85cbb19ad4c076dabc592a4254fb
 
 ## DG0201
 
@@ -3753,7 +3753,7 @@ pdx IN ('K35', 'K352', 'K353', 'K358')
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: a4ea606002599caa20593399b99fe8191e39b3a405e7330fbfde60ef960dfd47
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 66996e669898e0b1c628a76ab8ade57c751a34994ec0c59cea9b6dffa4024cea
 
 ## DG0202
 
@@ -3783,7 +3783,7 @@ LEFT(pdx, 3) = 'K35'
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 4aedc48469e3fbbbe8405a02e9a06a62ed8aa2f08b7c1413e375e375b647df24
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 4a545b57edebf46b84b4cf94276aa9e11253130b09a3755fbe96ebd1ec2824b1
 
 ## DH0101
 
@@ -3814,7 +3814,7 @@ age_y >= 18 AND (pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') OR has_
 - ตัวตั้งครั้งจำหน่าย ACS ที่ตาย / ตัวหารครั้งจำหน่าย ACS ทุกสถานะ; ต้องยืนยัน I21/secondary ACS และ cause-of-death proxy ไม่ใช่จำนวน HN ทั้งทะเบียน
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 7bf0a04444e09e155f61a3267036139c6251e7894cad35fb62f5ca47d150e7e4
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 083fd7997fd88b971a3a95a4e833f923259272d57a78c68ff00ddce5a07f27ea
 
 ## DH0101.1
 
@@ -3844,7 +3844,7 @@ age_y >= 18 AND (pdx IN ('I210', 'I211', 'I212', 'I213') OR has_stemi_sdx)
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 0ce260a7029d448432e9b83a103bbe962f101ec067d9acdbd386eb29a6ae5a8a
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: c07bdd7cc9b011a4bf32ef5cbc211d2ec96a94a650339e6d5b1c6728f68a1d16
 
 ## DH0101.2
 
@@ -3874,7 +3874,7 @@ age_y >= 18 AND (pdx IN ('I214', 'I219') OR has_nste_sdx)
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: bc7a4c323088a7627c2941c9a164cc1ac028199e102bd2a27563b597b0ad37f1
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 7232462b1b7274b45271379867c10373ec3663d3ad26a41f288fc122c0facc83
 
 ## DH0102
 
@@ -3910,7 +3910,7 @@ age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, drugitems, ipt, iptdiag, opitemrece. SQL SHA256: 67c87fe2bbffae1e9756ce40326e76c1851212d2145f936a39af2c439a3ad0f0
+Source tables: an_stat, death, drugitems, ipt, iptdiag, opitemrece. SQL SHA256: 4932f1c4a583c39bfe5512bed4bb509cf11faba4f31c10ad1f2abb971bb90d70
 
 ## DH0103
 
@@ -3946,7 +3946,7 @@ age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') AND NOT 
 - Counts ACS admissions (Pdx I210-I219, age 18 or over) discharged alive whose opitemrece holds an aspirin item on the discharge day or the day before (drugitems.name like aspirin). The PDF asks for aspirin prescribed at discharge with a live home discharge status and an absent contraindication (aspirin allergy, active bleeding); HOSxP does not code the contraindication and dchstts home status is approximated as alive discharge (no death record). Owner must confirm the local aspirin item names and the discharge prescription window.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, drugitems, ipt, iptdiag, opitemrece. SQL SHA256: 49892003e7b5e2ed9d36b3320f92a15e849e4c1777a5650ac85702446fb18b68
+Source tables: an_stat, death, drugitems, ipt, iptdiag, opitemrece. SQL SHA256: 83ce7330439e57c1e1e1cfdec5ae917ec862100cffe8c87023c38608ed6d477a
 
 ## DH0104
 
@@ -3986,7 +3986,7 @@ age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') AND EXIS
 - Counts ACS admissions with an LVSD proxy (secondary diagnosis I502 or I504, systolic or combined heart failure) that received an ACE inhibitor or ARB during the stay (drugitems.name match). The PDF needs echocardiographic ejection fraction 40 percent or lower to define LVSD; ejection fraction is not stored in HOSxP structured tables. Owner must confirm the heart failure code proxy or load the echo-confirmed cohort aggregates into reporting.thip_external_facts.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, drugitems, ipt, iptdiag, opitemrece. SQL SHA256: 756f37011e556b06fde04e4b2f96a1c899937ba5ec29370c93f041c23f623a01
+Source tables: an_stat, death, drugitems, ipt, iptdiag, opitemrece. SQL SHA256: e0904d27e2deb824ed6980d09a159def6d6a64351147b34c1af30a96ab3be4df
 
 ## DH0105
 
@@ -4064,7 +4064,7 @@ age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') AND (
 - Counts ACS admissions of smokers (secondary diagnosis F17 or Z720, or opdscreen smoking_type_id 2 or 3 on a linked visit) whose chart shows cessation advice (secondary diagnosis Z716, opdscreen advice flags, advice7_note text, or an opdscreen_advice item naming tobacco). The PDF needs documented advice given during the admission for every smoker with no contraindication exclusion; documentation completeness depends on local nursing entry habits. Owner must confirm the smoking status and advice item mappings.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, opdscreen, opdscreen_advice, opdscreen_advice_item, ovst. SQL SHA256: c6b748460cedc9d1329f1aaa363a418d2ea5937bf6780be8b5462a9233b626c0
+Source tables: an_stat, death, ipt, iptdiag, opdscreen, opdscreen_advice, opdscreen_advice_item, ovst. SQL SHA256: 21ab9ac9d58d55d46d4b82716a5afa9a1a70dcf6be699d0b9f083db40a5f2e0a
 
 ## DH0106
 
@@ -4107,7 +4107,7 @@ age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') AND NOT 
 - Counts ACS admissions without coded beta blocker contraindications (no asthma J45 or J46 and no bradycardia or block codes R000, R001, I440, I441, I442, I495, I951 as secondary diagnoses) that received a beta blocker drug during the stay. The PDF excludes clinical contraindications (hypotension, decompensated heart failure, severe asthma) that are not coded in HOSxP, so the denominator is broader than the printed one. Owner must confirm the contraindication list and local beta blocker item names.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, drugitems, ipt, iptdiag, opitemrece. SQL SHA256: afc9992132a763e908ee46ac2bd2fbdff6ebbc9a8146a31af84c5c6797e6199d
+Source tables: an_stat, death, drugitems, ipt, iptdiag, opitemrece. SQL SHA256: 8bab56847c88b5895a7b1a4b825d036aa67f97bde201ddbf3a4d5ee3f9bd6444
 
 ## DH0107
 
@@ -4151,7 +4151,7 @@ age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') AND NOT 
 - Same cohort as DH0106, restricted to live discharges, with a beta blocker drug item ordered on the discharge day or the day before (take home prescription). The PDF asks for beta blocker prescribed at discharge for patients without contraindications and discharged alive with home status; home discharge status is approximated as alive discharge and contraindications are approximated by the coded list. Owner must confirm the discharge prescription window.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, drugitems, ipt, iptdiag, opitemrece. SQL SHA256: 86430dee1b1cd06c942bbd82e94e9114b77f5725f9ab6fdae8b9e41adf330baf
+Source tables: an_stat, death, drugitems, ipt, iptdiag, opitemrece. SQL SHA256: ef26a0f6c70bd9e45406c45844fd35709e6430689cf590493597bf97fe37923c
 
 ## DH0108
 
@@ -4213,7 +4213,7 @@ age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') AND ((
 - Average door to EKG minutes for ACS admissions with an ER arrival timestamp and an EKG event: the EKG time is the earliest er_regist_oper begin_time for an ER operation whose er_oper_code name matches EKG or ECG, or whose icd9cm normalizes to 8952, measured from er_regist enter_er_time. The PDF wants the average time from arrival to first EKG over all ACS arrivals; HOSxP stores no dedicated EKG event, so the event source and code naming must be confirmed by the owner (or the average loaded into reporting.thip_external_facts).
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, er_oper_code, er_regist, er_regist_oper, ipt, iptdiag, ovst. SQL SHA256: e4647b6e6f7b501788a874f7b067a25c1fb61e7b1797261fb46d816f97503734
+Source tables: an_stat, death, er_oper_code, er_regist, er_regist_oper, ipt, iptdiag, ovst. SQL SHA256: 35e155d6076b75e59a3121729486cda2b3b2b99c9af8c9b5b881d79bbbc26e4a
 
 ## DH0109
 
@@ -4263,7 +4263,7 @@ age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') AND ((
 - Average door to referral minutes for ACS admissions referred out: from er_regist enter_er_time to referout refer_begin_time for the earliest referral of the linked visit. The PDF wants the average arrival-to-referral time over all referred ACS patients; cases without ER clock or refer timestamps are dropped. Owner must confirm refer_begin_time is maintained at referral decision time.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, er_regist, ipt, iptdiag, ovst, referout. SQL SHA256: ed9fdf58ba56520ba90d65af44abcf8228968fedecb3a6c28d3613c5a58dab9e
+Source tables: an_stat, death, er_regist, ipt, iptdiag, ovst, referout. SQL SHA256: 0354618c81a42bbceff52ccd1c5064c6b59857285bc9c7a8c281421e02452e96
 
 ## DH0110
 
@@ -4316,7 +4316,7 @@ age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213')
 - Counts STEMI admissions (Pdx I210-I213) whose reperfusion clock meets the target: primary PCI proxy is er_regist do_stemi_balloon with stemi_balloon_datetime within 7200 seconds of enter_er_time, or a fibrinolytic drug (drugitems name match) given within 30 minutes of ER arrival (opitemrece rxdate and rxtime). The PDF denominator excludes patients with PPCI limitations or thrombolytic contraindications and its PPCI clock is puncture or device time, not balloon time; both exclusions and the event choice need owner confirmation.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, drugitems, er_regist, ipt, iptdiag, opitemrece, ovst. SQL SHA256: 3b009dfadae4f4e899200c6f7999461e830f4c835806d5b092280ec10aa93fce
+Source tables: an_stat, death, drugitems, er_regist, ipt, iptdiag, opitemrece, ovst. SQL SHA256: 18438328ca7e2a7e33a845c313b8ae142cb0755abd1e2b7186aa405cf656b0a7
 
 ## DH0111
 
@@ -4353,7 +4353,7 @@ age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 9fd85638a2946fcf0a4488c9484063e5234960a277864066a159d5bfff0737ac
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 3436baffc5338d8395a2719757d88aafa3162555f303d49f5309a79a47f7d249
 
 ## DH0112
 
@@ -4384,7 +4384,7 @@ age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219')
 - ตัวตั้งผลรวมวันนอน / ตัวหาร COUNT admission ACS ที่จำหน่าย; dictionary ใช้คำว่าคน ต้องยืนยัน episode เทียบ distinct HN; ไม่เปลี่ยนเป็น COUNT HN โดยเดา
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: f633ec4768802767cb66cbefa1e2abc1ce02a1666c420c265ce229d50f0ec4e4
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 3f8b0c5dd2696fa50973be2f2f4a00b321a7d06fa352a72b98c051b52a06534e
 
 ## DH0113
 
@@ -4428,7 +4428,7 @@ age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213')
 - Counts STEMI admissions receiving a fibrinolytic agent (streptokinase, alteplase, tenecteplase, reteplase, urokinase by drugitems name) within 30 minutes of ER arrival over all STEMI admissions. The PDF denominator excludes thrombolytic contraindications (recent stroke or bleeding) and counts time from first medical contact; HOSxP codes neither, so the denominator is broader and the clock starts at hospital arrival. Owner must confirm the fibrinolytic item names.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, drugitems, er_regist, ipt, iptdiag, opitemrece, ovst. SQL SHA256: 6bc170e9b2df8c93a4a081de3f2ee5697f8969e33ca108d6a53bc5742ad3306d
+Source tables: an_stat, death, drugitems, er_regist, ipt, iptdiag, opitemrece, ovst. SQL SHA256: 39f6be0337abcf8d91640bd0632f42180afb956b74ea37d08ee9ee36aa673a21
 
 ## DH0201
 
@@ -4462,7 +4462,7 @@ EXISTS (
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: 175dbe916536fdadee362331a41a895bd5b1b3d4322f4fd423a12dfe8bb626cd
+Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: 4935cc3571867ed8b053918ef0d6ba9005a61c77ddf10c5835f9ff327b3f726e
 
 ## DH0202
 
@@ -4507,7 +4507,7 @@ EXISTS (
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, drugitems, ipt, iptdiag, iptoprt, opitemrece. SQL SHA256: d0ca24d013f5909075a6d181bb96fc3f6faae955044a5f6f498fdb7ccb70805b
+Source tables: an_stat, death, drugitems, ipt, iptdiag, iptoprt, opitemrece. SQL SHA256: 5f35205c8e6a220b9d4e5bfb58cf02bdac4f899176b9dbbcab32c5eee93a9538
 
 ## DH0203
 
@@ -4558,7 +4558,7 @@ EXISTS (
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: 106b7c06f9eee23e1285fcf9603d67d5e5cbb0f234ae3b5a0a937d3cb02542ac
+Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: f53f1eb0c40be3e903ee9f91363ffe2fe29d98f599318af5dd053025df99a61e
 
 ## DH0204
 
@@ -4607,7 +4607,7 @@ EXISTS (
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: 9769adb6be0e5fd88c1eb82fc46ace4991598b8d3c127e800bef88ac48c77512
+Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: d056225f8a41bb1a27d5e792bac8ebb9beb0b04801df091abe4af0bc4a14f6e5
 
 ## DH0301
 
@@ -4648,7 +4648,7 @@ age_y >= 18 AND LEFT(pdx, 3) = 'I50' AND NOT EXISTS (SELECT 1 FROM iptdiag sd WH
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, drugitems, ipt, iptdiag, opitemrece. SQL SHA256: 4a7788220dfec92a153fcdd48214e64ca070ab3a08d07b57fa3c63585e9f26d3
+Source tables: an_stat, death, drugitems, ipt, iptdiag, opitemrece. SQL SHA256: 65eb8f936ff2695d906efc6bb460bbd0bb96d37ebb1c7e2c75c3a34d911a9d2e
 
 ## DH0302
 
@@ -4706,7 +4706,7 @@ LEFT(pdx, 3) = 'I50'
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, opdscreen, ovst. SQL SHA256: 8dd153bdce6df81880cef337cce170a7ffe2128eba15260afbbfa2a2f5387398
+Source tables: an_stat, death, ipt, iptdiag, opdscreen, ovst. SQL SHA256: 22f1f4e1f9f3235bcd20d910118a17b278daf1d9ab2d651a7083de7551014bca
 
 ## DH0401
 
@@ -4750,7 +4750,7 @@ age_y >= 18 AND (
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - base LEFT JOIN patient.hn และ er_regist.vn อาจเพิ่มแถวถ้าคีย์ซ้ำ; principal diagnosis LIMIT 1 ยังต้องยืนยันลำดับ/ความครบ
 
-Source tables: drugitems, er_regist, opdscreen, opitemrece, ovst, ovstdiag, patient. SQL SHA256: e7e2d5f4528be7c48ef649caf3abdd500922491fc63f4cbcce71ab7d367fe5fe
+Source tables: drugitems, er_regist, opdscreen, opitemrece, ovst, ovstdiag, patient. SQL SHA256: 389cdffc73e3fba782cf5f86761810500485c43feda034abc5a72635aeceea51
 
 ## DH0402
 
@@ -4802,7 +4802,7 @@ age_y >= 18 AND (
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - base LEFT JOIN patient.hn และ er_regist.vn อาจเพิ่มแถวถ้าคีย์ซ้ำ; principal diagnosis LIMIT 1 ยังต้องยืนยันลำดับ/ความครบ
 
-Source tables: an_stat, drugitems, er_regist, ipt, opitemrece, ovst, ovstdiag, patient. SQL SHA256: 9a72c0c718ad11740cca54c51354b8bf6a4ee864b80af16970f616a4f3639214
+Source tables: an_stat, drugitems, er_regist, ipt, opitemrece, ovst, ovstdiag, patient. SQL SHA256: 2c0380df0bf87c9226e46a3db7060a084b63d7e200d8ecad548c615fc8b14f6a
 
 ## DM0101
 
@@ -4863,7 +4863,7 @@ chronic_periodized.age_y <= 6
 - Measures members aged 6 or under with GDD (F83, R62) who had a developmental assessment in the trailing 6 months (denominator) and whose paired psych_assess_child records one to six months apart improve at least one of the five developmental-age domains with none worse (numerator). The PDF leaves the improvement instrument to context and needs clinical judgement over 6 months of treatment; the domain-month comparison is the closest structured aggregate, so the owner must confirm the domain columns and the pair window.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: clinicmember, ovstdiag, psych_assess_child, psych_assess_head. SQL SHA256: 3db5be89e7cb8387e30e5da7580fe2b6a645bf40a46a53fdbd501cb220d8407c
+Source tables: clinicmember, ovstdiag, psych_assess_child, psych_assess_head. SQL SHA256: 8323b4df39ff6d15a610e3ad338196c16300d7be0d2b537b0e9b15a3c0d5d618
 
 ## DM0102
 
@@ -4925,7 +4925,7 @@ chronic_periodized.age_y <= 6
 - Same cohort and domain-pair rule as DM0101 but both assessments must sit under a psych_assess_topic named for TEDA4I. The PDF requires the TEDA4I instrument specifically; topic-name matching is the only instrument binding in HOSxP, so the owner must confirm the TEDA4I topic naming in psych_assess_topic.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: clinicmember, ovstdiag, psych_assess_child, psych_assess_head, psych_assess_topic. SQL SHA256: 1a9d70c325639c5cc771113beb5ad4ba761edbb4f2c0d648f41401b320642d4f
+Source tables: clinicmember, ovstdiag, psych_assess_child, psych_assess_head, psych_assess_topic. SQL SHA256: 173c8353fc8fcdf49fb08a2d58beb1e0fce3fe370234c6de399af9dbf352d6a2
 
 ## DM0103
 
@@ -5021,7 +5021,7 @@ EXISTS (
 - Measures members with ASD (F84) in treatment per programme (psych_therapy or psych_plan in the trailing 6 months, denominator) whose paired psych_assess_child records improve receptive or expressive language together with personal and social, with no domain worse (numerator). The PDF wants clinician-judged social and communication improvement over 6 months; the owner must confirm the domain mapping and the treatment-programme evidence.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: clinicmember, ovst, ovstdiag, psych_assess_child, psych_assess_head, psych_plan, psych_therapy. SQL SHA256: 5a1d7af8b9b2f31c550c3d81a058f810a8088d4a94e756be84f06c7d0d2b9a09
+Source tables: clinicmember, ovst, ovstdiag, psych_assess_child, psych_assess_head, psych_plan, psych_therapy. SQL SHA256: 4279752554505be31d5a5d24b17a37fa961f0658b59564541daaaa1109945343
 
 ## DM0202
 
@@ -5087,7 +5087,7 @@ EXISTS (
 - Same cohort and language-plus-social pair rule as DM0201 but both assessments must sit under a psych_assess_topic named for TEDA4I. The TEDA4I binding is topic-name matching only, so the owner must confirm the TEDA4I topic naming in psych_assess_topic.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: clinicmember, ovst, ovstdiag, psych_assess_child, psych_assess_head, psych_assess_topic, psych_plan, psych_therapy. SQL SHA256: 3cb954626999a5301314d9baecf7575f0ace91601daf45b93bf471d2de6f5cab
+Source tables: clinicmember, ovst, ovstdiag, psych_assess_child, psych_assess_head, psych_assess_topic, psych_plan, psych_therapy. SQL SHA256: 2869033b770cfb7946b8968ca27cb1b0528bc11de0a196354257c966d438c9b7
 
 ## DM0203
 
@@ -5184,7 +5184,7 @@ chronic_periodized.age_y <= 18
 - Measures members aged 18 or under with cerebral palsy (G80) in treatment per programme (psych_therapy or psych_plan in the trailing 6 months, denominator) whose paired psych_assess_child records improve at least one of the five domains with none worse (numerator). The PDF leaves the instrument to context and spans 6 months of treatment; the owner must confirm the domain mapping and the treatment-programme evidence.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: clinicmember, ovst, ovstdiag, psych_assess_child, psych_assess_head, psych_plan, psych_therapy. SQL SHA256: fe9f085d1e080d6872104abb77e4ec1d8f259be824db57c4379ac66d2ebbb5cd
+Source tables: clinicmember, ovst, ovstdiag, psych_assess_child, psych_assess_head, psych_plan, psych_therapy. SQL SHA256: bc6201e330fdf11f30073684f584c5115e4a6d29e108f8f92ef03cdd312a4a42
 
 ## DM0302
 
@@ -5251,7 +5251,7 @@ chronic_periodized.age_y <= 18
 - Same cohort and domain-pair rule as DM0301 but both assessments must sit under a psych_assess_topic named for TEDA4I. The TEDA4I binding is topic-name matching only, so the owner must confirm the TEDA4I topic naming in psych_assess_topic.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: clinicmember, ovst, ovstdiag, psych_assess_child, psych_assess_head, psych_assess_topic, psych_plan, psych_therapy. SQL SHA256: a690cd0eb1ca6ac1c94952cc68aaac109b13b2901f6603cf2bf8ca84232c3696
+Source tables: clinicmember, ovst, ovstdiag, psych_assess_child, psych_assess_head, psych_assess_topic, psych_plan, psych_therapy. SQL SHA256: 317428db5bc8b78329c0981048d731e93d6d80af41f2683203444d0211ee6099
 
 ## DM0401
 
@@ -5341,7 +5341,7 @@ LEFT(pdx, 3) IN ('I60', 'I61', 'I62', 'I63', 'I64', 'I65', 'I66', 'I67')
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: c69516d5e7947f16c27bbee4817329cae4800caa32d21eeae214407e3edb5446
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 5cb0cafd7949d38cb473af026f3224885e6e2387ad18bc90f9f92325c56f0564
 
 ## DN0102
 
@@ -5377,7 +5377,7 @@ age_y >= 18 AND LEFT(pdx, 3) = 'I63'
 - Counts ischemic stroke admissions (Pdx I63, age 18 or over) with an antiplatelet drug item (aspirin, clopidogrel, ticagrelor, prasugrel, dipyridamole, cilostazol) ordered between admission day and admission day plus 2 days. The PDF times the dose from symptom onset within 48 hours; symptom onset time is not stored, so admission time is the clock start. Owner must confirm the antiplatelet item names.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, drugitems, ipt, iptdiag, opitemrece. SQL SHA256: 116b70b05e6f8cf418aa9ccfe83464aae29e22f8012af66423795399d68a915f
+Source tables: an_stat, death, drugitems, ipt, iptdiag, opitemrece. SQL SHA256: 60ffe4d2038ef4fe625e84d9bd51f52d43af09ec616f3eb7d6cfd6c742dfef2d
 
 ## DN0103
 
@@ -5413,7 +5413,7 @@ age_y >= 18 AND LEFT(pdx, 3) = 'I63' AND NOT died
 - Counts ischemic stroke admissions discharged alive whose discharge day or day before prescription contains an antiplatelet or anticoagulant item (drugitems name match over both drug groups). The PDF asks for antithrombotic therapy at discharge after live home discharge; home status is approximated as alive discharge. Owner must confirm the antithrombotic item names and discharge window.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, drugitems, ipt, iptdiag, opitemrece. SQL SHA256: df66144bfffec80133787f7d63711fdd88e1d7d482d5da97a85e948258ba7dff
+Source tables: an_stat, death, drugitems, ipt, iptdiag, opitemrece. SQL SHA256: 0d95aeb654f2a4802b07df8747f1eaf63310ce368dcab89c3fb8224e485fc8cf
 
 ## DN0104
 
@@ -5453,7 +5453,7 @@ age_y >= 18 AND LEFT(pdx, 3) IN ('I60', 'I61', 'I62', 'I63', 'I64') AND EXISTS (
 - Counts stroke admissions (Pdx I60 to I64) with atrial fibrillation or flutter (secondary diagnosis I48) discharged alive that received an anticoagulant (warfarin, heparins, fondaparinux, or a direct oral anticoagulant) at any point in the stay. The PDF restricts to stays of 120 days or less, excludes palliative care and contraindicated patients, and prefers discharge therapy; those flags are not coded. Owner must confirm the anticoagulant item names and whether discharge-only therapy is required.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, drugitems, ipt, iptdiag, opitemrece. SQL SHA256: e70615d32e59be61006c6a096f00ca397c1ce523d1d66c335af59cdee5b797dc
+Source tables: an_stat, death, drugitems, ipt, iptdiag, opitemrece. SQL SHA256: 55f2f58928ba00c48b3cae47820ea9fcfc75cab1d5ae24baf2e4192c921cf274
 
 ## DN0105
 
@@ -5507,7 +5507,7 @@ age_y >= 18 AND LEFT(pdx, 3) IN ('I60', 'I61', 'I62', 'I63', 'I64') AND NOT died
 - Counts stroke admissions discharged alive with a health education proxy: counseling secondary diagnosis (Z716, Z719, V6541, V6549), opdscreen advice flags set on a linked visit, or any opdscreen_advice record. The PDF needs stroke-specific education (emergency activation, follow-up, risk factor and medication counselling) documented for the patient or caregiver; HOSxP has no stroke education checklist, so documentation proxies may over or under count. Owner must confirm which local documentation of stroke education to treat as evidence.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, opdscreen, opdscreen_advice, ovst. SQL SHA256: 90e6218e367c22230d2448cae1ed59d6518f462182a9f2ff77f7766e473e414d
+Source tables: an_stat, death, ipt, iptdiag, opdscreen, opdscreen_advice, ovst. SQL SHA256: dd0550c0f62af5355a97605fa521e45a5174bc40208daaa8c45c2207ad97c0b8
 
 ## DN0106
 
@@ -5543,7 +5543,7 @@ age_y >= 18 AND LEFT(pdx, 3) IN ('I60', 'I61', 'I62', 'I63', 'I64') AND NOT died
 - Counts stroke admissions discharged alive with a rehabilitation record (ovst_rehab on the admission) whose service_date falls within 72 hours of the admit timestamp. The PDF wants physiotherapy or rehabilitation assessment and treatment started within 72 hours once the patient is stable; stability and the assessment text are not structured and ovst_rehab keeps date granularity only. Owner must confirm ovst_rehab is the inpatient rehab register and the local timing convention.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, ovst_rehab. SQL SHA256: bc5cd99b95f44ab2db0151c124e69e5ce4db2f235891d01d43f189cd730147df
+Source tables: an_stat, death, ipt, iptdiag, ovst_rehab. SQL SHA256: 0927eef75d1527019b9f93fab92dd1d27363ed04f3470b17c96480118890b7eb
 
 ## DN0107
 
@@ -5580,7 +5580,7 @@ LEFT(pdx, 3) IN ('I60', 'I61', 'I62', 'I63', 'I64', 'I65', 'I66', 'I67')
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 58ebfaed0fc1c9f8a93ae6c576d5d25a5f89b5a53056b34ce654ad49f1b3799f
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 451d6313bd8e71a666cd04ca78849b5daa7f8dc42611cc0dedc4aa81b074eff4
 
 ## DN0109
 
@@ -5610,7 +5610,7 @@ LEFT(pdx, 3) IN ('I60', 'I61', 'I62', 'I63', 'I64', 'I65', 'I66', 'I67')
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 181073a4ed52b15fdec56800d19579e8561a81e48aeb4460d0e464645d140b28
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: f48f04a37d685abb612fe90d9f463c4ed4ea5392c15196051714aa388ea2bda6
 
 ## DN0110
 
@@ -5673,7 +5673,7 @@ age_y >= 18 AND LEFT(pdx, 3) = 'I63'
 - Counts ischemic stroke admissions receiving thrombolysis within 60 minutes of arrival (er_regist do_stroke_needle with stroke_needle_datetime within 3600 seconds of enter_er_time, or a fibrinolytic drug item given within 60 minutes of arrival) over admissions that received thrombolysis at all (do_stroke_needle or a fibrinolytic item). The PDF excludes thrombolytic contraindications and counts from arrival to needle for every treated patient; the contraindication exclusion is not coded. Owner must confirm which clock field (door_to_needle_second or the timestamps) is maintained.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, drugitems, er_regist, ipt, iptdiag, opitemrece, ovst. SQL SHA256: a1dab3b563230a40b9fecb93c25d6b8f1f8992b3eff2041c79da60042e60fdbe
+Source tables: an_stat, death, drugitems, er_regist, ipt, iptdiag, opitemrece, ovst. SQL SHA256: c2f453d1b9690585adab18c573360b0b373f516eee35c98714b24f0588645985
 
 ## DN0301
 
@@ -5715,7 +5715,7 @@ age_y >= 18 AND LEFT(pdx, 3) IN ('S02', 'S06') AND EXISTS (
 - Counts head injury admissions (Pdx S02 or S06, age 18 or over) with a craniotomy procedure (iptoprt icd9 in the 012 to 016 families) discharged alive and not readmitted within 28 days of discharge (any later ipt admission of the same hn) as the denominator; the numerator is those with such a readmission. The PDF denominator is the previous month discharge cohort and counts unplanned readmissions only (elective and planned returns excluded); HOSxP has no planned readmission flag and this branch buckets both counts by the discharge month of the craniotomy episode. Owner must confirm the craniotomy icd9 list and the unplanned convention.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: d7d3ddb876f58a44c7a108fcf8309ae0b6de2d66fd6b148057d5fe7ba5a1beac
+Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: d6d997a8f04d481daf733d8fbcf271dd9a6e919581184fd52d8989574eff757d
 
 ## DN0302
 
@@ -5745,7 +5745,7 @@ pdx IN ('S060', 'S061', 'S062', 'S063', 'S064', 'S065', 'S066', 'S067', 'S068', 
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: a780a82f9fce7a28bd50faec5165a1d79e0cc95869455e8bf8fc3b9fa9d56525
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 002a9bb23312a3bbe41a09efbeea5a82105fd60590c614f68e09ffe44dbe38cb
 
 ## DN0303
 
@@ -5780,7 +5780,7 @@ age_y >= 18 AND LEFT(pdx, 3) = 'S06'
 - Counts intracranial injury admissions (Pdx S06, age 18 or over) that had at least one craniotomy (iptoprt icd9 012 to 016) over all such admissions. The PDF numerator is the number of craniotomy operations (multiple operations per patient each count) while one episode is counted once here, per the one row per episode grain. Owner must confirm the craniotomy icd9 list and whether operation counts are needed (they can be staged into reporting.thip_external_facts).
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: 720dd9f3fb06af01d347a6a24c5a28c60fb0e66324889f5f8097c3c5f4e25f94
+Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: 4cf5194cd89e581e1b0de6c3c5e3da660a4d6182d167c2ef428b0b24760d6de8
 
 ## DO0202
 
@@ -5825,7 +5825,7 @@ EXISTS (
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, drugitems, ipt, iptdiag, iptoprt, opitemrece. SQL SHA256: 13a69a41becd79f7db468cbca20eee222e5ce93557303f811aa14a06a1db61fd
+Source tables: an_stat, death, drugitems, ipt, iptdiag, iptoprt, opitemrece. SQL SHA256: 8463b7ab08c88a6e53675f3fa4a4198ac24cea066f394ff35a996c9fe62e81cd
 
 ## DO0204
 
@@ -5876,7 +5876,7 @@ EXISTS (
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: dc6a5de520661f6fc2702fb83ec7ed4b30b7355ffd4c266cb577f2ca52ec6aaf
+Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: 4000a9276e14005f373826c8913fd15e8f90a08a255c5b5a6f0c12d82373f2eb
 
 ## DO0205
 
@@ -5927,7 +5927,7 @@ EXISTS (
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: 2b823bd7b0dc1fb9260bba656d4ceba29ad84ea8c53f3fb0406f36859f53b7dd
+Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: 4f3f491d5313934399ec644cfa4d5fbe433c2d8e47e9ca6819a35b9f885f1856
 
 ## DO0302
 
@@ -5972,7 +5972,7 @@ EXISTS (
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, drugitems, ipt, iptdiag, iptoprt, opitemrece. SQL SHA256: b6e0cbd54310b5293d876861d1a079f139062af96e70f6c27e490c2a493ba30c
+Source tables: an_stat, death, drugitems, ipt, iptdiag, iptoprt, opitemrece. SQL SHA256: c7d1fa5939fe4ce0b2fbe25854f3499595a366d303dc40dac44201413c145824
 
 ## DO0303
 
@@ -6023,7 +6023,7 @@ EXISTS (
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: 1792c52158ee5fe8cc1c7380c872568eca3db5993224378f2ce0de3380c6976e
+Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: dc7d2a81a78d30f6d57c2f44adb864491f0107e4c84f199e62c562c9226c9d1b
 
 ## DO0304
 
@@ -6074,7 +6074,7 @@ EXISTS (
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: 6eea37f7683256fc93e1754d6ee7771345c42089d904cfea019589e3cb15a1ec
+Source tables: an_stat, death, ipt, iptdiag, iptoprt. SQL SHA256: ca11ed8ed4d8779aa3d4f4af539456dc8982aeebf365091c9134bf09c2cd698a
 
 ## DP0101
 
@@ -6114,7 +6114,7 @@ age_y < 18 AND (LEFT(pdx, 3) = 'E10' OR pdx IN ('E891', 'P702'))
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, lab_head, lab_items, lab_order. SQL SHA256: 3858e284491fd99de4624a920b5af40735a1efc6a00647f74b9a8539059d6651
+Source tables: an_stat, death, ipt, iptdiag, lab_head, lab_items, lab_order. SQL SHA256: 0424bc01089adaf57fae48ebcb96a9a85cd5619db8b16bc63886a9a3c9c3a8d9
 
 ## DR0101
 
@@ -6144,7 +6144,7 @@ LEFT(pdx, 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850',
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 2fe7085cc41268b29eee66797d41c9578e5ba62be4e6401b0d900f06edc1c4ac
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 8072521aaa2c7a3692b52f62538697d9215fb2ca6c4ef33fb2c3458c5e3776ec
 
 ## DR0102
 
@@ -6181,7 +6181,7 @@ LEFT(pdx, 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850',
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 29344aec0e0b9ea365ad63bd61848a34487c16e81826239e8621026869a89c63
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 83ee12225d20df2fb8fbdd2fd9ff1f8b0ee2b95958a918b4b6b75bdb53819639
 
 ## DR0103
 
@@ -6259,7 +6259,7 @@ periodized
 - Counts pneumonia admissions of smokers (secondary diagnosis F17 or Z720, or opdscreen smoking_type_id 2 or 3) with documented cessation advice (Z716 secondary diagnosis, opdscreen advice flags or advice note text, or an opdscreen_advice item naming tobacco) over all smoking pneumonia admissions. The PDF needs advice documented for every smoker with pneumonia and lists no age limit; documentation evidence quality is local. Owner must confirm the smoking and advice mappings.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, opdscreen, opdscreen_advice, opdscreen_advice_item, ovst. SQL SHA256: 4f9c816c13fa1ded90cb5b7446630544815b1327c07f75ad71c09c5ff444ae3a
+Source tables: an_stat, death, ipt, iptdiag, opdscreen, opdscreen_advice, opdscreen_advice_item, ovst. SQL SHA256: 56138a37897e6dbf9fd625362bd117dc38d06c9110c51bfd9b2262f593bc6782
 
 ## DR0201
 
@@ -6289,7 +6289,7 @@ pdx IN ('A15', 'A16')
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 1b1bbd4f09bea3f18e72e75a4d8b165e4b51b1dc69c9bf079ab4ae530e9c263e
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 52c4fd133b9391dc192eab6794baf890c3ff6091ac66d13ef99c687bdd41ce06
 
 ## DR0202
 
@@ -6360,7 +6360,7 @@ chronic_periodized
 - Measures PLHIV without recent TB treatment whose TB screening is on file in the trailing 12 months, where screening is an AFB sputum examination, an afb_check clinic visit or the tb_register TB-screening advice date. The PDF also accepts symptom history and CXR which are not separately structured; the owner must confirm those screening channels or accept the recorded subset.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: arv_tx, clinic_visit, clinicmember, ovst, ovstdiag, tb_lab_examination_sputum, tb_register. SQL SHA256: e95e9596aa91ffa4b463a05aa54c038ed91a2c25e7b22aabee505e36589bdde6
+Source tables: arv_tx, clinic_visit, clinicmember, ovst, ovstdiag, tb_lab_examination_sputum, tb_register. SQL SHA256: 0de96f762e9d6549a73016b4a24e21c4cc7160563c41d1a85c48f3da1e664bbc
 
 ## DR0203
 
@@ -6414,7 +6414,7 @@ tbr.tb_register_id IS NOT NULL
 - Measures TB registrations whose nearest tb_register episode within 3 months of the clinic registration is a new case (patient type name) with a positive sputum result at registration and whose discharge type name signals cure or completion. The PDF evaluates treatment outcomes 12 months back and the anchor is the clinicmember registration date rather than tb_register_date; the owner must confirm the patient-type and outcome name matching in clinicmember_tb_patient_type, tb_result_sputum and tb_discharge_type.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: clinicmember, clinicmember_tb_patient_type, tb_discharge_type, tb_register, tb_result_sputum. SQL SHA256: 50d45d35abd44088658011d20c69b254b3386577356dd143be9cb5795fb95686
+Source tables: clinicmember, clinicmember_tb_patient_type, tb_discharge_type, tb_register, tb_result_sputum. SQL SHA256: 08fb7cc7f1e679dd40bc50984fe6109abb53728ba0e03ebd78f4b74b1a41ef10
 
 ## DR0204
 
@@ -6479,7 +6479,7 @@ tbr.tb_register_id IS NOT NULL
 - Measures TB registrations whose tb_register episode records an HIV screening signal: the receive_recomment_hiv_date column or an HIV lab item in the trailing 12 months. The PDF counts VCT, DCT and PICT counselling channels which may not reach the lab or that date column, so the owner must confirm the counselling record source (for example arv_counselling).
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: clinicmember, clinicmember_tb_patient_type, lab_head, lab_items, lab_order, tb_discharge_type, tb_register, tb_result_sputum. SQL SHA256: 57dbcd471e111eacb6ea2e7a5fa20a2af7f3f9468e54180f53d528c2e918676b
+Source tables: clinicmember, clinicmember_tb_patient_type, lab_head, lab_items, lab_order, tb_discharge_type, tb_register, tb_result_sputum. SQL SHA256: cc11148a18520d93e60839a4b0d819563054e14197f58c22e084b24e84e49ff1
 
 ## DR0205
 
@@ -6549,7 +6549,7 @@ tbr.tb_register_id IS NOT NULL
 - Measures HIV-positive TB registrations (tb_register episode plus HIV cohort evidence) with an arv_tx record starting within 6 months after registration. The PDF wants ART started within 6 months of TB treatment and sustained more than 6 months; the branch only sees the ARV record start, so the owner must confirm arv_tx.date_entry semantics and the TB-to-ART clock start.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: arv_tx, clinicmember, clinicmember_tb_patient_type, ovstdiag, tb_discharge_type, tb_register, tb_result_sputum. SQL SHA256: 774d7349622f7895ca4a8167407b060736386f5834e111560ba5c9cf42460189
+Source tables: arv_tx, clinicmember, clinicmember_tb_patient_type, ovstdiag, tb_discharge_type, tb_register, tb_result_sputum. SQL SHA256: 3407e290695f09b47865324b73764f5ac736977431909d6c2e35b05050f54d03
 
 ## DR0301
 
@@ -6586,7 +6586,7 @@ LEFT(pdx, 3) IN ('J45', 'J46')
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 3371cc4c4ef8dd449bcf278173c83837210bc3a0d45189990230d81d37aff782
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 3b127ae1af8e76c898f2fd31b0bb1539a35eb574ffb4dfbd63afa7a53243b3ba
 
 ## DR0302
 
@@ -6644,7 +6644,7 @@ LEFT(pdx, 3) IN ('J45', 'J46')
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, opdscreen, ovst. SQL SHA256: cc58223558005a20d1a4690be22a07b560eb15935603d546851a807c0446eb42
+Source tables: an_stat, death, ipt, iptdiag, opdscreen, ovst. SQL SHA256: 4250442ea14237bea8949100c748c117245ece5a843d2a53ffa23fcbf955bfdc
 
 ## DR0401
 
@@ -6681,7 +6681,7 @@ age_y >= 18 AND LEFT(pdx, 3) = 'J44'
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 0a7261db0fd276025c15420aca94a190b34062379193867cfcb839bb96e09de4
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: ae48379e28d3cde08f7bce138e096ab73c4055f2a2511aa8b23c3009c8b0f8e5
 
 ## DR0403
 
@@ -6711,7 +6711,7 @@ age_y >= 18 AND LEFT(pdx, 3) = 'J44'
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: a5b29405b1ac83e809e8338d3a9a618ae129a56403835835d834ff4541a1d6fd
+Source tables: an_stat, death, ipt, iptdiag. SQL SHA256: 0a623febb6e3c7727225d29a4fd828300756a800d8986abafec77ca6ee650551
 
 ## DR0404
 
@@ -6769,7 +6769,7 @@ age_y >= 18 AND LEFT(pdx, 3) = 'J44'
 - ต้องยืนยันนิยามและ local workflow กับโรงพยาบาล
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, opdscreen, ovst. SQL SHA256: 7beb66217f216f94ea4fe8241e4c5f945a38e3e82cf024af78e5895184b1b4c2
+Source tables: an_stat, death, ipt, iptdiag, opdscreen, ovst. SQL SHA256: 2f3ca44ffb86eb8a91c2c9aedfb95b00b2be398d9d91b0c30fbe8bac249f236e
 
 ## DS0101
 
@@ -6908,7 +6908,7 @@ EXISTS (
 - Measures members whose first methadone dispensing (opitemrece plus drugitems name match) falls within 3 months of the clinic registration (denominator: MMT starts) and who collect methadone again 11 to 15 months later (numerator: retained at one year). The PDF counts voluntary-system outpatients started in the previous fiscal year quarters, requires no gap longer than 1 month and excludes arrest, death and transfer; the branch cannot verify the gap rule or those exclusions, so the owner must confirm the methadone item set, the MMT start anchor and accept the retention proxy or stage the programme outcomes.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: clinicmember, drugitems, opitemrece. SQL SHA256: 672de1d37d87157ac12f3da260f28066d111cf50218792010d69135d7572bcb8
+Source tables: clinicmember, drugitems, opitemrece. SQL SHA256: 3d91e446940d50a44f6752d5d98b4905f6b79b1656dc4f7f0055b7f8e31cbac9
 
 ## HC0101
 
@@ -6973,7 +6973,7 @@ opd_periodized
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - base LEFT JOIN patient.hn และ er_regist.vn อาจเพิ่มแถวถ้าคีย์ซ้ำ; principal diagnosis LIMIT 1 ยังต้องยืนยันลำดับ/ความครบ
 
-Source tables: er_regist, ipt, iptdiag, ovst, ovstdiag, patient. SQL SHA256: 8a369149434d82d8e17d1de2b8ce5223bdb361b874268a293b88db5139b74e50
+Source tables: er_regist, ipt, iptdiag, ovst, ovstdiag, patient. SQL SHA256: eca4379919a5ab2f0077c89d873544973b5f7756934ab962d043645140c8c09f
 
 ## HC0102
 
@@ -7045,7 +7045,7 @@ opd_periodized
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - base LEFT JOIN patient.hn และ er_regist.vn อาจเพิ่มแถวถ้าคีย์ซ้ำ; principal diagnosis LIMIT 1 ยังต้องยืนยันลำดับ/ความครบ
 
-Source tables: er_regist, ipt, iptdiag, ovst, ovstdiag, patient. SQL SHA256: 9eb79a729e001d491c8546724746b8ee43a93145722f03d841ad11c6ff055359
+Source tables: er_regist, ipt, iptdiag, ovst, ovstdiag, patient. SQL SHA256: b090d96e2dd2270b39ee17111796da966acb1f96c6c94817e728721cca8d23ad
 
 ## HE0101
 
@@ -7100,7 +7100,7 @@ TRUE
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - วันเริ่ม/สิ้นสุดงานว่างยังใช้ fallback ในสูตรเดิม; ยอดฐานแยก unknown temporal; สิ้นสุดก่อนเริ่มงานถูกตัดจาก employee-month; ขอบเขตวันสิ้นสุดและทะเบียนครบต้องยืนยัน HR
 
-Source tables: emp, emp_position_main, opdscreen, patient. SQL SHA256: 26ddf4c9f3145f37f2cd62e31edd41ead56608f4bd3b25200935c8053b5824d9
+Source tables: emp, emp_position_main, opdscreen, patient. SQL SHA256: 48a8ac9d3f101bac1e4c8d226a9578fdebb0fec3aa7e355ef9de4cc83f7caa57
 
 ## HE0102
 
@@ -7163,7 +7163,7 @@ TRUE
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - วันเริ่ม/สิ้นสุดงานว่างยังใช้ fallback ในสูตรเดิม; ยอดฐานแยก unknown temporal; สิ้นสุดก่อนเริ่มงานถูกตัดจาก employee-month; ขอบเขตวันสิ้นสุดและทะเบียนครบต้องยืนยัน HR
 
-Source tables: emp, emp_position_main, opdscreen, patient. SQL SHA256: 8de2491f2f99a1b5e66ccc66ebbf7d02052f69a166e0649b96062bb3d422d665
+Source tables: emp, emp_position_main, opdscreen, patient. SQL SHA256: 2a754495361c886c9aabc03f843d448cd06e3dae037b502d1969f8071a2e272e
 
 ## HE0103
 
@@ -7217,7 +7217,7 @@ TRUE
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - วันเริ่ม/สิ้นสุดงานว่างยังใช้ fallback ในสูตรเดิม; ยอดฐานแยก unknown temporal; สิ้นสุดก่อนเริ่มงานถูกตัดจาก employee-month; ขอบเขตวันสิ้นสุดและทะเบียนครบต้องยืนยัน HR
 
-Source tables: emp, emp_position_main, opdscreen, patient. SQL SHA256: 8b89f77d15a3329fbbd1c0ef37cbed002c9bae8198073e432fa5352097e2345f
+Source tables: emp, emp_position_main, opdscreen, patient. SQL SHA256: 6564e09f3b1eea4b7a0fc8611a8207d92e4ad3bd6167b786601718142bed4c57
 
 ## HE0104
 
@@ -7281,7 +7281,7 @@ TRUE
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - วันเริ่ม/สิ้นสุดงานว่างยังใช้ fallback ในสูตรเดิม; ยอดฐานแยก unknown temporal; สิ้นสุดก่อนเริ่มงานถูกตัดจาก employee-month; ขอบเขตวันสิ้นสุดและทะเบียนครบต้องยืนยัน HR
 
-Source tables: emp, emp_position_main, emp_sex, opdscreen, patient. SQL SHA256: e3058c79967915f6d513135942225d41dc9de7e954d6ec6e00ddcb346c283860
+Source tables: emp, emp_position_main, emp_sex, opdscreen, patient. SQL SHA256: 3485542d5d16a21c51b8e801544750cf2a78e64b0652b3dc2e950221f3beabb1
 
 ## HE0105
 
@@ -7345,7 +7345,7 @@ TRUE
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - วันเริ่ม/สิ้นสุดงานว่างยังใช้ fallback ในสูตรเดิม; ยอดฐานแยก unknown temporal; สิ้นสุดก่อนเริ่มงานถูกตัดจาก employee-month; ขอบเขตวันสิ้นสุดและทะเบียนครบต้องยืนยัน HR
 
-Source tables: emp, emp_position_main, emp_sex, opdscreen, patient. SQL SHA256: 9cde27f79897afd2749ce0ecee8a252fd27d28f7d1e3263f7c64be04ea30b163
+Source tables: emp, emp_position_main, emp_sex, opdscreen, patient. SQL SHA256: 4fe23a2e11adf1174f4cef75acee772137690a15c9d437d7aa726190fc10aa56
 
 ## HE0106
 
@@ -7401,7 +7401,7 @@ TRUE
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - วันเริ่ม/สิ้นสุดงานว่างยังใช้ fallback ในสูตรเดิม; ยอดฐานแยก unknown temporal; สิ้นสุดก่อนเริ่มงานถูกตัดจาก employee-month; ขอบเขตวันสิ้นสุดและทะเบียนครบต้องยืนยัน HR
 
-Source tables: emp, emp_position_main, ovst, ovst_vaccine, patient, person_vaccine. SQL SHA256: 0316740e30477a3c0f26be51d930b25f1c64319db173d8bff07636278acbb3e3
+Source tables: emp, emp_position_main, ovst, ovst_vaccine, patient, person_vaccine. SQL SHA256: e9a67cb29ca91b3f9cce8b657971ea4b527032d9eac05618c426b9ec36708e7c
 
 ## HH0101.1
 
@@ -7437,7 +7437,7 @@ opd_periodized.age_y >= 15
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - base LEFT JOIN patient.hn และ er_regist.vn อาจเพิ่มแถวถ้าคีย์ซ้ำ; principal diagnosis LIMIT 1 ยังต้องยืนยันลำดับ/ความครบ
 
-Source tables: er_regist, opdscreen, ovst, ovstdiag, patient. SQL SHA256: 2961594ccea674faa2c446ac1850a9366f8285476dee443195d83ac795fa9391
+Source tables: er_regist, opdscreen, ovst, ovstdiag, patient. SQL SHA256: 44d21f26a1714bdf62c654ba153fd8099281320a15a4bb3f10b0e74abdc439ba
 
 ## HH0101.2
 
@@ -7473,7 +7473,7 @@ periodized.age_y >= 15
 - Quarterly percent of distinct inpatients aged 15+ whose admission has a smoking-status screen via the admitting ovst visit (ovst.an = periodized.an joined to opdscreen). HOSxP keeps no separate IPD smoking-screen table; the hospital owner must confirm the admitting visit screen is the official inpatient screening record.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: an_stat, death, ipt, iptdiag, opdscreen, ovst. SQL SHA256: 9b972c2d0edd2ed59823dd9be7cfde09cccf8f227d7cc3db20963c900a168985
+Source tables: an_stat, death, ipt, iptdiag, opdscreen, ovst. SQL SHA256: cef605a2ba9b6c5e8bda923fdc481bba824accc6aaa5036b29187b4fc691dca3
 
 ## HH0102
 
@@ -7562,7 +7562,7 @@ opd_periodized.age_y >= 15 AND (
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - base LEFT JOIN patient.hn และ er_regist.vn อาจเพิ่มแถวถ้าคีย์ซ้ำ; principal diagnosis LIMIT 1 ยังต้องยืนยันลำดับ/ความครบ
 
-Source tables: drugitems, er_regist, iptdiag, opdscreen, opitemrece, ovst, ovstdiag, patient. SQL SHA256: c452824fa693a84cc787c23899be716ca1a829aee433286349c6f5d70b4b1644
+Source tables: drugitems, er_regist, iptdiag, opdscreen, opitemrece, ovst, ovstdiag, patient. SQL SHA256: 7e50e254bb88039782d1139be67b827ee5b5242ea10050de42429bac9999f6ef
 
 ## HH0103.1
 
@@ -7669,7 +7669,7 @@ opd_periodized.age_y >= 15 AND (
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - base LEFT JOIN patient.hn และ er_regist.vn อาจเพิ่มแถวถ้าคีย์ซ้ำ; principal diagnosis LIMIT 1 ยังต้องยืนยันลำดับ/ความครบ
 
-Source tables: drugitems, er_regist, ipt, iptdiag, opdscreen, opitemrece, ovst, ovstdiag, patient. SQL SHA256: 31b1943dddcf39501d906a6e0a72f8a1a68e30c92f11039035322ef1ce4962ca
+Source tables: drugitems, er_regist, ipt, iptdiag, opdscreen, opitemrece, ovst, ovstdiag, patient. SQL SHA256: 3576806f35ba68d78671d01ad8ad1ca47cd757b766621b88a9ff46109d69028b
 
 ## HH0103.2
 
@@ -7776,7 +7776,7 @@ opd_periodized.age_y >= 15 AND (
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - base LEFT JOIN patient.hn และ er_regist.vn อาจเพิ่มแถวถ้าคีย์ซ้ำ; principal diagnosis LIMIT 1 ยังต้องยืนยันลำดับ/ความครบ
 
-Source tables: drugitems, er_regist, ipt, iptdiag, opdscreen, opitemrece, ovst, ovstdiag, patient. SQL SHA256: 2ed7f6dee1df0644ede5fdf6c75cc62d847c0e896c72a6c335e1e21fe6d6e38b
+Source tables: drugitems, er_regist, ipt, iptdiag, opdscreen, opitemrece, ovst, ovstdiag, patient. SQL SHA256: c8c6af9c2660619b50ac740844be6852812d29734588915189b2baa1e1d47bf0
 
 ## HH0103.3
 
@@ -7883,7 +7883,7 @@ opd_periodized.age_y >= 15 AND (
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - base LEFT JOIN patient.hn และ er_regist.vn อาจเพิ่มแถวถ้าคีย์ซ้ำ; principal diagnosis LIMIT 1 ยังต้องยืนยันลำดับ/ความครบ
 
-Source tables: drugitems, er_regist, ipt, iptdiag, opdscreen, opitemrece, ovst, ovstdiag, patient. SQL SHA256: f1f0033789fe942071149404851c871d0e102274d4667dbcae5fd8491e97e0ce
+Source tables: drugitems, er_regist, ipt, iptdiag, opdscreen, opitemrece, ovst, ovstdiag, patient. SQL SHA256: 81d775707ce3c207858ef8823fb56a036bc83d8bbe64a89a7d250dbab56779dd
 
 ## HH0103.4
 
@@ -7990,7 +7990,7 @@ opd_periodized.age_y >= 15 AND (
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - base LEFT JOIN patient.hn และ er_regist.vn อาจเพิ่มแถวถ้าคีย์ซ้ำ; principal diagnosis LIMIT 1 ยังต้องยืนยันลำดับ/ความครบ
 
-Source tables: drugitems, er_regist, ipt, iptdiag, opdscreen, opitemrece, ovst, ovstdiag, patient. SQL SHA256: 72604480ad3547ca1ada5e4b909ba94acfe835922a5bf09d906d65e35b3ac067
+Source tables: drugitems, er_regist, ipt, iptdiag, opdscreen, opitemrece, ovst, ovstdiag, patient. SQL SHA256: 4f9d1b8a73a6a9548bd08dc2abc56ffb6fd655fa927b906ec8ee2c117a00770d
 
 ## HH0103.5
 
@@ -8101,7 +8101,7 @@ opd_periodized.age_y >= 15 AND (
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - base LEFT JOIN patient.hn และ er_regist.vn อาจเพิ่มแถวถ้าคีย์ซ้ำ; principal diagnosis LIMIT 1 ยังต้องยืนยันลำดับ/ความครบ
 
-Source tables: clinicmember, drugitems, er_regist, ipt_pregnancy, iptdiag, opdscreen, opdscreen_pregnancy, opitemrece, ovst, ovstdiag, patient. SQL SHA256: 27eb0edab8c7e96f6a57e0e2c72d14734e4ef21ce8c77b0830a30f6be40673de
+Source tables: clinicmember, drugitems, er_regist, ipt_pregnancy, iptdiag, opdscreen, opdscreen_pregnancy, opitemrece, ovst, ovstdiag, patient. SQL SHA256: 605a544111cbfbfcfbab41ed40b2900461f049e41b5bda2e04a142523be239a9
 
 ## HH0103.6
 
@@ -8208,7 +8208,7 @@ opd_periodized.age_y >= 15 AND (
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - base LEFT JOIN patient.hn และ er_regist.vn อาจเพิ่มแถวถ้าคีย์ซ้ำ; principal diagnosis LIMIT 1 ยังต้องยืนยันลำดับ/ความครบ
 
-Source tables: drugitems, er_regist, ipt, iptdiag, opdscreen, opitemrece, ovst, ovstdiag, patient. SQL SHA256: 53c9fb4c0690601fe2f1e93c058d89b75135dcefc4f1b0f7211fab49a4066220
+Source tables: drugitems, er_regist, ipt, iptdiag, opdscreen, opitemrece, ovst, ovstdiag, patient. SQL SHA256: 70c40ca0979c3b578b4b855f9323ef38ea410e0b0c73295dd09b18d802f9d17c
 
 ## HH0104.1
 
@@ -8370,7 +8370,7 @@ opd_periodized.age_y >= 15 AND (
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - base LEFT JOIN patient.hn และ er_regist.vn อาจเพิ่มแถวถ้าคีย์ซ้ำ; principal diagnosis LIMIT 1 ยังต้องยืนยันลำดับ/ความครบ
 
-Source tables: drugitems, er_regist, ipt, iptdiag, opdscreen, opitemrece, ovst, ovstdiag, patient. SQL SHA256: a16c43fd18e84780de766cae0a9625d64b22eae18ad5e37aafbc19cb9a49e0a6
+Source tables: drugitems, er_regist, ipt, iptdiag, opdscreen, opitemrece, ovst, ovstdiag, patient. SQL SHA256: 21cfbd89fa0735e7eb7adcc8c9e90303633217bc6bd7ff54e825aed7aabdac27
 
 ## HH0104.2
 
@@ -8532,7 +8532,7 @@ opd_periodized.age_y >= 15 AND (
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - base LEFT JOIN patient.hn และ er_regist.vn อาจเพิ่มแถวถ้าคีย์ซ้ำ; principal diagnosis LIMIT 1 ยังต้องยืนยันลำดับ/ความครบ
 
-Source tables: drugitems, er_regist, ipt, iptdiag, opdscreen, opitemrece, ovst, ovstdiag, patient. SQL SHA256: e5a9ba57b062915b40feccc57359e11ee040380dd646db5c4e5afc6be72f1332
+Source tables: drugitems, er_regist, ipt, iptdiag, opdscreen, opitemrece, ovst, ovstdiag, patient. SQL SHA256: 0ae469b8841b7038e809edb5d18f9e1f83b057e09cdfe82205fc2edb09edc3b7
 
 ## HH0104.3
 
@@ -8694,7 +8694,7 @@ opd_periodized.age_y >= 15 AND (
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - base LEFT JOIN patient.hn และ er_regist.vn อาจเพิ่มแถวถ้าคีย์ซ้ำ; principal diagnosis LIMIT 1 ยังต้องยืนยันลำดับ/ความครบ
 
-Source tables: drugitems, er_regist, ipt, iptdiag, opdscreen, opitemrece, ovst, ovstdiag, patient. SQL SHA256: c07f74f4dc5742dc48b82e8752f5ae36ae5b52286a19115fe992eeb3df38905e
+Source tables: drugitems, er_regist, ipt, iptdiag, opdscreen, opitemrece, ovst, ovstdiag, patient. SQL SHA256: 757719da28307b4b35a0c515cf0d4cc0240376a15d51e4a8da8c402d2980b6aa
 
 ## HH0104.4
 
@@ -8856,7 +8856,7 @@ opd_periodized.age_y >= 15 AND (
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - base LEFT JOIN patient.hn และ er_regist.vn อาจเพิ่มแถวถ้าคีย์ซ้ำ; principal diagnosis LIMIT 1 ยังต้องยืนยันลำดับ/ความครบ
 
-Source tables: drugitems, er_regist, ipt, iptdiag, opdscreen, opitemrece, ovst, ovstdiag, patient. SQL SHA256: 83f8e67b7bf3f46baa3ec91e4105b9ab07fecdff1b8ed517a09d223cb76c1059
+Source tables: drugitems, er_regist, ipt, iptdiag, opdscreen, opitemrece, ovst, ovstdiag, patient. SQL SHA256: a22fff1da4ee6ce8522fff79d035b474a349ae3bb9bf2baba26a5d4ae98f4040
 
 ## HH0104.5
 
@@ -9022,7 +9022,7 @@ opd_periodized.age_y >= 15 AND (
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - base LEFT JOIN patient.hn และ er_regist.vn อาจเพิ่มแถวถ้าคีย์ซ้ำ; principal diagnosis LIMIT 1 ยังต้องยืนยันลำดับ/ความครบ
 
-Source tables: clinicmember, drugitems, er_regist, ipt_pregnancy, iptdiag, opdscreen, opdscreen_pregnancy, opitemrece, ovst, ovstdiag, patient. SQL SHA256: eb9e0cd240051167a8ecec87abfa51df0148accda4d9c966c91325019e565a56
+Source tables: clinicmember, drugitems, er_regist, ipt_pregnancy, iptdiag, opdscreen, opdscreen_pregnancy, opitemrece, ovst, ovstdiag, patient. SQL SHA256: 7f924ad39f9c0ce18df8bc3df9496a99c7344d9f99d1c702d2ebc744e5d32d3b
 
 ## SC0101
 
@@ -9467,7 +9467,7 @@ TRUE
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - วันเริ่ม/สิ้นสุดงานว่างยังใช้ fallback ในสูตรเดิม; ยอดฐานแยก unknown temporal; สิ้นสุดก่อนเริ่มงานถูกตัดจาก employee-month; ขอบเขตวันสิ้นสุดและทะเบียนครบต้องยืนยัน HR
 
-Source tables: emp, emp_position_main, emp_resign, emp_resign_type. SQL SHA256: 484ea7f75678b62ac6f9b065a053d9ac98e255584d9086f0525d4b4b27cf3bbd
+Source tables: emp, emp_position_main, emp_resign, emp_resign_type. SQL SHA256: 1e80262cb99bee86c6689e6d27a4dc20393896ef9f70644bcfd9ec8a537d7e6b
 
 ## SH0102
 
@@ -9521,7 +9521,7 @@ TRUE
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - วันเริ่ม/สิ้นสุดงานว่างยังใช้ fallback ในสูตรเดิม; ยอดฐานแยก unknown temporal; สิ้นสุดก่อนเริ่มงานถูกตัดจาก employee-month; ขอบเขตวันสิ้นสุดและทะเบียนครบต้องยืนยัน HR
 
-Source tables: emp, emp_position_main, emp_work_sick, emp_work_sick_type. SQL SHA256: 68dc2897b53babb91e1d1d0dfe490620e29e9b695516d59378e050c08e54a4fd
+Source tables: emp, emp_position_main, emp_work_sick, emp_work_sick_type. SQL SHA256: 114c16070620a784ab349912944df1323548ee34f2684a06741da2dd7503d5ac
 
 ## SH0103
 
@@ -9575,7 +9575,7 @@ TRUE
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - วันเริ่ม/สิ้นสุดงานว่างยังใช้ fallback ในสูตรเดิม; ยอดฐานแยก unknown temporal; สิ้นสุดก่อนเริ่มงานถูกตัดจาก employee-month; ขอบเขตวันสิ้นสุดและทะเบียนครบต้องยืนยัน HR
 
-Source tables: emp, emp_position_main, emp_work_sick, emp_work_sick_type. SQL SHA256: cfd1535f216daf3d4a1ce201bab878d3465e8db7a6f60130ca6c3fbde4b4d2fc
+Source tables: emp, emp_position_main, emp_work_sick, emp_work_sick_type. SQL SHA256: d86ffcf17e519aab7ed20d1f10072776fd91704aed6f325eec2811f840186a8b
 
 ## SH0104
 
@@ -9629,7 +9629,7 @@ hr.is_physician
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - วันเริ่ม/สิ้นสุดงานว่างยังใช้ fallback ในสูตรเดิม; ยอดฐานแยก unknown temporal; สิ้นสุดก่อนเริ่มงานถูกตัดจาก employee-month; ขอบเขตวันสิ้นสุดและทะเบียนครบต้องยืนยัน HR
 
-Source tables: emp, emp_position_main, emp_resign, emp_resign_type. SQL SHA256: c669edd388d5fdc20a2be3e5c076244df23a0cc41afb125e94ba6d4dd3fb7070
+Source tables: emp, emp_position_main, emp_resign, emp_resign_type. SQL SHA256: 0992a057f7c9efce576a6a1d111157ae9c3c3d6a9aa0957b5a371a220bc6210c
 
 ## SH0105
 
@@ -9683,7 +9683,7 @@ hr.is_nurse
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - วันเริ่ม/สิ้นสุดงานว่างยังใช้ fallback ในสูตรเดิม; ยอดฐานแยก unknown temporal; สิ้นสุดก่อนเริ่มงานถูกตัดจาก employee-month; ขอบเขตวันสิ้นสุดและทะเบียนครบต้องยืนยัน HR
 
-Source tables: emp, emp_position_main, emp_resign, emp_resign_type. SQL SHA256: 00a2cc902e048e031fbf0f262f9efaf925ebdc0af47f06c62a7293ed5ba5989d
+Source tables: emp, emp_position_main, emp_resign, emp_resign_type. SQL SHA256: 640b900f26be15a135c276c256bdf6a0b4c869c2ad0effb565d5813a3516d271
 
 ## SH0106
 
@@ -9737,7 +9737,7 @@ hr.is_allied_health
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - วันเริ่ม/สิ้นสุดงานว่างยังใช้ fallback ในสูตรเดิม; ยอดฐานแยก unknown temporal; สิ้นสุดก่อนเริ่มงานถูกตัดจาก employee-month; ขอบเขตวันสิ้นสุดและทะเบียนครบต้องยืนยัน HR
 
-Source tables: emp, emp_position_main, emp_resign, emp_resign_type. SQL SHA256: e94f42448dc21d04c504b63cae7f78d2caace839ef52626271b350db44f2ec5d
+Source tables: emp, emp_position_main, emp_resign, emp_resign_type. SQL SHA256: b06a4e03dbdb6f992e481cf2292c209af88dbbb4371aa891e7ebae4af4aaf240
 
 ## SH0107
 
@@ -9791,7 +9791,7 @@ hr.is_back_office
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - วันเริ่ม/สิ้นสุดงานว่างยังใช้ fallback ในสูตรเดิม; ยอดฐานแยก unknown temporal; สิ้นสุดก่อนเริ่มงานถูกตัดจาก employee-month; ขอบเขตวันสิ้นสุดและทะเบียนครบต้องยืนยัน HR
 
-Source tables: emp, emp_position_main, emp_resign, emp_resign_type. SQL SHA256: eaac4f30446c46f2634f3340d80705bf05147e84bcd615d6195d866bb28f4b4f
+Source tables: emp, emp_position_main, emp_resign, emp_resign_type. SQL SHA256: 8f456b4e527ca29410471daa17bb0667a69b995e0b37d4803f7714d511660251
 
 ## SH0201
 
@@ -10339,7 +10339,7 @@ TRUE
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - วันเริ่ม/สิ้นสุดงานว่างยังใช้ fallback ในสูตรเดิม; ยอดฐานแยก unknown temporal; สิ้นสุดก่อนเริ่มงานถูกตัดจาก employee-month; ขอบเขตวันสิ้นสุดและทะเบียนครบต้องยืนยัน HR
 
-Source tables: emp, emp_position_main, emp_work_schedule, emp_work_sick, emp_work_sick_type, emp_work_status. SQL SHA256: 96e38445b77a2ee663b8a844663b2d993217b0a6d63ad5e5de0dd364b4f3b5b5
+Source tables: emp, emp_position_main, emp_work_schedule, emp_work_sick, emp_work_sick_type, emp_work_status. SQL SHA256: 04df1f28fa7df416f034039b532b3b531cdd6f7344a0d685b1ae09ef29980acc
 
 ## SH0302
 
@@ -10401,7 +10401,7 @@ hr.is_direct_contact
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - วันเริ่ม/สิ้นสุดงานว่างยังใช้ fallback ในสูตรเดิม; ยอดฐานแยก unknown temporal; สิ้นสุดก่อนเริ่มงานถูกตัดจาก employee-month; ขอบเขตวันสิ้นสุดและทะเบียนครบต้องยืนยัน HR
 
-Source tables: emp, emp_position_main, emp_work_schedule, emp_work_sick, emp_work_sick_type, emp_work_status. SQL SHA256: e404ea65ca3191c298cedd8279f51984e3222f2732280c31c20c44396b564cd7
+Source tables: emp, emp_position_main, emp_work_schedule, emp_work_sick, emp_work_sick_type, emp_work_status. SQL SHA256: 12a6564538b25b5a266004b9aa4bf5325a79fab66c2ea942c170bf441dc59224
 
 ## SH0303
 
@@ -10463,7 +10463,7 @@ hr.is_back_office
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - วันเริ่ม/สิ้นสุดงานว่างยังใช้ fallback ในสูตรเดิม; ยอดฐานแยก unknown temporal; สิ้นสุดก่อนเริ่มงานถูกตัดจาก employee-month; ขอบเขตวันสิ้นสุดและทะเบียนครบต้องยืนยัน HR
 
-Source tables: emp, emp_position_main, emp_work_schedule, emp_work_sick, emp_work_sick_type, emp_work_status. SQL SHA256: 64c0bd0758642ffb0e62156996fb85173856681bae793c9309db6cd56be2f7d5
+Source tables: emp, emp_position_main, emp_work_schedule, emp_work_sick, emp_work_sick_type, emp_work_status. SQL SHA256: 1730f7014dc16ad660055605f67b4a66b62bc09298ecd81833dabee2a63aaf6d
 
 ## SH0306
 
@@ -10532,7 +10532,7 @@ hr.is_direct_contact
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - วันเริ่ม/สิ้นสุดงานว่างยังใช้ fallback ในสูตรเดิม; ยอดฐานแยก unknown temporal; สิ้นสุดก่อนเริ่มงานถูกตัดจาก employee-month; ขอบเขตวันสิ้นสุดและทะเบียนครบต้องยืนยัน HR
 
-Source tables: emp, emp_position_main, emp_work_schedule, emp_work_sick, emp_work_sick_type, emp_work_status. SQL SHA256: 9eeea77d820fa80002d1adb538b01d0ea18d64fe061ad4967aa7790b3684e152
+Source tables: emp, emp_position_main, emp_work_schedule, emp_work_sick, emp_work_sick_type, emp_work_status. SQL SHA256: 456b9e277a0b1848bcb7137762c15dc886727d474cdeb44db6190b373c807e62
 
 ## SH0307
 
@@ -10601,7 +10601,7 @@ hr.is_back_office
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - วันเริ่ม/สิ้นสุดงานว่างยังใช้ fallback ในสูตรเดิม; ยอดฐานแยก unknown temporal; สิ้นสุดก่อนเริ่มงานถูกตัดจาก employee-month; ขอบเขตวันสิ้นสุดและทะเบียนครบต้องยืนยัน HR
 
-Source tables: emp, emp_position_main, emp_work_schedule, emp_work_sick, emp_work_sick_type, emp_work_status. SQL SHA256: 9f3a7526e0704f68179e0d178f88ac1b6b7b7201000b557dd40680d3c6b716c5
+Source tables: emp, emp_position_main, emp_work_schedule, emp_work_sick, emp_work_sick_type, emp_work_status. SQL SHA256: fa1b93ca3369837a0390a945693a80ad8ac44c56bfa8e5c7a2fdf5bf05676ff8
 
 ## SI0101
 
@@ -10922,7 +10922,7 @@ EXISTS (
 - Measures the C:T ratio for surgical cases from blood_request plus blood_request_detail: numerator is SUM(request_qty) (units crossmatch-requested) and denominator SUM(response_qty) (units issued) of blood requests tied to a surgical case (operation_list matched on vn, or on hn with an operation date within 7 days of the request). PDF needs: crossmatched units versus truly transfused units per month for elective surgery groups. Confirm with the hospital owner: whether response_qty equals transfused units, the correct patient-to-operation matching key (blood_request carries vn and hn but no an), and whether the blood-bank module (bb_ or blb_ tables) holds the authoritative crossmatch and transfusion unit counts that should be staged via branchExternal instead.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: blood_request, blood_request_detail, operation_list. SQL SHA256: ec92e2ee13184ab1975dfcc0fbff91e8c9f51db861b9954d5cdc3adc5b3f7569
+Source tables: blood_request, blood_request_detail, operation_list. SQL SHA256: eedeb0af0492c150dfd87376c557bbb1ab352b409c2c9ddf50777e5120aef365
 
 ## SM0102
 
@@ -10971,7 +10971,7 @@ opd_periodized
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - base LEFT JOIN patient.hn และ er_regist.vn อาจเพิ่มแถวถ้าคีย์ซ้ำ; principal diagnosis LIMIT 1 ยังต้องยืนยันลำดับ/ความครบ
 
-Source tables: drugitems, er_regist, opitemrece, ovst, ovstdiag, patient. SQL SHA256: c316315af2b2aae4de6e575e3e6dc165b019e4dee0c8d427a7ece656e8db4224
+Source tables: drugitems, er_regist, opitemrece, ovst, ovstdiag, patient. SQL SHA256: 1d69e424e309d4fdd93bf440946a41d99c3fd3002656f92a3661d44500ca0b6f
 
 ## SM0103
 
@@ -11020,7 +11020,7 @@ opd_periodized
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - base LEFT JOIN patient.hn และ er_regist.vn อาจเพิ่มแถวถ้าคีย์ซ้ำ; principal diagnosis LIMIT 1 ยังต้องยืนยันลำดับ/ความครบ
 
-Source tables: drugitems, er_regist, opitemrece, ovst, ovstdiag, patient. SQL SHA256: 7d7ca0b178eeefa56490219644d86ca45dfcafb2ec2546cc555e95a12d2ce46b
+Source tables: drugitems, er_regist, opitemrece, ovst, ovstdiag, patient. SQL SHA256: 61cd0b9d6ea764c18f06527a06caa60fbc32064a090fb603d224563c55f75c19
 
 ## SM0201
 
@@ -11066,7 +11066,7 @@ opd_periodized.event_date IS NOT NULL
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 - base LEFT JOIN patient.hn และ er_regist.vn อาจเพิ่มแถวถ้าคีย์ซ้ำ; principal diagnosis LIMIT 1 ยังต้องยืนยันลำดับ/ความครบ
 
-Source tables: er_regist, ovst, ovstdiag, patient, stock_trancation. SQL SHA256: 82d305171d5f2503a8f4f66f7411bac8fbd68633e02bed20a3b39e4e295ff3ad
+Source tables: er_regist, ovst, ovstdiag, patient, stock_trancation. SQL SHA256: e8cff07534148f6c57fff5e5155954d4a576b031faba9f7063950ba1b560d416
 
 ## SS0101
 
@@ -11146,7 +11146,7 @@ TRUE
 - Measures the share of CSSD sterilization batches prepared correctly and completely: supply_sterile batches with supply_sterile_complete = Y and supply_sterile_confirm = Y and no supply_sterile_list line left incomplete. PDF needs: instrument sets assembled correctly for the specific procedure per the hospital committee agreement. Confirm with the hospital owner: that set-content correctness is verified against operation_set (operation_list.operation_set_id) or a paper checklist, and the Y convention of the supply_sterile flags; otherwise stage the audit counts via branchExternal.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: supply_sterile, supply_sterile_list. SQL SHA256: b033e0a7537194c6fff79be1d591b002f16b047270025a01a572d1e4c46ba04e
+Source tables: supply_sterile, supply_sterile_list. SQL SHA256: c7042ecb2a296b3d85e2f631dd0706b607cb08da7ac70de42ab1809fcf406132
 
 ## SS0103
 
@@ -11195,4 +11195,4 @@ TRUE
 - Measures the share of CSSD distributions acknowledged as accurately provided: supply_sterile_receive rows with supply_sterile_receive_status = Y whose parent supply_sterile batch is confirmed. PDF needs: correct, complete and on-time provision of supplies to the requesting units as verified by the receiving unit. Confirm with the hospital owner: that supply_sterile_receive records the unit acknowledgement of an accurate delivery (including timeliness) and the status flag convention.
 - ชื่อคอลัมน์และ primary key ไม่ยืนยัน join cardinality ของข้อมูลจริง; ยังไม่รับรองสูตร/หน่วย/วันที่/target
 
-Source tables: supply_sterile, supply_sterile_receive. SQL SHA256: 5f2abb97a59d52910acc94e2e53c37af854894b42a3ab587dc96178d00c425ee
+Source tables: supply_sterile, supply_sterile_receive. SQL SHA256: 09423d3c6f21f7340a02642d478aa2bb60b943353458b40a94455ce79d389672

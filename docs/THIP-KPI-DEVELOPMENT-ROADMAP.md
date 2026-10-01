@@ -179,3 +179,18 @@ Read-only DB role, server-side registered query, aggregate limit, timeout คร
 | Cohort mapping 232 | Dictionary + registered SQL + audit matrix | Definition/a/b/unit/population/grain/key/date/source/window/limits/status for every code; missing structured evidence explicit; generated drift gate; never fills hospital approval |
 | Evidence-based fixes | Representative fixture execution | CE0102/3 sampled days 5/15/25; invalid employee date ordering excluded from employee-month; SH0101 numeric annual average retained; generated reporting/step fingerprints updated |
 | Hospital certification (pending) | Mapping + aggregate comparison with owners | Confirm patient/ER cardinality, local codes, event dates, full observation windows, HR completeness and external population; compare official aggregates; sign rule/version/approval separately before publishing |
+
+## ประสิทธิภาพ — 2026-10-02
+
+พัฒนาการแยก module, ตารางที่รักษา 232 แถว, cache v2, SQL dependency closure, precompressed gzip และ local fonts แล้ว. ดู [benchmark และหลักฐานตรวจรับ](THIP-PERFORMANCE-2026-10-02.md). THIP 1,552 และ monitoring 2,784 cells พร้อม publication gates เดิมยังคงอยู่
+
+| ระยะ | Dependency | Implementation / acceptance |
+|---|---|---|
+| A วัดผล | Baseline + production build | Production gzip benchmark 5 รอบ/device; cold monitoring 232×12, interactions และ warm cache 177; numeric diagnostics แยก queue wait/request และไม่บันทึกข้อมูลหรือ capability |
+| B Startup graph | A | Lightweight transport/probe; lazy routes/charts/reporting/validation; compact readiness manifest และ detail evidence แยก 29 family; initial JS ≤200 KB gzip; generated runtime/rule equivalence |
+| C Rendering | B | Stable memoized rows/cells, hidden filters, cached periods/search/formatters; deferred search + pending export guard; arrows/dialog/FY/session checks; LCP/CLS/interaction budgets ใน CI |
+| D Queue/cache | B–C | Build-time SQL/rule hashes, query planning เมื่อถึง code, one-transaction readMany + context/expiry indices, readonly shared progress; v1 invalidation, 24h/Bangkok expiry, memory fallback และ stale-response/write cancellation |
+| E SQL/static delivery | A–D | CTE manifest ครบ 177; exact aggregate comparison + 5 EXPLAIN runs ของหกรหัสตัวแทนใน PG16 จำลอง; gzip_static/immutable assets/no-store HTML/local fonts; explicit chunk retry โดยไม่มี reload loop |
+| F Hospital acceptance (pending) | A–E + เจ้าของระบบ | ทดสอบเครื่องโรงพยาบาล/มือถือจริง, latency/EXPLAIN กับ aggregate staging ที่อนุมัติ, ประเมิน indices ที่มีและ cardinality ก่อนเสนอ DBA; รับรอง family/rule แยกจาก performance |
+
+CI เพิ่ม performance gates และ artifacts, source audit, runtime drift, SQL equivalence และ mocked browser cache/Step/profile regressions. รอบนี้ไม่มี live BMS/HOSxP calls, Issues, deployment หรือ commit/push

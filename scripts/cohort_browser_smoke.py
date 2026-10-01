@@ -7,7 +7,7 @@ from step_browser_smoke import fixtures, BASE
 
 OUT = Path(__file__).resolve().parents[1]/'tmp/cohort-browser'
 OUT.mkdir(parents=True,exist_ok=True)
-ENTRIES = """async () => {const db=await new Promise(resolve=>{const r=indexedDB.open('thip-candidate-cache',1);r.onsuccess=()=>resolve(r.result);});const entries=await new Promise(resolve=>{const r=db.transaction('entries').objectStore('entries').getAll();r.onsuccess=()=>resolve(r.result);});db.close();return entries;}"""
+ENTRIES = """async () => {const db=await new Promise(resolve=>{const r=indexedDB.open('thip-candidate-cache',2);r.onsuccess=()=>resolve(r.result);});const entries=await new Promise(resolve=>{const r=db.transaction('entries').objectStore('entries').getAll();r.onsuccess=()=>resolve(r.result);});db.close();return entries;}"""
 
 async def connected(page, session='SYNTHETIC_COHORT'):
     await page.goto(f'{BASE}/?view=validation&fy=2026&bms-session-id={session}',wait_until='domcontentloaded')

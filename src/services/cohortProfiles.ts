@@ -1,4 +1,4 @@
-import { executeRegisteredQuery, type RegisteredQuery } from './queryRegistry';
+import { executeRegisteredQuery, type RegisteredQuery } from './queryTransport';
 import { aggregateQueryLane } from './aggregateQueryLane';
 import type { BmsRuntimeConfig } from './bmsSession';
 import { BmsRequestError } from './bmsErrors';

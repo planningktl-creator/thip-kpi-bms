@@ -27,10 +27,13 @@ jobs:
       - run: pnpm test
       - run: pnpm fixture:export
       - run: pnpm sourceview:check
+      - run: pnpm runtime:check
       - run: pnpm steps:check
       - run: pnpm cohorts:check
       - run: python scripts/cohort_sql_smoke.py
+      - run: python scripts/query_performance_smoke.py
       - run: python scripts/check-thip-fixtures.py
+      - run: python scripts/thip_source_audit.py --input test-fixtures/thip-kpi-complete-2026.json --fiscal-year 2026
       - run: pnpm run build
       - run: pnpm monitoring:release-check
       # CI validates the production image contract with a safe identifier only;
@@ -43,6 +46,16 @@ jobs:
 
       - run: python -m pip install playwright
       - run: python -m playwright install --with-deps chromium
+      - run: pnpm perf:check
+      - run: python scripts/chunk_browser_smoke.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thip-performance
+          path: |
+            tmp/performance/result.json
+            tmp/performance/chunk-result.json
+            tmp/sql-performance/result.json
       - run: python scripts/check-nginx-security.py
       - run: pnpm dev -- --host 127.0.0.1 --port 5173 > /tmp/thip-kpi-bms-preview.log 2>&1 &
       - run: VITE_THIP_MONITORING_PREVIEW=true pnpm exec vite --host 127.0.0.1 --port 5174 > /tmp/thip-kpi-synthetic.log 2>&1 &
@@ -50,3 +63,5 @@ jobs:
       - run: python scripts/visual_smoke.py
       - run: python scripts/monitoring_browser_smoke.py
       - run: THIP_STEP_SMOKE_URL=http://127.0.0.1:5173 python scripts/cohort_browser_smoke.py
+      - run: THIP_STEP_SMOKE_URL=http://127.0.0.1:5173 python scripts/step_browser_smoke.py
+      - run: THIP_STEP_SMOKE_URL=http://127.0.0.1:5173 python scripts/step_cache_browser_smoke.py

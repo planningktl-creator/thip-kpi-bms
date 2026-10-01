@@ -3,6 +3,7 @@ import csv
 import io
 import json
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
 from visual_smoke import mock_bms_routes, allow_cors_headers
@@ -19,35 +20,44 @@ def main():
     checks = []
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
-        page = browser.new_page(viewport={'width': 1440, 'height': 1000})
+        page = browser.new_page(viewport={'width': 1440, 'height': 1000}, timezone_id='America/New_York')
+        page.clock.set_fixed_time(datetime(2026, 10, 1, 0, 0, tzinfo=timezone.utc))
         page.on('pageerror', lambda error: errors.append(str(error)))
         page.goto(f'{PREVIEW}/?fy=2026', wait_until='networkidle')
-        expect(page.locator('.monitoring-matrix tbody tr')).to_have_count(232)
-        expect(page.locator('.monitoring-cell')).to_have_count(2784)
+        expect(page.locator('.monitoring-matrix tbody tr:not([hidden])')).to_have_count(232)
+        expect(page.locator('.monitoring-matrix tbody tr:not([hidden]) .monitoring-cell')).to_have_count(2784)
         expect(page.locator('.monitoring-preview').first).to_contain_text('ข้อมูลสังเคราะห์')
         page.get_by_label('กรองสถานะข้อมูล').select_option('measured')
-        expect(page.locator('.monitoring-matrix tbody tr')).to_have_count(7)
+        expect(page.locator('.monitoring-matrix tbody tr:not([hidden])')).to_have_count(7)
         page.screenshot(path=str(OUT / 'preview-measured-desktop.png'), full_page=True)
         page.get_by_label('กรองผลเทียบเป้า').select_option('watch')
-        assert page.locator('.monitoring-matrix tbody tr').count() > 0
-        for row in page.locator('.monitoring-matrix tbody tr').all():
+        assert page.locator('.monitoring-matrix tbody tr:not([hidden])').count() > 0
+        for row in page.locator('.monitoring-matrix tbody tr:not([hidden])').all():
             assert row.locator('.assessment-watch').count() > 0
             assert row.locator('.monitoring-cell').count() == 12
         page.get_by_label('กรองผลเทียบเป้า').select_option('all')
         checks += ['assessment filter preserves all twelve months']
         page.get_by_label('ค้นหารหัสหรือชื่อ KPI').fill('DH0101')
-        expect(page.locator('.monitoring-matrix tbody tr')).to_have_count(1)
-        cell = page.locator('.monitoring-cell').first
+        expect(page.locator('.monitoring-matrix tbody tr:not([hidden])')).to_have_count(1)
+        cell = page.locator('.monitoring-matrix tbody tr:not([hidden]) .monitoring-cell').first
         cell.focus(); cell.press('ArrowRight')
-        expect(page.locator('.monitoring-cell').nth(1)).to_be_focused()
+        expect(page.locator('.monitoring-matrix tbody tr:not([hidden]) .monitoring-cell').nth(1)).to_be_focused()
         page.keyboard.press('Enter')
         expect(page.locator('dialog')).to_be_visible()
         expect(page.locator('dialog')).to_contain_text('synthetic-preview-1')
         expect(page.locator('dialog')).to_contain_text('ไม่มีเป้าหมาย')
+        expect(page.locator('dialog')).to_contain_text('1 พ.ย. พ.ศ. 2568 ถึง 1 ธ.ค. พ.ศ. 2568')
+        expect(page.locator('dialog .monitoring-facts')).not_to_contain_text('2025-11-01')
+        expect(page.locator('dialog')).to_contain_text('1 ต.ค. พ.ศ. 2569 07:00:00')
         page.screenshot(path=str(OUT / 'preview-detail-desktop.png'), full_page=True)
         page.keyboard.press('Escape')
         expect(page.locator('dialog')).not_to_be_visible()
-        expect(page.locator('.monitoring-cell').nth(1)).to_be_focused()
+        expect(page.locator('.monitoring-matrix tbody tr:not([hidden]) .monitoring-cell').nth(1)).to_be_focused()
+        page.keyboard.press('ArrowLeft'); page.keyboard.press('Enter')
+        expect(page.locator('dialog')).to_contain_text('1 ต.ค. พ.ศ. 2568 ถึง 1 พ.ย. พ.ศ. 2568')
+        expect(page.locator('dialog')).to_contain_text('31 ต.ค. พ.ศ. 2568')
+        assert '2025-10-01' not in page.locator('dialog').inner_text()
+        page.keyboard.press('Escape')
         with page.expect_download() as download_info:
             page.get_by_role('button', name='ส่งออก CSV', exact=True).click()
         download = download_info.value
@@ -55,6 +65,8 @@ def main():
         content = Path(download.path()).read_text(encoding='utf-8-sig')
         rows = list(csv.DictReader(io.StringIO(content)))
         assert len(rows) == 12 and rows[5]['data_status'] == 'missing-source'
+        assert rows[0]['period_start'] == '2025-10-01'
+        assert rows[0]['period_start_be'] == '1 ต.ค. พ.ศ. 2568'
         assert all(row['series'] == 'monthly-monitoring' and 'ข้อมูลสังเคราะห์' in row['data_label'] for row in rows)
         checks += ['232×12', 'preview label', 'any-month filter', 'keyboard + focus restore', 'CSV all twelve cells']
         url = page.url
@@ -63,14 +75,14 @@ def main():
         expect(page.get_by_label('ค้นหารหัสหรือชื่อ KPI')).to_have_value('DH0101')
         expect(page.get_by_label('กรองสถานะข้อมูล')).to_have_value('measured')
         page.get_by_label('กรองกลุ่ม KPI').select_option('S')
-        expect(page.locator('.monitoring-matrix tbody tr')).to_have_count(0)
+        expect(page.locator('.monitoring-matrix tbody tr:not([hidden])')).to_have_count(0)
         page.go_back(wait_until='networkidle')
         expect(page.get_by_label('กรองกลุ่ม KPI')).to_have_value('all')
-        expect(page.locator('.monitoring-matrix tbody tr')).to_have_count(1)
+        expect(page.locator('.monitoring-matrix tbody tr:not([hidden])')).to_have_count(1)
         page.go_forward(wait_until='networkidle')
         expect(page.get_by_label('กรองกลุ่ม KPI')).to_have_value('S')
         page.get_by_role('button',name='ล้างตัวกรอง').click()
-        expect(page.locator('.monitoring-matrix tbody tr')).to_have_count(232)
+        expect(page.locator('.monitoring-matrix tbody tr:not([hidden])')).to_have_count(232)
         page.get_by_label('เลือกปีงบประมาณ').select_option('2027')
         expect(page.locator('.state-future')).to_have_count(2552)
         page.get_by_label('เลือกปีงบประมาณ').select_option('2026')
@@ -85,13 +97,14 @@ def main():
         expect(mobile.get_by_role('button',name='เปิดเมนู')).to_be_focused()
         expect(mobile.locator('aside')).not_to_have_class('app-sidebar is-open')
         scroll = mobile.locator('.monitoring-scroll')
-        before = mobile.locator('.monitoring-identity').last.bounding_box()['x']
+        identity = mobile.locator('.monitoring-matrix tbody tr:not([hidden]) .monitoring-identity').last
+        before = identity.bounding_box()['x']
         scroll.evaluate('(element)=>element.scrollLeft=600')
-        after = mobile.locator('.monitoring-identity').last.bounding_box()['x']
+        after = identity.bounding_box()['x']
         assert abs(before-after)<1
         scroll.evaluate('(element)=>element.scrollLeft=0')
         mobile.screenshot(path=str(OUT/'preview-measured-mobile.png'),full_page=True)
-        mobile.locator('.monitoring-cell').first.click()
+        mobile.locator('.monitoring-matrix tbody tr:not([hidden]) .monitoring-cell').first.click()
         expect(mobile.locator('dialog')).to_be_visible()
         mobile.screenshot(path=str(OUT/'preview-detail-mobile.png'),full_page=True)
         mobile.keyboard.press('Escape')
@@ -107,8 +120,8 @@ def main():
         unavailable = browser.new_page()
         unavailable.goto(f'{NORMAL}/?fy=2026',wait_until='networkidle')
         expect(unavailable.locator('.monitoring-coverage')).to_contain_text('0/2784')
-        expect(unavailable.locator('.monitoring-cell')).to_have_count(2784)
-        unavailable.locator('.monitoring-cell').first.click()
+        expect(unavailable.locator('.monitoring-matrix tbody tr:not([hidden]) .monitoring-cell')).to_have_count(2784)
+        unavailable.locator('.monitoring-matrix tbody tr:not([hidden]) .monitoring-cell').first.click()
         expect(unavailable.locator('dialog')).to_contain_text('population denominator')
         unavailable.keyboard.press('Escape')
         checks += ['no source preserves NULL and reasons']
@@ -156,14 +169,14 @@ def main():
         live.wait_for_timeout(150)
         pending[2025].fulfill(status=503,headers=allow_cors_headers(pending[2025].request),json={})
         expect(live.locator('.monitoring-error')).to_be_visible()
-        expect(live.locator('.monitoring-cell')).to_have_count(2784)
+        expect(live.locator('.monitoring-matrix tbody tr:not([hidden]) .monitoring-cell')).to_have_count(2784)
         expect(live.get_by_role('button',name='ส่งออก CSV',exact=True)).to_be_disabled()
         checks += ['source error retains grid and disables export']
         rejected = browser.new_page()
         rejected.route('https://hosxp.net/phapi/PasteJSON**', lambda route: route.fulfill(status=401, json={}))
         rejected.goto(f'{SOURCE}/?fy=2026&bms-session-id=synthetic-expired-session', wait_until='networkidle')
         expect(rejected.locator('.connection-banner-error')).to_be_visible()
-        expect(rejected.locator('.monitoring-cell')).to_have_count(2784)
+        expect(rejected.locator('.monitoring-matrix tbody tr:not([hidden]) .monitoring-cell')).to_have_count(2784)
         assert 'synthetic-expired-session' not in rejected.url
         checks += ['expired session retains grid and strips launch capability']
         browser.close()

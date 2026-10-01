@@ -1,3 +1,4 @@
+import { parseCtes, requiredCtes } from './thipCtePlan';
 /**
  * Fan-out plan for the HOSxP foundation queries.
  *
@@ -40,12 +41,18 @@ const SLOW_CODE_MS = 8_000;
 
 const BASE_CHAIN = `WITH\n      ${ipdBaseCte('standard').replace(/^WITH\s+/, '')},\n      ${extendedBaseCte(false)}`;
 
-function chunkSql(codes: readonly string[], branches: readonly string[]): string {
+const CTES = parseCtes(BASE_CHAIN);
+export function codeCteDependencies(codes: readonly string[]): readonly string[] {
+  return requiredCtes(CTES, codes.map(code => BRANCH_BY_CODE.get(code)!)).map(cte => cte.name);
+}
+function chunkSql(codes: readonly string[], branches: readonly string[], prune = true): string {
+  const selected = requiredCtes(CTES, branches);
+  const chain = prune ? selected.length ? `WITH\n${selected.map(cte => cte.sql).join(',\n')},` : 'WITH' : `${BASE_CHAIN},`;
   const pairs = codes
     .flatMap((code) => getExpectedFiscalMonths(code).map((month) => `('${code}', ${month})`))
     .join(', ');
   return `
-      ${BASE_CHAIN},
+      ${chain}
       facts AS (
       ${branches.join('\n\n      UNION ALL\n')}
       ), expected_codes(indicator_code, fiscal_month) AS (
@@ -97,6 +104,13 @@ export function registeredCodeBranchPairs(): ReadonlyArray<readonly [string, str
 }
 
 const BRANCH_BY_CODE = new Map(registeredCodeBranchPairs());
+
+/** Offline equivalence harness over the same registered branch; no SQL input. */
+export function codeComparisonQueries(code: string) {
+  const branch = BRANCH_BY_CODE.get(code);
+  if (!branch) throw new Error('Unknown registered native KPI');
+  return { code, before: chunkSql([code], [branch], false), after: chunkSql([code], [branch]), ctes: codeCteDependencies([code]) };
+}
 
 /** Builds one executable request for an explicit set of codes. */
 function makeChunk(codes: readonly string[], key: string, description: string): RegisteredQuery {

@@ -79,7 +79,7 @@ describe('candidate cache contract', () => {
     expect(await (await createStepCache(runtime, 2026, repo, signal())).read(signal())).toEqual([]);
   });
   it('uses memory when opening/writing storage fails and still attempts disk clear', async () => {
-    const disk = new MemoryCacheRepository(); vi.spyOn(disk, 'read').mockRejectedValue(new Error('private mode')); const clear = vi.spyOn(disk, 'clear'); const warning = vi.fn();
+    const disk = new MemoryCacheRepository(); vi.spyOn(disk, 'readMany').mockRejectedValue(new Error('private mode')); const clear = vi.spyOn(disk, 'clear'); const warning = vi.fn();
     const repo = new ResilientCacheRepository(disk, warning); const cache = await createStepCache(runtime, 2026, repo, signal()); await cache.read(signal());
     await cache.write('DH0101', rows(), signal()); expect(await cache.read(signal())).toHaveLength(1); expect(warning).toHaveBeenCalledTimes(1);
     await repo.clear(); expect(clear).toHaveBeenCalled(); expect(await cache.read(signal())).toEqual([]);

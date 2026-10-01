@@ -4,7 +4,7 @@ import type { CacheRepository } from '@/services/thipStepCache';
 import type { BmsRuntimeConfig } from '@/services/bmsSession';
 import { BmsRequestError } from '@/services/bmsErrors';
 import { aggregateQueryLane } from '@/services/aggregateQueryLane';
-import { getFiscalMonthPeriods } from '@/utils/fiscal';
+import { formatThaiDateTime, getFiscalMonthPeriods } from '@/utils/fiscal';
 
 type Props = { runtime: BmsRuntimeConfig | null; fiscalYear: number; repository: CacheRepository; clearEpoch: number; locked: boolean; onSourceHold(error: BmsRequestError): void };
 const labels: Record<CohortProfileResult['status'], string> = { pending: 'ยังไม่โหลด', running: 'รอคิว/กำลังอ่าน', success: 'อ่านยอดฐานสำเร็จ', 'zero-cohort': 'ไม่มี episode ในช่วงนี้', 'unverified-source': 'ทะเบียนยังไม่ยืนยัน', 'missing-source': 'อ่าน source ไม่สำเร็จ', future: 'เดือนอนาคต' };
@@ -16,7 +16,7 @@ export function CohortProfilesPanel({ runtime, fiscalYear, repository, clearEpoc
   const [retryAt, setRetryAt] = useState(0); const [now, setNow] = useState(Date.now()); const [sessionBlocked, setSessionBlocked] = useState(false);
   const abort = useRef<AbortController | null>(null);
   useEffect(() => { abort.current?.abort(); setState(null); setBusy(false); setRetryAt(0); setSessionBlocked(false); return () => abort.current?.abort(); }, [runtime, fiscalYear, month, clearEpoch]);
-  useEffect(() => { if (!retryAt) return; const timer = setInterval(() => setNow(Date.now()), 500); return () => clearInterval(timer); }, [retryAt]);
+  useEffect(() => { if (!retryAt || retryAt <= Date.now()) return; const timer = setInterval(() => { const value = Date.now(); setNow(value); if (value >= retryAt) clearInterval(timer); }, 500); return () => clearInterval(timer); }, [retryAt]);
   const current = state?.runtime === runtime && state.fiscalYear === fiscalYear && state.month === month && state.epoch === clearEpoch ? state.rows : cohortProfiles.map((p) => emptyProfile(p.key, fiscalYear, month));
   function cancel() {
     abort.current?.abort(); setBusy(false);
@@ -57,7 +57,7 @@ export function CohortProfilesPanel({ runtime, fiscalYear, repository, clearEpoc
       <h3>{profile.title}</h3><p>{profile.scope === 'current-register' ? 'ทะเบียนปัจจุบัน ณ เวลาตรวจ — ไม่ใช่ยอดย้อนหลัง' : `ช่วงสอบทาน ${getFiscalMonthPeriods(fiscalYear)[month - 1].label}`}</p><strong>{labels[row.status]}{row.origin === 'cache' && ' · จาก cache'}</strong>
       <dl className="cohort-highlights">{highlights[profile.key].map((key) => <div key={key}><dt>{profile.metrics.find((m) => m.key === key)!.label}</dt><dd>{row.metrics[key]?.toLocaleString('th-TH') ?? '—'}</dd></div>)}</dl>
       <details><summary>ดูยอดและวิธีนับ</summary><dl>{profile.metrics.map((m) => <div key={m.key}><dt>{m.label}</dt><dd>{row.metrics[m.key]?.toLocaleString('th-TH') ?? '—'}</dd></div>)}</dl><p>{profile.explanation}</p></details>
-      <p>{row.reason}</p>{row.observedAt && <small>อ่านเมื่อ {new Date(row.observedAt).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}{row.expiresAt && ` · cache หมดอายุ ${new Date(row.expiresAt).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`}</small>}
+      <p>{row.reason}</p>{row.observedAt && <small>อ่านเมื่อ {formatThaiDateTime(row.observedAt)}{row.expiresAt && ` · cache หมดอายุ ${formatThaiDateTime(row.expiresAt)}`}</small>}
     </article>; })}</div>
   </section>;
 }

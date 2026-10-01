@@ -99,6 +99,7 @@ def main() -> None:
         desktop.locator(".indicator-table tbody tr").first.click()
         desktop.wait_for_load_state("networkidle")
         desktop.screenshot(path=str(ARTIFACTS / "detail-desktop.png"), full_page=True)
+        desktop.wait_for_selector("[data-testid=period-breakdown]")
         assert desktop.get_by_test_id("period-breakdown").count() == 1
         assert desktop.locator(".monthly-table tbody tr").count() == 12
         assert desktop.get_by_text("AA0101", exact=True).count() >= 1

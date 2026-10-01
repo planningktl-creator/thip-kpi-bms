@@ -1,4 +1,5 @@
 import type { Indicator, IndicatorStatus } from '@/types/thip';
+import { formatThaiDateTime } from '@/utils/fiscal';
 
 const integerFormatter = new Intl.NumberFormat('th-TH', {
   maximumFractionDigits: 0,
@@ -32,10 +33,7 @@ export function formatPercent(value: number | null): string {
 }
 
 export function formatRefreshTime(iso: string | null): string {
-  if (!iso) return '—';
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return '—';
-  return new Intl.DateTimeFormat('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false }).format(date);
+  return formatThaiDateTime(iso);
 }
 
 export function formatCompact(value: number): string {

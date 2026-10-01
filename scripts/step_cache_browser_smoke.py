@@ -7,7 +7,7 @@ from playwright.async_api import async_playwright, expect
 from step_browser_smoke import BASE, OUT, fixtures
 
 READ = """async () => {
- const db = await new Promise((resolve,reject) => { const r=indexedDB.open('thip-candidate-cache',1); r.onsuccess=()=>resolve(r.result); r.onerror=reject; });
+ const db = await new Promise((resolve,reject) => { const r=indexedDB.open('thip-candidate-cache',2); r.onsuccess=()=>resolve(r.result); r.onerror=reject; });
  const rows = await new Promise((resolve,reject) => { const r=db.transaction('entries').objectStore('entries').getAll(); r.onsuccess=()=>resolve(r.result); r.onerror=reject; });
  db.close(); return rows;
 }"""
@@ -31,7 +31,7 @@ async def main():
         await expect(page.locator('[data-code="DH0101"]')).to_contain_text('query สำเร็จ')
         await pause(page)
         stored = await page.evaluate(READ)
-        assert len(stored) >= 1 and stored[0]['version'] == 1
+        assert len(stored) >= 1 and stored[0]['version'] == 2
         assert stored[0]['expiresAt'] - __import__('datetime').datetime.fromisoformat(stored[0]['observedAt'].replace('Z','+00:00')).timestamp()*1000 == 86400000
         assert not any(word in json.dumps(stored) for word in ['SYNTHETIC_', 'bearerToken', 'marketplaceToken', 'step.mock.invalid', 'patient', 'hn', 'vn'])
         count = sum(c['code']=='DH0101' for c in calls)
@@ -60,9 +60,10 @@ async def main():
         await page.screenshot(path=str(OUT/'cache-mobile.png'))
         checks += ['browser close/reopen retains cache', 'mobile cache controls without overflow']
         await page.get_by_role('button', name='โหลดใหม่ทั้งคิว', exact=True).click()
+        await expect(page.locator('[data-code="DH0101"]')).not_to_contain_text('จาก cache')
         await expect(page.locator('[data-code="DH0101"]')).to_contain_text('query สำเร็จ')
         await pause(page)
-        assert sum(c['code']=='DH0101' for c in calls)==1
+        assert sum(c['code']=='DH0101' for c in calls)==1, {'calls':calls, 'row':await page.locator('[data-code="DH0101"]').inner_text()}
         await expect(page.locator('[data-code="DH0101"]')).not_to_contain_text('จาก cache')
         checks.append('force reload bypasses cache')
 
@@ -82,7 +83,7 @@ async def main():
         checks.append('year isolation and return to cached year')
 
         await page.evaluate("""async () => {
-          const r=indexedDB.open('thip-candidate-cache',1);
+          const r=indexedDB.open('thip-candidate-cache',2);
           const db=await new Promise(resolve=>r.onsuccess=()=>resolve(r.result));
           await new Promise((resolve,reject)=>{const tx=db.transaction('entries','readwrite'); tx.oncomplete=resolve; tx.onabort=reject;
             tx.objectStore('entries').openCursor().onsuccess=e=>{const c=e.target.result;if(!c)return; c.update({...c.value,expiresAt:Date.now()-1});c.continue();};});db.close();
@@ -102,6 +103,26 @@ async def main():
         await expect(page.locator('[data-code="DH0101"]')).not_to_contain_text('query สำเร็จ')
         checks.append('clear-all aborts and waits for manual restart')
         await ctx.close()
+
+        # Upgrade the old schema without trusting its obsolete fingerprints.
+        migration = await p.chromium.launch(headless=True)
+        tab = await migration.new_context()
+        await tab.route('https://**', lambda route: route.abort())
+        migration_calls = await fixtures(tab)
+        page = await tab.new_page()
+        await page.goto(f'{BASE}/?fy=2026',wait_until='networkidle')
+        await page.evaluate("""async () => {
+          const db=await new Promise((resolve,reject)=>{const r=indexedDB.open('thip-candidate-cache',1);r.onupgradeneeded=()=>r.result.createObjectStore('entries',{keyPath:'key'});r.onsuccess=()=>resolve(r.result);r.onerror=reject;});
+          await new Promise((resolve,reject)=>{const tx=db.transaction('entries','readwrite');tx.oncomplete=resolve;tx.onabort=reject;tx.objectStore('entries').put({key:'obsolete-aggregate',version:1,facts:[]});});db.close();
+        }""")
+        await page.goto(launch,wait_until='networkidle')
+        await expect(page.locator('[data-code="DH0101"]')).to_contain_text('query สำเร็จ')
+        await pause(page)
+        stored = await page.evaluate(READ)
+        assert any(c['code']=='DH0101' for c in migration_calls)
+        assert stored and all(row['version']==2 and row['key']!='obsolete-aggregate' for row in stored)
+        checks.append('v1 schema invalidated and upgraded before query')
+        await migration.close()
 
         ctx = await p.chromium.launch(headless=True)
         tab = await ctx.new_context()

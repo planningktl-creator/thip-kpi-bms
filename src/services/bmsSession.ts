@@ -1,5 +1,5 @@
 import { abortable } from './abortable';
-import { executeRegisteredQuery, queryRegistry } from '@/services/queryRegistry';
+import { executeRegisteredQuery, versionProbe } from '@/services/queryTransport';
 import { BmsRequestError, getBmsConnectionErrorMessage } from '@/services/bmsErrors';
 import type { BmsConnection } from '@/types/thip';
 
@@ -141,7 +141,7 @@ export async function connectBmsSession(manualSessionId?: string, signal?: Abort
       hospitalCode: info?.hospital_code,
       userName: info?.name,
     };
-    const probe = await executeRegisteredQuery(queryRegistry.versionProbe, runtime, undefined, marketplaceToken ?? undefined, { signal });
+    const probe = await executeRegisteredQuery(versionProbe, runtime, undefined, marketplaceToken ?? undefined, { signal });
     const version = String((probe.data?.[0] ?? probe.result?.[0])?.version ?? '');
     const databaseType = /postgres/i.test(version)
       ? 'PostgreSQL'

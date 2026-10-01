@@ -1,0 +1,232 @@
+{
+  "profile": {
+    "downloadMbps": 1.6,
+    "latencyMs": 100,
+    "mobileCpuSlowdown": 4,
+    "runs": 5
+  },
+  "labOnly": true,
+  "hospitalQueries": 0,
+  "measurements": [
+    {
+      "lcp": 1596,
+      "cls": 0.027635572916666663,
+      "readyMs": 2002.199999988079,
+      "jsBytes": 130495,
+      "rows": 232,
+      "cells": 2784,
+      "nodes": 12324,
+      "blockingMs": 66,
+      "device": "desktop",
+      "repeat": 1,
+      "interactionMs": 80
+    },
+    {
+      "lcp": 1612,
+      "cls": 0.027635572916666663,
+      "readyMs": 2025.2000000476837,
+      "jsBytes": 130495,
+      "rows": 232,
+      "cells": 2784,
+      "nodes": 12324,
+      "blockingMs": 72,
+      "device": "desktop",
+      "repeat": 2,
+      "interactionMs": 80
+    },
+    {
+      "lcp": 1672,
+      "cls": 0.027536922743055553,
+      "readyMs": 2077.600000023842,
+      "jsBytes": 130495,
+      "rows": 232,
+      "cells": 2784,
+      "nodes": 12324,
+      "blockingMs": 140,
+      "device": "desktop",
+      "repeat": 3,
+      "interactionMs": 24
+    },
+    {
+      "lcp": 1560,
+      "cls": 0.027635572916666663,
+      "readyMs": 1954,
+      "jsBytes": 130495,
+      "rows": 232,
+      "cells": 2784,
+      "nodes": 12324,
+      "blockingMs": 60,
+      "device": "desktop",
+      "repeat": 4,
+      "interactionMs": 80
+    },
+    {
+      "lcp": 1596,
+      "cls": 0.027545878182870367,
+      "readyMs": 1897.9000000357628,
+      "jsBytes": 130495,
+      "rows": 232,
+      "cells": 2784,
+      "nodes": 12324,
+      "blockingMs": 80,
+      "device": "desktop",
+      "repeat": 5,
+      "interactionMs": 80
+    },
+    {
+      "device": "desktop",
+      "view": "cache",
+      "repeat": 1,
+      "restoreMs": 202,
+      "cacheHits": 177
+    },
+    {
+      "device": "desktop",
+      "view": "cache",
+      "repeat": 2,
+      "restoreMs": 167,
+      "cacheHits": 177
+    },
+    {
+      "device": "desktop",
+      "view": "cache",
+      "repeat": 3,
+      "restoreMs": 264,
+      "cacheHits": 177
+    },
+    {
+      "device": "desktop",
+      "view": "cache",
+      "repeat": 4,
+      "restoreMs": 178,
+      "cacheHits": 177
+    },
+    {
+      "device": "desktop",
+      "view": "cache",
+      "repeat": 5,
+      "restoreMs": 164,
+      "cacheHits": 177
+    },
+    {
+      "lcp": 2156,
+      "cls": 0.07348678079892003,
+      "readyMs": 2899,
+      "jsBytes": 130495,
+      "rows": 232,
+      "cells": 2784,
+      "nodes": 12324,
+      "blockingMs": 1028,
+      "device": "mobile",
+      "repeat": 1,
+      "interactionMs": 80
+    },
+    {
+      "lcp": 2272,
+      "cls": 0.07348678079892003,
+      "readyMs": 3050,
+      "jsBytes": 130495,
+      "rows": 232,
+      "cells": 2784,
+      "nodes": 12324,
+      "blockingMs": 1052,
+      "device": "mobile",
+      "repeat": 2,
+      "interactionMs": 216
+    },
+    {
+      "lcp": 1456,
+      "cls": 0.08376798848598674,
+      "readyMs": 2764.699999988079,
+      "jsBytes": 130495,
+      "rows": 232,
+      "cells": 2784,
+      "nodes": 12324,
+      "blockingMs": 923,
+      "device": "mobile",
+      "repeat": 3,
+      "interactionMs": 112
+    },
+    {
+      "lcp": 2240,
+      "cls": 0.07348678079892003,
+      "readyMs": 3037.600000023842,
+      "jsBytes": 130495,
+      "rows": 232,
+      "cells": 2784,
+      "nodes": 12324,
+      "blockingMs": 1072,
+      "device": "mobile",
+      "repeat": 4,
+      "interactionMs": 104
+    },
+    {
+      "lcp": 2288,
+      "cls": 0.07348678079892003,
+      "readyMs": 3060.300000011921,
+      "jsBytes": 130495,
+      "rows": 232,
+      "cells": 2784,
+      "nodes": 12324,
+      "blockingMs": 1047,
+      "device": "mobile",
+      "repeat": 5,
+      "interactionMs": 88
+    },
+    {
+      "device": "mobile",
+      "view": "cache",
+      "repeat": 1,
+      "restoreMs": 915,
+      "cacheHits": 177
+    },
+    {
+      "device": "mobile",
+      "view": "cache",
+      "repeat": 2,
+      "restoreMs": 1417,
+      "cacheHits": 177
+    },
+    {
+      "device": "mobile",
+      "view": "cache",
+      "repeat": 3,
+      "restoreMs": 1017,
+      "cacheHits": 177
+    },
+    {
+      "device": "mobile",
+      "view": "cache",
+      "repeat": 4,
+      "restoreMs": 1074,
+      "cacheHits": 177
+    },
+    {
+      "device": "mobile",
+      "view": "cache",
+      "repeat": 5,
+      "restoreMs": 990,
+      "cacheHits": 177
+    }
+  ],
+  "p75": {
+    "desktop": {
+      "lcp": 1612,
+      "cls": 0.027635572916666663,
+      "jsBytes": 130495,
+      "interactionMs": 80,
+      "readyMs": 2025.2000000476837,
+      "blockingMs": 80,
+      "restoreMs": 202
+    },
+    "mobile": {
+      "lcp": 2272,
+      "cls": 0.07348678079892003,
+      "jsBytes": 130495,
+      "interactionMs": 112,
+      "readyMs": 3050,
+      "blockingMs": 1052,
+      "restoreMs": 1074
+    }
+  }
+}

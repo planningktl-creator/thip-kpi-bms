@@ -9,6 +9,10 @@
     {
       "code": "DH0101",
       "key": "thipReportCandidate_DH0101",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -26,12 +30,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13201,
-      "sqlSha256": "7bf0a04444e09e155f61a3267036139c6251e7894cad35fb62f5ca47d150e7e4"
+      "sqlBytes": 9877,
+      "sqlSha256": "083fd7997fd88b971a3a95a4e833f923259272d57a78c68ff00ddce5a07f27ea"
     },
     {
       "code": "DH0112",
       "key": "thipReportCandidate_DH0112",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -49,72 +57,96 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 12937,
-      "sqlSha256": "f633ec4768802767cb66cbefa1e2abc1ce02a1666c420c265ce229d50f0ec4e4"
+      "sqlBytes": 9613,
+      "sqlSha256": "3f8b0c5dd2696fa50973be2f2f4a00b321a7d06fa352a72b98c051b52a06534e"
     },
     {
       "code": "AA0101",
       "key": "thipReportCandidate_AA0101",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 12663,
-      "sqlSha256": "e397fb5417825fc2d8e2132d60a9180a4cb407c8637caee016a3cb4173b93e36"
+      "sqlBytes": 9339,
+      "sqlSha256": "7603f8dc48f091a99ad814b1e225137db6931f7f61ce0d06cb6e0c792d3b758c"
     },
     {
       "code": "AA0102",
       "key": "thipReportCandidate_AA0102",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13033,
-      "sqlSha256": "075d892658b645e9ed9cedf243a9492dcee8e2c95f12a053935213685424bce9"
+      "sqlBytes": 9709,
+      "sqlSha256": "7c744fe618c4d29e2e27d6c2886a6d36162369c71919549b3267011a41c9fee0"
     },
     {
       "code": "AA0103",
       "key": "thipReportCandidate_AA0103",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 12663,
-      "sqlSha256": "fa24e18f777b9ece094c4e816945e38faf5894f4a1e05c4c1fcd7990d0195d28"
+      "sqlBytes": 9339,
+      "sqlSha256": "5b65b9e0acb40f91cf1194318a0ea4477a9439ce1316c6e1c087b296810f8bb0"
     },
     {
       "code": "AA0104",
       "key": "thipReportCandidate_AA0104",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 12768,
-      "sqlSha256": "d8e0a438748b3eb3f8b885210c9cd2ac35deac80e11464de636aaf11f38abbc6"
+      "sqlBytes": 9444,
+      "sqlSha256": "1e6b7395c14f9656780759812554408c867c206f7813b20cc7dc8ecfc262052f"
     },
     {
       "code": "AA0105",
       "key": "thipReportCandidate_AA0105",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 12663,
-      "sqlSha256": "304f2b1c18c25b017958026f30de5f322197b230d25af2167ca8e4691ef49e61"
+      "sqlBytes": 9339,
+      "sqlSha256": "a539398fb5b4b45496749ab0ed166b233ab54a5a5fc88024d68fbe9da464b01b"
     },
     {
       "code": "CA0101",
       "key": "thipReportCandidate_CA0101",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -132,12 +164,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15129,
-      "sqlSha256": "c9954925433279d276432b6fdfd759cb9a8af467197bc584313f9feec42f7e5b"
+      "sqlBytes": 11805,
+      "sqlSha256": "f8e91d85ab76c9f32b2fcf4f1e156249059337f2e3202036ff8dbb676bfaf26c"
     },
     {
       "code": "CA0102",
       "key": "thipReportCandidate_CA0102",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -155,12 +191,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 16335,
-      "sqlSha256": "083ae263467537f7d6f46db6d77b7c6be9b0b6278e17e4ea45dfc6aef1b05680"
+      "sqlBytes": 13011,
+      "sqlSha256": "4e4568b2ab170ba6f8aa6f2f5ca2b6d3d47550ea454f011f2c4dc9863d92f3cf"
     },
     {
       "code": "CA0103",
       "key": "thipReportCandidate_CA0103",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -178,12 +218,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14717,
-      "sqlSha256": "e22b6b30e7e904d71df57abc23506774901a2efdb3b3dffd395653f03bc7e19d"
+      "sqlBytes": 11393,
+      "sqlSha256": "36a4480049bc19813c7bfdc95cd1dd75b8ea37fe905a412d12e3c31ab5ba66f1"
     },
     {
       "code": "CA0104",
       "key": "thipReportCandidate_CA0104",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -201,12 +245,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 17235,
-      "sqlSha256": "918f5bb7152db853d82d3be9a86b52fad804a558eb65123aa6a06c67fa7e26c7"
+      "sqlBytes": 13911,
+      "sqlSha256": "f8e7ad8b5db3abb9390be2bd8ee49ada4d1cb6ae03862f007edce336d4f05ff1"
     },
     {
       "code": "CA0105",
       "key": "thipReportCandidate_CA0105",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -224,12 +272,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14485,
-      "sqlSha256": "3a121a1beffd9e2d992cee7597e3932e9ecb759820b6c8b139b4230ae77df6a0"
+      "sqlBytes": 11161,
+      "sqlSha256": "30a2dee096f59e054ccc7a47bcdf14b2ba47eedf8b433eace9aa378324859c6a"
     },
     {
       "code": "CE0101",
       "key": "thipReportCandidate_CE0101",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -247,12 +299,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13813,
-      "sqlSha256": "58e6cd0eb575b6a2cb5dc5dc254686cd4c21874988db36853ac8178747b2cb14"
+      "sqlBytes": 10489,
+      "sqlSha256": "5c67541e11ebffb7cdd0b937253558c3cb9ed94ee08b928a2adf79096ba7b051"
     },
     {
       "code": "CE0102",
       "key": "thipReportCandidate_CE0102",
+      "cteDependencies": [
+        "opd_periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -270,12 +325,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13321,
-      "sqlSha256": "4436f22230e93641d3af36522f14df66f235c8baf4f24ebc9cc58bf727d5fe6b"
+      "sqlBytes": 4059,
+      "sqlSha256": "7474177a72c97ee5ce489f203535f70760e980d518b3a5c028dc654f8c1c0ec6"
     },
     {
       "code": "CE0103",
       "key": "thipReportCandidate_CE0103",
+      "cteDependencies": [
+        "opd_periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -293,12 +351,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13345,
-      "sqlSha256": "a4dc704d54cc5148fe03116b5c03381b8c8181ad663ae7e8e5ef236b80a2247c"
+      "sqlBytes": 4083,
+      "sqlSha256": "379a89ade10aaa6e46409cd93dc4dd46bfa902f3cd9df890cfb51a33025e6ee9"
     },
     {
       "code": "CE0104",
       "key": "thipReportCandidate_CE0104",
+      "cteDependencies": [
+        "opd_periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -316,12 +377,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13600,
-      "sqlSha256": "c8005cbcc0ff184ad253c8d4e97db457a6e5359861d586dd57a48afdad0578cb"
+      "sqlBytes": 4338,
+      "sqlSha256": "54b80c1aa43578d54956a5dca44c1a631794a6e06b8f24024788432cca846a81"
     },
     {
       "code": "CG0101",
       "key": "thipReportCandidate_CG0101",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -339,12 +404,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14292,
-      "sqlSha256": "2866a3f62893222f142c786064c962347e09c38ed128b8a8d6da6a8818b4bd3b"
+      "sqlBytes": 10968,
+      "sqlSha256": "791830f4c26660697d287f4e707b268c5f4736e98b98f859785b5b0a9a647d80"
     },
     {
       "code": "CG0102",
       "key": "thipReportCandidate_CG0102",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -362,12 +431,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15954,
-      "sqlSha256": "2d513073c381b187e784ce64a6b24011cc2aee0720986f8934d0f87adeb3195e"
+      "sqlBytes": 12630,
+      "sqlSha256": "e7bccf0e53ebc628fcfe4e7bd12a24f915d262e5bc3ac5c4a3944ef17f16d338"
     },
     {
       "code": "CI0101",
       "key": "thipReportCandidate_CI0101",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -385,24 +458,31 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 12995,
-      "sqlSha256": "709c4afb5fdadabc2b9e3352a62295813c27680d3a351b26e9709f752de4064f"
+      "sqlBytes": 9671,
+      "sqlSha256": "ce4ef4ffa59f07612c6893b1892c2221408015179ccec87d5784bbb169495b91"
     },
     {
       "code": "CM0101",
       "key": "thipReportCandidate_CM0101",
+      "cteDependencies": [
+        "delivery_periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 16461,
-      "sqlSha256": "0abf391e1258889ce195e5058ea27dcf70087bc240f3d1b98624ebaaae21afd1"
+      "sqlBytes": 6972,
+      "sqlSha256": "29e32becebed83ded132479ead540ddede839dd7c9ed1b8a36fcecf3d73519a9"
     },
     {
       "code": "CM0104",
       "key": "thipReportCandidate_CM0104",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -420,12 +500,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13556,
-      "sqlSha256": "0b839e02941c80623fac6dd6abc6a13d692f908918ffbe5ef5db3d0885793e46"
+      "sqlBytes": 10232,
+      "sqlSha256": "75b455074572081c5ac4584ad25b217f46010e6bce59d3ca5dd5d39b9a83394e"
     },
     {
       "code": "CM0105",
       "key": "thipReportCandidate_CM0105",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -443,12 +527,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 12921,
-      "sqlSha256": "f88161a893c48338e6c490b33af22698fa7cc0845bc1c62cbbdf7a34aafbf4db"
+      "sqlBytes": 9597,
+      "sqlSha256": "6899180cd606e1a041b18025da51954c1f2b8d8ac93c81203f419453b0cc1cc7"
     },
     {
       "code": "CM0107",
       "key": "thipReportCandidate_CM0107",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -466,12 +554,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13653,
-      "sqlSha256": "9fec227db32ab6f57d43ebdef86a931060dd594f21be2d1df8bfc1b8a0ef541c"
+      "sqlBytes": 10329,
+      "sqlSha256": "5f3115a9e15f4df24d54eae27d74aeca5b89e912994b0fe6854cbdf4e4e5f22d"
     },
     {
       "code": "CM0109",
       "key": "thipReportCandidate_CM0109",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -489,12 +581,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13302,
-      "sqlSha256": "12d1c99723bb361dfa3eb24a496d0db0cd46adfc05aaecf6f57bc2c456ea84b9"
+      "sqlBytes": 9978,
+      "sqlSha256": "a18b9132abaf002dc17e287572f31516373b67ed406954e757e927ce8e54d982"
     },
     {
       "code": "CM0110",
       "key": "thipReportCandidate_CM0110",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -512,12 +608,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13270,
-      "sqlSha256": "2a3dac693379f948b967817d1f9496af95e5f93f13b40547cb386eb5c71155f0"
+      "sqlBytes": 9946,
+      "sqlSha256": "1d900b074b07f539bb3a5e8c821aba9a1fde135214fd3f9099841c4235de16f3"
     },
     {
       "code": "CM0116",
       "key": "thipReportCandidate_CM0116",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -535,12 +635,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14389,
-      "sqlSha256": "8f264d78eae3f61338f926bffb22076ef9ffefe43d96056752c22bb3ba259781"
+      "sqlBytes": 11065,
+      "sqlSha256": "ed09b80563233335a3b4575b292523f97bdc5d350d8269bc21a779beba072056"
     },
     {
       "code": "CM0117",
       "key": "thipReportCandidate_CM0117",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -558,12 +662,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14447,
-      "sqlSha256": "241a340ccd59082a1ca6985e0bd194f234b8f13c02aa0e42d0996f7e06169fcc"
+      "sqlBytes": 11123,
+      "sqlSha256": "36099c354c0ec94de7cbea0b2973729a9312e24adb9b13739eacaa3a9484da05"
     },
     {
       "code": "CM0118",
       "key": "thipReportCandidate_CM0118",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -581,12 +689,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13873,
-      "sqlSha256": "05cc52b7cffc8a481b0dfe7b6c5d56b9e539055ce4e4e1dad234b25ac637c007"
+      "sqlBytes": 10549,
+      "sqlSha256": "7997daa8004d3eee48054528bbafaa4c1c1e3499dfbcd14cb028a029118eda88"
     },
     {
       "code": "CM0119",
       "key": "thipReportCandidate_CM0119",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -604,12 +716,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13347,
-      "sqlSha256": "1d0ecc81c5f2e6fa8c6284f6236a10fbe819aba3a24aaf6c64a4f736e647c328"
+      "sqlBytes": 10023,
+      "sqlSha256": "c643b4ff450fbe2d5a25c6e7f6c2eabfe88ef1722f357488bd864ba99cd60a17"
     },
     {
       "code": "CM0201",
       "key": "thipReportCandidate_CM0201",
+      "cteDependencies": [
+        "newborn_periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -627,12 +742,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14140,
-      "sqlSha256": "b949b272d66ba4bcdbadf8c606bdf1d7ece6a8fc6dc7becef3dee7ebc787f679"
+      "sqlBytes": 4426,
+      "sqlSha256": "443224d8039075baf341914e0072bb419a86fca17e6a06c7766eb97bfa84d0d1"
     },
     {
       "code": "CM0202",
       "key": "thipReportCandidate_CM0202",
+      "cteDependencies": [
+        "newborn_periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -650,12 +768,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14142,
-      "sqlSha256": "01230f2533e850fd49dd0c6e11e2bd0ccfb0172d1e2faf777c8c48103aeca1b5"
+      "sqlBytes": 4428,
+      "sqlSha256": "c0ec1995d01be1a77fd46efc3c40b5cd933279ec9e50cc229303a8e44e5190ef"
     },
     {
       "code": "CM0203",
       "key": "thipReportCandidate_CM0203",
+      "cteDependencies": [
+        "newborn_periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -673,12 +794,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13541,
-      "sqlSha256": "23143d99ce55d0a36868b276797a42139e96056560e1e961a0e86e184628e05b"
+      "sqlBytes": 3827,
+      "sqlSha256": "e224aaad81e528ee70a4aaea0630eb0fff47cfe1051bc30f4384228e59e6be9a"
     },
     {
       "code": "CM0204",
       "key": "thipReportCandidate_CM0204",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -696,12 +821,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13575,
-      "sqlSha256": "5f909b94c9dd959f487b56ee8bb868c5d05763a337118b41f1df23fe1b680b96"
+      "sqlBytes": 10251,
+      "sqlSha256": "91b7256895daaad558650987d084af3ef87df1ed79931a9469bf516f801e1f58"
     },
     {
       "code": "CM0205",
       "key": "thipReportCandidate_CM0205",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -719,12 +848,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13529,
-      "sqlSha256": "a41256dad3a6fb2a449b86e0b66e5063e7dbc10d40e56f62cf85c2f5d5ecc1c5"
+      "sqlBytes": 10205,
+      "sqlSha256": "b97fc48c65359902a66e7fa2e42fd8b14e827925e86dee0de252b3f7fc6e95f0"
     },
     {
       "code": "CM0206",
       "key": "thipReportCandidate_CM0206",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -742,12 +875,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13253,
-      "sqlSha256": "5b681b31af684f9749f081d25498f7b1f437c90258f263f4e9233ca7fb35bf62"
+      "sqlBytes": 9929,
+      "sqlSha256": "770dc1b97aff1f053d4afeb1951b3b164cc1b51abe4dd671f21b66fac487fb5e"
     },
     {
       "code": "CM0207",
       "key": "thipReportCandidate_CM0207",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -765,12 +902,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13633,
-      "sqlSha256": "4fee27d6fd287809e7305769863fd3dfc117822d91f1cef6f0fdbbfeb6a0ecdc"
+      "sqlBytes": 10309,
+      "sqlSha256": "5e975c301aad809a7a1fe5d9df99a89f88a6d75368d7081715bb9095c414ab28"
     },
     {
       "code": "CM0208",
       "key": "thipReportCandidate_CM0208",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -788,12 +929,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13753,
-      "sqlSha256": "5f1440dd72c74eec0cfac174858b4275e37e2f57c72885f6cd02ea019915ec6e"
+      "sqlBytes": 10429,
+      "sqlSha256": "3f3d433eb3180a88265e2c7ff79f8b33629d5aaa39c806307c65b650e3d84358"
     },
     {
       "code": "CM0209",
       "key": "thipReportCandidate_CM0209",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -811,12 +956,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13753,
-      "sqlSha256": "9cb8e4ef02d904bc9fc0a63feb097a6c2af4a80ddca07813d9d0e328e4a77da2"
+      "sqlBytes": 10429,
+      "sqlSha256": "084ba55858786ef7cb3757eba1084a7ec66ebfa7c1e94fde6ed8bdb36b45386d"
     },
     {
       "code": "CO0101",
       "key": "thipReportCandidate_CO0101",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -834,12 +983,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14209,
-      "sqlSha256": "113fec4e223e90bc5055bebe39209976cf7683e7777bf173d7ad56282e169200"
+      "sqlBytes": 10885,
+      "sqlSha256": "38e5ca268c2e1d83951816efc17ba19c0ce64ccfaa3406a953be8c2c4080e6af"
     },
     {
       "code": "CO0105",
       "key": "thipReportCandidate_CO0105",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -857,12 +1010,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15221,
-      "sqlSha256": "6f447be66ce92be2db50d3b33b1b85104c4df1b580088034855edd55b766b450"
+      "sqlBytes": 11897,
+      "sqlSha256": "ca901f94c0cccbd49fe5970ef31150fa3e78ac6969c0cbd8fc14b5f52dffaf00"
     },
     {
       "code": "CO0107",
       "key": "thipReportCandidate_CO0107",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -880,12 +1037,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13101,
-      "sqlSha256": "43a2cb3732c7cdd32647704362123bfe44b0750cc66c3c3c633047a689beb02a"
+      "sqlBytes": 9777,
+      "sqlSha256": "12c96e2145d3af6fafd54df3ade10f2da01a1fcd93f0f2bfde95322b97cecb34"
     },
     {
       "code": "CP0101",
       "key": "thipReportCandidate_CP0101",
+      "cteDependencies": [
+        "chronic_periodized"
+      ],
       "cadence": "semiannual",
       "expectedMonths": [
         1,
@@ -893,12 +1053,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14221,
-      "sqlSha256": "3cbe2eb1405a61dba539472aebecb3efac0428bef55ed29c5fd0796625deaddd"
+      "sqlBytes": 4654,
+      "sqlSha256": "f5a4d7263b8c1c1592853ce519b7981d1a20145e8156e85c8a3d267de2da5665"
     },
     {
       "code": "CP0201",
       "key": "thipReportCandidate_CP0201",
+      "cteDependencies": [
+        "chronic_periodized"
+      ],
       "cadence": "quarterly",
       "expectedMonths": [
         1,
@@ -908,24 +1071,32 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14124,
-      "sqlSha256": "71170143b7a0e23d17f9b73d41d88bdda584a7138c1b81fa395b05fde0a058c7"
+      "sqlBytes": 4557,
+      "sqlSha256": "ea9267eef3ed4cee2ad6e92338ea6fd7897d4525b5ba4ded9a706d75601e226e"
     },
     {
       "code": "DC0103",
       "key": "thipReportCandidate_DC0103",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13538,
-      "sqlSha256": "302181a8c4246c8c1a2cfde59ea8babea12980e699ce0f554dd5163b5bc913c1"
+      "sqlBytes": 10214,
+      "sqlSha256": "432d083caa325f926174aef12bb29c7302d72f6c04386166a94216ec90223bc6"
     },
     {
       "code": "DC0107",
       "key": "thipReportCandidate_DC0107",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -943,12 +1114,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13390,
-      "sqlSha256": "3443a643923e1e7912c268ef1e4d8be22e57f96df573bcdd955f5c8092a45d32"
+      "sqlBytes": 10066,
+      "sqlSha256": "c762077a4ea16c6acc2653146f8f9e3383fb2f1347459472a834089f09ac7dcb"
     },
     {
       "code": "DC0108",
       "key": "thipReportCandidate_DC0108",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "semiannual",
       "expectedMonths": [
         1,
@@ -956,12 +1131,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15465,
-      "sqlSha256": "072ba0089024690f462850b6b289ca4b3796f7f9e57256c91769459574aa1c12"
+      "sqlBytes": 12141,
+      "sqlSha256": "7c4fda6a0a4d38c7441a60036dc59635d66e92d7886ef03ab8b1a7373ed3e348"
     },
     {
       "code": "DC0108.1",
       "key": "thipReportCandidate_DC0108_1",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "semiannual",
       "expectedMonths": [
         1,
@@ -969,12 +1148,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14131,
-      "sqlSha256": "53fd203b245a542b9b059ecbcd7e1efe09ba29f590b752b8ffeb8ec51f670525"
+      "sqlBytes": 10807,
+      "sqlSha256": "a126f13464b252b90ce95f2d1782eb62a37a8debe3a5f894c2e1d11f91d3c0f7"
     },
     {
       "code": "DC0108.2",
       "key": "thipReportCandidate_DC0108_2",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "semiannual",
       "expectedMonths": [
         1,
@@ -982,12 +1165,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14146,
-      "sqlSha256": "cf2a48204b5f1d81638c83e477dfeef2f360d50178d20853d6d53164c83b85e6"
+      "sqlBytes": 10822,
+      "sqlSha256": "cfee64a7c0f608479a11269c9bd8d25d7932a93a13c587d5a2300cc9c1fcb703"
     },
     {
       "code": "DC0201",
       "key": "thipReportCandidate_DC0201",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "semiannual",
       "expectedMonths": [
         1,
@@ -995,12 +1182,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13684,
-      "sqlSha256": "ee15758d34ae5fbafe8f3ae9d935d0e5d055d568ce2dd9bafeada7a1b13f828b"
+      "sqlBytes": 10360,
+      "sqlSha256": "9ebaa270f9d837f28eeef145f7a13750c4306285f54f6eaf37ed289f26873b7b"
     },
     {
       "code": "DC0201.1",
       "key": "thipReportCandidate_DC0201_1",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "semiannual",
       "expectedMonths": [
         1,
@@ -1008,12 +1199,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13259,
-      "sqlSha256": "97b8410f197ffb74f16185fc742b98558f7594a3000654583d154fb48c5d6235"
+      "sqlBytes": 9935,
+      "sqlSha256": "02bc34cfc0a1293927805fe7ba4c3fd3a41ba87009bd8a5fbdba916604b69f14"
     },
     {
       "code": "DC0201.2",
       "key": "thipReportCandidate_DC0201_2",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "semiannual",
       "expectedMonths": [
         1,
@@ -1021,84 +1216,106 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13244,
-      "sqlSha256": "c375130b4db65623c211d817f50b2e3722f4b39f69687f59f8d9577c50273277"
+      "sqlBytes": 9920,
+      "sqlSha256": "15acc27470b64c37a76945d5d161b8a9ef144e7e2368e5a38861529919e9359d"
     },
     {
       "code": "DC0301",
       "key": "thipReportCandidate_DC0301",
+      "cteDependencies": [
+        "chronic_periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13746,
-      "sqlSha256": "64d8b759afbacbae0705d302da9b39ab35d5e7a139d54e79150f63421efcc8bc"
+      "sqlBytes": 4179,
+      "sqlSha256": "ae19c37d6b20d4fefbdd392dd55aaaa45f091966dca39d3efb8cdb22b619632e"
     },
     {
       "code": "DC0302",
       "key": "thipReportCandidate_DC0302",
+      "cteDependencies": [
+        "chronic_periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14150,
-      "sqlSha256": "b7c844296f6fbdd65fcf20fbf642aa67eb54a332db0552e0750cac181f017b8f"
+      "sqlBytes": 4583,
+      "sqlSha256": "7ffe687b4688e606f32a824c56fb589596042b6be25808f60067c47ca1e5ce52"
     },
     {
       "code": "DC0306",
       "key": "thipReportCandidate_DC0306",
+      "cteDependencies": [
+        "chronic_periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13605,
-      "sqlSha256": "65fa4e345ea62d4015f0e66c434806e62688f294439ff1a562bb61dfd9d4cc2e"
+      "sqlBytes": 4038,
+      "sqlSha256": "d41c6d91b28dcd46b6111ced08df612b95919da4057f6b8ebf63f6e4f8dc95ee"
     },
     {
       "code": "DC0307",
       "key": "thipReportCandidate_DC0307",
+      "cteDependencies": [
+        "chronic_periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13772,
-      "sqlSha256": "ee8665977e1eb30f42a05834d7a778708a2e84ebe5562b73f19e26b3bc71acb9"
+      "sqlBytes": 4205,
+      "sqlSha256": "a42dfd1775018cf28868c562cf61c5a22ddd0b5336385b67b3f3b272957b4723"
     },
     {
       "code": "DC0308",
       "key": "thipReportCandidate_DC0308",
+      "cteDependencies": [
+        "chronic_periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13830,
-      "sqlSha256": "94b8d5c662b1d71c7fa5ccaa70d16a1013ad93bfec36f3b0e39725544dec063d"
+      "sqlBytes": 4263,
+      "sqlSha256": "00cfa354d07368d6be21fb6f9e5c7e1b4047b5b394f3b5570cc78c2991c31b94"
     },
     {
       "code": "DC0309",
       "key": "thipReportCandidate_DC0309",
+      "cteDependencies": [
+        "chronic_periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13844,
-      "sqlSha256": "af2d2fb283a1ab311ff2b7049ecc6d3364a729fed2a015075010fb36c700311f"
+      "sqlBytes": 4277,
+      "sqlSha256": "982efab725bc64faf1847fec65b580fa658f9393af455ca59e0364fd6714b578"
     },
     {
       "code": "DC0401",
       "key": "thipReportCandidate_DC0401",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1116,12 +1333,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13547,
-      "sqlSha256": "94899be2c74fba45a5e13bcb2a699506a852d8176bf7373349f18904fffd1ed7"
+      "sqlBytes": 10223,
+      "sqlSha256": "9c1198eba578f9fe6748988fed59de337a8c601dfadcbbb1fb4d6994bd8a9040"
     },
     {
       "code": "DC0402",
       "key": "thipReportCandidate_DC0402",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1139,12 +1360,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15542,
-      "sqlSha256": "e56ec0a202724ec0f765f31d488b47d74dc110c3554584326828d9d7e629ad0d"
+      "sqlBytes": 12218,
+      "sqlSha256": "29fbe3d7421c2fa97485a6e1a2ed889d081a380407f721eefe75ef9912321e63"
     },
     {
       "code": "DC0403",
       "key": "thipReportCandidate_DC0403",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1162,24 +1387,30 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13255,
-      "sqlSha256": "d74c9b29ec53aec8570f793c8bf34d60d3d9c8cbf269654f662d2d99e5f6d29d"
+      "sqlBytes": 9931,
+      "sqlSha256": "52864729fbe749e7666e2a3d1c517585689f3409d7cab17155a31dacfb935b50"
     },
     {
       "code": "DC0501",
       "key": "thipReportCandidate_DC0501",
+      "cteDependencies": [
+        "chronic_periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14187,
-      "sqlSha256": "0a6a24099712f5c35a6da0abfce5642d4e76551187ecebd59bdebc7b10623691"
+      "sqlBytes": 4620,
+      "sqlSha256": "2b6a6a23b5663ac3ac7da03932934def9912da251bb20753eff8d00967410fc9"
     },
     {
       "code": "DC0502",
       "key": "thipReportCandidate_DC0502",
+      "cteDependencies": [
+        "chronic_periodized"
+      ],
       "cadence": "semiannual",
       "expectedMonths": [
         1,
@@ -1187,48 +1418,61 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15143,
-      "sqlSha256": "c4963cfb831bea924aab62e705407dd03ccb02792047fbe606866026e3ddf882"
+      "sqlBytes": 5576,
+      "sqlSha256": "07eac7751bdbd7d1d66588c023af630fece6bca46a2e8a1c6ed4f9bf56ddee9f"
     },
     {
       "code": "DE0101",
       "key": "thipReportCandidate_DE0101",
+      "cteDependencies": [
+        "opd_periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14295,
-      "sqlSha256": "c6159947eb35338f25c7ad75e63c5117169c3e6e348d56e7b6a5fe7c92905756"
+      "sqlBytes": 5033,
+      "sqlSha256": "ca210dc1cccbfa0357529e2de4adc1a0808db07d51c285bd4ccace18abb33e2c"
     },
     {
       "code": "DE0103",
       "key": "thipReportCandidate_DE0103",
+      "cteDependencies": [
+        "chronic_periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13424,
-      "sqlSha256": "7cf6baf997b748c493fdc03438c60ef34c6e58e2ec98880cbabd2774db4c57b1"
+      "sqlBytes": 3857,
+      "sqlSha256": "bdef284524a5dfda03da772632c2ec0ed3a0277c0acbffd18828253e8d7d4469"
     },
     {
       "code": "DE0501",
       "key": "thipReportCandidate_DE0501",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15162,
-      "sqlSha256": "bedfb3e75c22f8dfcb59be26ab640883ba426e892eaf4005fd367808d0ac8032"
+      "sqlBytes": 11838,
+      "sqlSha256": "7039b52de02299ffff29814d24b4ad10cadab4f37dd54c19cc8548dbf8ab9c3c"
     },
     {
       "code": "DE0801",
       "key": "thipReportCandidate_DE0801",
+      "cteDependencies": [
+        "opd_periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1246,12 +1490,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14884,
-      "sqlSha256": "d09d16d67fc8c0fe4980c7f7bf361b765c7a605996d82a0c578664493a1bf495"
+      "sqlBytes": 5622,
+      "sqlSha256": "056552cbd360697e3ab8315b08ef482102dce1a5c49940f50a8edd268272c4fa"
     },
     {
       "code": "DE1201",
       "key": "thipReportCandidate_DE1201",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "quarterly",
       "expectedMonths": [
         1,
@@ -1261,12 +1509,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15437,
-      "sqlSha256": "5551c9ce179048dab3d32dab2219b7c8b7aa14b3d325eab63b890fbf19c3e311"
+      "sqlBytes": 12113,
+      "sqlSha256": "22f7b1026c3dd87b03381cc874874d0fdf1ee6e04fb19977a01c4a1fa5e519da"
     },
     {
       "code": "DE1202",
       "key": "thipReportCandidate_DE1202",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "quarterly",
       "expectedMonths": [
         1,
@@ -1276,12 +1528,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15442,
-      "sqlSha256": "c755c790ea5a26b727598b5442bb219f5bd5ca7ec1568bf369861285c28d06b6"
+      "sqlBytes": 12118,
+      "sqlSha256": "41654b7a1cc5115687c60fe542c9f93b78c9a046e40259e8b70645565129d368"
     },
     {
       "code": "DE1401",
       "key": "thipReportCandidate_DE1401",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1299,12 +1555,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14200,
-      "sqlSha256": "f9ff40abe6f01ca7c739025d48d92a3332d93e440a08d46e31c655ced1dc7467"
+      "sqlBytes": 10876,
+      "sqlSha256": "144c08937ccd337c4f6d3d89598d7a4714d34a420433f444e3b600dac11f28c2"
     },
     {
       "code": "DE1402",
       "key": "thipReportCandidate_DE1402",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1322,12 +1582,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15266,
-      "sqlSha256": "d36ae84f83857c1f078064b776d236779566e17110f4f752892b77854cbcce50"
+      "sqlBytes": 11942,
+      "sqlSha256": "1aa986db5a7c53a895521a66b686e50a6c5a74b5b0a73cb7a4a69472256726a4"
     },
     {
       "code": "DE1403",
       "key": "thipReportCandidate_DE1403",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1345,12 +1609,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 19684,
-      "sqlSha256": "4ce78c0d9ab8bf88c9c515b1818338d25d02ff1f9b6ba9720659c04c25c170fe"
+      "sqlBytes": 16360,
+      "sqlSha256": "c2ee78f1c820a2f78236fdf98bf6aa8b296bdd70f03eccdc131d26814b030434"
     },
     {
       "code": "DE1404",
       "key": "thipReportCandidate_DE1404",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1368,12 +1636,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 19676,
-      "sqlSha256": "a2efb2df9a5ad3b98e9cae34c20a9cbc841f4679d562b54d4a767a6f312eec58"
+      "sqlBytes": 16352,
+      "sqlSha256": "ce55f7f1fc67bcb98d1d89967e34cdfdd6767dd9555b43cef69b4e76f458c73d"
     },
     {
       "code": "DE1405",
       "key": "thipReportCandidate_DE1405",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1391,12 +1663,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14420,
-      "sqlSha256": "5bcf9308fea7b8c92828a9ae38c5f21a52a2b213a6b2f11dd831da9df0747b06"
+      "sqlBytes": 11096,
+      "sqlSha256": "29f3342d7889e2e6b09ff363d28af8d9c6b7dd2c76e5ee71decf75377d483484"
     },
     {
       "code": "DG0101",
       "key": "thipReportCandidate_DG0101",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1414,12 +1690,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13732,
-      "sqlSha256": "816a9b04f8126be3f7cdc03fc5a974c03020143e89ccdf75f631afba12dceab9"
+      "sqlBytes": 10408,
+      "sqlSha256": "6edd9110e4c653d3da2afee84eaef041baaa0e8efe75042e7109b60f0e4c0a4a"
     },
     {
       "code": "DG0102",
       "key": "thipReportCandidate_DG0102",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1437,12 +1717,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13097,
-      "sqlSha256": "cb0c3e753cd0fab044eb3d0c1147667d14dcb78691d71cb3d3491a1c5833adab"
+      "sqlBytes": 9773,
+      "sqlSha256": "0adcb1bd4aa67de609d10002893948134bae85cbb19ad4c076dabc592a4254fb"
     },
     {
       "code": "DG0201",
       "key": "thipReportCandidate_DG0201",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1460,12 +1744,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 12973,
-      "sqlSha256": "a4ea606002599caa20593399b99fe8191e39b3a405e7330fbfde60ef960dfd47"
+      "sqlBytes": 9649,
+      "sqlSha256": "66996e669898e0b1c628a76ab8ade57c751a34994ec0c59cea9b6dffa4024cea"
     },
     {
       "code": "DG0202",
       "key": "thipReportCandidate_DG0202",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1483,12 +1771,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 12939,
-      "sqlSha256": "4aedc48469e3fbbbe8405a02e9a06a62ed8aa2f08b7c1413e375e375b647df24"
+      "sqlBytes": 9615,
+      "sqlSha256": "4a545b57edebf46b84b4cf94276aa9e11253130b09a3755fbe96ebd1ec2824b1"
     },
     {
       "code": "DH0101.1",
       "key": "thipReportCandidate_DH0101_1",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1506,12 +1798,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13189,
-      "sqlSha256": "0ce260a7029d448432e9b83a103bbe962f101ec067d9acdbd386eb29a6ae5a8a"
+      "sqlBytes": 9865,
+      "sqlSha256": "c07bdd7cc9b011a4bf32ef5cbc211d2ec96a94a650339e6d5b1c6728f68a1d16"
     },
     {
       "code": "DH0101.2",
       "key": "thipReportCandidate_DH0101_2",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1529,12 +1825,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13136,
-      "sqlSha256": "bc7a4c323088a7627c2941c9a164cc1ac028199e102bd2a27563b597b0ad37f1"
+      "sqlBytes": 9812,
+      "sqlSha256": "7232462b1b7274b45271379867c10373ec3663d3ad26a41f288fc122c0facc83"
     },
     {
       "code": "DH0102",
       "key": "thipReportCandidate_DH0102",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1552,12 +1852,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13740,
-      "sqlSha256": "67c87fe2bbffae1e9756ce40326e76c1851212d2145f936a39af2c439a3ad0f0"
+      "sqlBytes": 10416,
+      "sqlSha256": "4932f1c4a583c39bfe5512bed4bb509cf11faba4f31c10ad1f2abb971bb90d70"
     },
     {
       "code": "DH0103",
       "key": "thipReportCandidate_DH0103",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1575,12 +1879,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13657,
-      "sqlSha256": "49892003e7b5e2ed9d36b3320f92a15e849e4c1777a5650ac85702446fb18b68"
+      "sqlBytes": 10333,
+      "sqlSha256": "83ce7330439e57c1e1e1cfdec5ae917ec862100cffe8c87023c38608ed6d477a"
     },
     {
       "code": "DH0104",
       "key": "thipReportCandidate_DH0104",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1598,12 +1906,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14506,
-      "sqlSha256": "756f37011e556b06fde04e4b2f96a1c899937ba5ec29370c93f041c23f623a01"
+      "sqlBytes": 11182,
+      "sqlSha256": "e0904d27e2deb824ed6980d09a159def6d6a64351147b34c1af30a96ab3be4df"
     },
     {
       "code": "DH0105",
       "key": "thipReportCandidate_DH0105",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1621,12 +1933,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15867,
-      "sqlSha256": "c6b748460cedc9d1329f1aaa363a418d2ea5937bf6780be8b5462a9233b626c0"
+      "sqlBytes": 12543,
+      "sqlSha256": "21ab9ac9d58d55d46d4b82716a5afa9a1a70dcf6be699d0b9f083db40a5f2e0a"
     },
     {
       "code": "DH0106",
       "key": "thipReportCandidate_DH0106",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1644,12 +1960,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14146,
-      "sqlSha256": "afc9992132a763e908ee46ac2bd2fbdff6ebbc9a8146a31af84c5c6797e6199d"
+      "sqlBytes": 10822,
+      "sqlSha256": "8bab56847c88b5895a7b1a4b825d036aa67f97bde201ddbf3a4d5ee3f9bd6444"
     },
     {
       "code": "DH0107",
       "key": "thipReportCandidate_DH0107",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1667,12 +1987,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14365,
-      "sqlSha256": "86430dee1b1cd06c942bbd82e94e9114b77f5725f9ab6fdae8b9e41adf330baf"
+      "sqlBytes": 11041,
+      "sqlSha256": "ef26a0f6c70bd9e45406c45844fd35709e6430689cf590493597bf97fe37923c"
     },
     {
       "code": "DH0108",
       "key": "thipReportCandidate_DH0108",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1690,12 +2014,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15105,
-      "sqlSha256": "e4647b6e6f7b501788a874f7b067a25c1fb61e7b1797261fb46d816f97503734"
+      "sqlBytes": 11781,
+      "sqlSha256": "35e155d6076b75e59a3121729486cda2b3b2b99c9af8c9b5b881d79bbbc26e4a"
     },
     {
       "code": "DH0109",
       "key": "thipReportCandidate_DH0109",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1713,12 +2041,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14307,
-      "sqlSha256": "ed9fdf58ba56520ba90d65af44abcf8228968fedecb3a6c28d3613c5a58dab9e"
+      "sqlBytes": 10983,
+      "sqlSha256": "0354618c81a42bbceff52ccd1c5064c6b59857285bc9c7a8c281421e02452e96"
     },
     {
       "code": "DH0110",
       "key": "thipReportCandidate_DH0110",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "quarterly",
       "expectedMonths": [
         1,
@@ -1728,12 +2060,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15738,
-      "sqlSha256": "3b009dfadae4f4e899200c6f7999461e830f4c835806d5b092280ec10aa93fce"
+      "sqlBytes": 12414,
+      "sqlSha256": "18438328ca7e2a7e33a845c313b8ae142cb0755abd1e2b7186aa405cf656b0a7"
     },
     {
       "code": "DH0111",
       "key": "thipReportCandidate_DH0111",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1751,12 +2087,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13572,
-      "sqlSha256": "9fd85638a2946fcf0a4488c9484063e5234960a277864066a159d5bfff0737ac"
+      "sqlBytes": 10248,
+      "sqlSha256": "3436baffc5338d8395a2719757d88aafa3162555f303d49f5309a79a47f7d249"
     },
     {
       "code": "DH0113",
       "key": "thipReportCandidate_DH0113",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1774,12 +2114,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14522,
-      "sqlSha256": "6bc170e9b2df8c93a4a081de3f2ee5697f8969e33ca108d6a53bc5742ad3306d"
+      "sqlBytes": 11198,
+      "sqlSha256": "39f6be0337abcf8d91640bd0632f42180afb956b74ea37d08ee9ee36aa673a21"
     },
     {
       "code": "DH0201",
       "key": "thipReportCandidate_DH0201",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1797,12 +2141,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13130,
-      "sqlSha256": "175dbe916536fdadee362331a41a895bd5b1b3d4322f4fd423a12dfe8bb626cd"
+      "sqlBytes": 9806,
+      "sqlSha256": "4935cc3571867ed8b053918ef0d6ba9005a61c77ddf10c5835f9ff327b3f726e"
     },
     {
       "code": "DH0202",
       "key": "thipReportCandidate_DH0202",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1820,12 +2168,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14326,
-      "sqlSha256": "d0ca24d013f5909075a6d181bb96fc3f6faae955044a5f6f498fdb7ccb70805b"
+      "sqlBytes": 11002,
+      "sqlSha256": "5f35205c8e6a220b9d4e5bfb58cf02bdac4f899176b9dbbcab32c5eee93a9538"
     },
     {
       "code": "DH0203",
       "key": "thipReportCandidate_DH0203",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1843,12 +2195,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14540,
-      "sqlSha256": "106b7c06f9eee23e1285fcf9603d67d5e5cbb0f234ae3b5a0a937d3cb02542ac"
+      "sqlBytes": 11216,
+      "sqlSha256": "f53f1eb0c40be3e903ee9f91363ffe2fe29d98f599318af5dd053025df99a61e"
     },
     {
       "code": "DH0204",
       "key": "thipReportCandidate_DH0204",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1866,12 +2222,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14688,
-      "sqlSha256": "9769adb6be0e5fd88c1eb82fc46ace4991598b8d3c127e800bef88ac48c77512"
+      "sqlBytes": 11364,
+      "sqlSha256": "d056225f8a41bb1a27d5e792bac8ebb9beb0b04801df091abe4af0bc4a14f6e5"
     },
     {
       "code": "DH0301",
       "key": "thipReportCandidate_DH0301",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1889,12 +2249,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14474,
-      "sqlSha256": "4a7788220dfec92a153fcdd48214e64ca070ab3a08d07b57fa3c63585e9f26d3"
+      "sqlBytes": 11150,
+      "sqlSha256": "65eb8f936ff2695d906efc6bb460bbd0bb96d37ebb1c7e2c75c3a34d911a9d2e"
     },
     {
       "code": "DH0302",
       "key": "thipReportCandidate_DH0302",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -1912,12 +2276,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14627,
-      "sqlSha256": "8dd153bdce6df81880cef337cce170a7ffe2128eba15260afbbfa2a2f5387398"
+      "sqlBytes": 11303,
+      "sqlSha256": "22f1f4e1f9f3235bcd20d910118a17b278daf1d9ab2d651a7083de7551014bca"
     },
     {
       "code": "DH0401",
       "key": "thipReportCandidate_DH0401",
+      "cteDependencies": [
+        "opd_periodized"
+      ],
       "cadence": "quarterly",
       "expectedMonths": [
         1,
@@ -1927,12 +2294,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14200,
-      "sqlSha256": "e7e2d5f4528be7c48ef649caf3abdd500922491fc63f4cbcce71ab7d367fe5fe"
+      "sqlBytes": 4938,
+      "sqlSha256": "389cdffc73e3fba782cf5f86761810500485c43feda034abc5a72635aeceea51"
     },
     {
       "code": "DH0402",
       "key": "thipReportCandidate_DH0402",
+      "cteDependencies": [
+        "opd_periodized"
+      ],
       "cadence": "quarterly",
       "expectedMonths": [
         1,
@@ -1942,12 +2312,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14466,
-      "sqlSha256": "9a72c0c718ad11740cca54c51354b8bf6a4ee864b80af16970f616a4f3639214"
+      "sqlBytes": 5204,
+      "sqlSha256": "2c0380df0bf87c9226e46a3db7060a084b63d7e200d8ecad548c615fc8b14f6a"
     },
     {
       "code": "DM0101",
       "key": "thipReportCandidate_DM0101",
+      "cteDependencies": [
+        "chronic_periodized"
+      ],
       "cadence": "semiannual",
       "expectedMonths": [
         1,
@@ -1955,12 +2328,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15691,
-      "sqlSha256": "3db5be89e7cb8387e30e5da7580fe2b6a645bf40a46a53fdbd501cb220d8407c"
+      "sqlBytes": 6124,
+      "sqlSha256": "8323b4df39ff6d15a610e3ad338196c16300d7be0d2b537b0e9b15a3c0d5d618"
     },
     {
       "code": "DM0102",
       "key": "thipReportCandidate_DM0102",
+      "cteDependencies": [
+        "chronic_periodized"
+      ],
       "cadence": "semiannual",
       "expectedMonths": [
         1,
@@ -1968,12 +2344,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 16103,
-      "sqlSha256": "1a9d70c325639c5cc771113beb5ad4ba761edbb4f2c0d648f41401b320642d4f"
+      "sqlBytes": 6536,
+      "sqlSha256": "173c8353fc8fcdf49fb08a2d58beb1e0fce3fe370234c6de399af9dbf352d6a2"
     },
     {
       "code": "DM0201",
       "key": "thipReportCandidate_DM0201",
+      "cteDependencies": [
+        "chronic_periodized"
+      ],
       "cadence": "semiannual",
       "expectedMonths": [
         1,
@@ -1981,12 +2360,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15560,
-      "sqlSha256": "5a1d7af8b9b2f31c550c3d81a058f810a8088d4a94e756be84f06c7d0d2b9a09"
+      "sqlBytes": 5993,
+      "sqlSha256": "4279752554505be31d5a5d24b17a37fa961f0658b59564541daaaa1109945343"
     },
     {
       "code": "DM0202",
       "key": "thipReportCandidate_DM0202",
+      "cteDependencies": [
+        "chronic_periodized"
+      ],
       "cadence": "semiannual",
       "expectedMonths": [
         1,
@@ -1994,12 +2376,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15820,
-      "sqlSha256": "3cb954626999a5301314d9baecf7575f0ace91601daf45b93bf471d2de6f5cab"
+      "sqlBytes": 6253,
+      "sqlSha256": "2869033b770cfb7946b8968ca27cb1b0528bc11de0a196354257c966d438c9b7"
     },
     {
       "code": "DM0301",
       "key": "thipReportCandidate_DM0301",
+      "cteDependencies": [
+        "chronic_periodized"
+      ],
       "cadence": "semiannual",
       "expectedMonths": [
         1,
@@ -2007,12 +2392,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15886,
-      "sqlSha256": "fe9f085d1e080d6872104abb77e4ec1d8f259be824db57c4379ac66d2ebbb5cd"
+      "sqlBytes": 6319,
+      "sqlSha256": "bc6201e330fdf11f30073684f584c5115e4a6d29e108f8f92ef03cdd312a4a42"
     },
     {
       "code": "DM0302",
       "key": "thipReportCandidate_DM0302",
+      "cteDependencies": [
+        "chronic_periodized"
+      ],
       "cadence": "semiannual",
       "expectedMonths": [
         1,
@@ -2020,12 +2408,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 16146,
-      "sqlSha256": "a690cd0eb1ca6ac1c94952cc68aaac109b13b2901f6603cf2bf8ca84232c3696"
+      "sqlBytes": 6579,
+      "sqlSha256": "317428db5bc8b78329c0981048d731e93d6d80af41f2683203444d0211ee6099"
     },
     {
       "code": "DN0101",
       "key": "thipReportCandidate_DN0101",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -2043,12 +2435,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 12991,
-      "sqlSha256": "c69516d5e7947f16c27bbee4817329cae4800caa32d21eeae214407e3edb5446"
+      "sqlBytes": 9667,
+      "sqlSha256": "5cb0cafd7949d38cb473af026f3224885e6e2387ad18bc90f9f92325c56f0564"
     },
     {
       "code": "DN0102",
       "key": "thipReportCandidate_DN0102",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -2066,12 +2462,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13935,
-      "sqlSha256": "116b70b05e6f8cf418aa9ccfe83464aae29e22f8012af66423795399d68a915f"
+      "sqlBytes": 10611,
+      "sqlSha256": "60ffe4d2038ef4fe625e84d9bd51f52d43af09ec616f3eb7d6cfd6c742dfef2d"
     },
     {
       "code": "DN0103",
       "key": "thipReportCandidate_DN0103",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -2089,12 +2489,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14510,
-      "sqlSha256": "df66144bfffec80133787f7d63711fdd88e1d7d482d5da97a85e948258ba7dff"
+      "sqlBytes": 11186,
+      "sqlSha256": "0d95aeb654f2a4802b07df8747f1eaf63310ce368dcab89c3fb8224e485fc8cf"
     },
     {
       "code": "DN0104",
       "key": "thipReportCandidate_DN0104",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -2112,12 +2516,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14058,
-      "sqlSha256": "e70615d32e59be61006c6a096f00ca397c1ce523d1d66c335af59cdee5b797dc"
+      "sqlBytes": 10734,
+      "sqlSha256": "55f2f58928ba00c48b3cae47820ea9fcfc75cab1d5ae24baf2e4192c921cf274"
     },
     {
       "code": "DN0105",
       "key": "thipReportCandidate_DN0105",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -2135,12 +2543,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14623,
-      "sqlSha256": "90e6218e367c22230d2448cae1ed59d6518f462182a9f2ff77f7766e473e414d"
+      "sqlBytes": 11299,
+      "sqlSha256": "dd0550c0f62af5355a97605fa521e45a5174bc40208daaa8c45c2207ad97c0b8"
     },
     {
       "code": "DN0106",
       "key": "thipReportCandidate_DN0106",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -2158,12 +2570,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13605,
-      "sqlSha256": "bc5cd99b95f44ab2db0151c124e69e5ce4db2f235891d01d43f189cd730147df"
+      "sqlBytes": 10281,
+      "sqlSha256": "0927eef75d1527019b9f93fab92dd1d27363ed04f3470b17c96480118890b7eb"
     },
     {
       "code": "DN0107",
       "key": "thipReportCandidate_DN0107",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -2181,12 +2597,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13573,
-      "sqlSha256": "58ebfaed0fc1c9f8a93ae6c576d5d25a5f89b5a53056b34ce654ad49f1b3799f"
+      "sqlBytes": 10249,
+      "sqlSha256": "451d6313bd8e71a666cd04ca78849b5daa7f8dc42611cc0dedc4aa81b074eff4"
     },
     {
       "code": "DN0109",
       "key": "thipReportCandidate_DN0109",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -2204,12 +2624,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 12938,
-      "sqlSha256": "181073a4ed52b15fdec56800d19579e8561a81e48aeb4460d0e464645d140b28"
+      "sqlBytes": 9614,
+      "sqlSha256": "f48f04a37d685abb612fe90d9f463c4ed4ea5392c15196051714aa388ea2bda6"
     },
     {
       "code": "DN0110",
       "key": "thipReportCandidate_DN0110",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -2227,12 +2651,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 16393,
-      "sqlSha256": "a1dab3b563230a40b9fecb93c25d6b8f1f8992b3eff2041c79da60042e60fdbe"
+      "sqlBytes": 13069,
+      "sqlSha256": "c2f453d1b9690585adab18c573360b0b373f516eee35c98714b24f0588645985"
     },
     {
       "code": "DN0301",
       "key": "thipReportCandidate_DN0301",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -2250,12 +2678,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13737,
-      "sqlSha256": "d7d3ddb876f58a44c7a108fcf8309ae0b6de2d66fd6b148057d5fe7ba5a1beac"
+      "sqlBytes": 10413,
+      "sqlSha256": "d6d997a8f04d481daf733d8fbcf271dd9a6e919581184fd52d8989574eff757d"
     },
     {
       "code": "DN0302",
       "key": "thipReportCandidate_DN0302",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -2273,12 +2705,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13028,
-      "sqlSha256": "a780a82f9fce7a28bd50faec5165a1d79e0cc95869455e8bf8fc3b9fa9d56525"
+      "sqlBytes": 9704,
+      "sqlSha256": "002a9bb23312a3bbe41a09efbeea5a82105fd60590c614f68e09ffe44dbe38cb"
     },
     {
       "code": "DN0303",
       "key": "thipReportCandidate_DN0303",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -2296,12 +2732,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13351,
-      "sqlSha256": "720dd9f3fb06af01d347a6a24c5a28c60fb0e66324889f5f8097c3c5f4e25f94"
+      "sqlBytes": 10027,
+      "sqlSha256": "4cf5194cd89e581e1b0de6c3c5e3da660a4d6182d167c2ef428b0b24760d6de8"
     },
     {
       "code": "DO0202",
       "key": "thipReportCandidate_DO0202",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -2319,12 +2759,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14158,
-      "sqlSha256": "13a69a41becd79f7db468cbca20eee222e5ce93557303f811aa14a06a1db61fd"
+      "sqlBytes": 10834,
+      "sqlSha256": "8463b7ab08c88a6e53675f3fa4a4198ac24cea066f394ff35a996c9fe62e81cd"
     },
     {
       "code": "DO0204",
       "key": "thipReportCandidate_DO0204",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -2342,12 +2786,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14372,
-      "sqlSha256": "dc6a5de520661f6fc2702fb83ec7ed4b30b7355ffd4c266cb577f2ca52ec6aaf"
+      "sqlBytes": 11048,
+      "sqlSha256": "4000a9276e14005f373826c8913fd15e8f90a08a255c5b5a6f0c12d82373f2eb"
     },
     {
       "code": "DO0205",
       "key": "thipReportCandidate_DO0205",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -2365,12 +2813,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14436,
-      "sqlSha256": "2b823bd7b0dc1fb9260bba656d4ceba29ad84ea8c53f3fb0406f36859f53b7dd"
+      "sqlBytes": 11112,
+      "sqlSha256": "4f3f491d5313934399ec644cfa4d5fbe433c2d8e47e9ca6819a35b9f885f1856"
     },
     {
       "code": "DO0302",
       "key": "thipReportCandidate_DO0302",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -2388,12 +2840,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14134,
-      "sqlSha256": "b6e0cbd54310b5293d876861d1a079f139062af96e70f6c27e490c2a493ba30c"
+      "sqlBytes": 10810,
+      "sqlSha256": "c7d1fa5939fe4ce0b2fbe25854f3499595a366d303dc40dac44201413c145824"
     },
     {
       "code": "DO0303",
       "key": "thipReportCandidate_DO0303",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -2411,12 +2867,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14364,
-      "sqlSha256": "1792c52158ee5fe8cc1c7380c872568eca3db5993224378f2ce0de3380c6976e"
+      "sqlBytes": 11040,
+      "sqlSha256": "dc7d2a81a78d30f6d57c2f44adb864491f0107e4c84f199e62c562c9226c9d1b"
     },
     {
       "code": "DO0304",
       "key": "thipReportCandidate_DO0304",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -2434,24 +2894,32 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14428,
-      "sqlSha256": "6eea37f7683256fc93e1754d6ee7771345c42089d904cfea019589e3cb15a1ec"
+      "sqlBytes": 11104,
+      "sqlSha256": "ca11ed8ed4d8779aa3d4f4af539456dc8982aeebf365091c9134bf09c2cd698a"
     },
     {
       "code": "DP0101",
       "key": "thipReportCandidate_DP0101",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13699,
-      "sqlSha256": "3858e284491fd99de4624a920b5af40735a1efc6a00647f74b9a8539059d6651"
+      "sqlBytes": 10375,
+      "sqlSha256": "0424bc01089adaf57fae48ebcb96a9a85cd5619db8b16bc63886a9a3c9c3a8d9"
     },
     {
       "code": "DR0101",
       "key": "thipReportCandidate_DR0101",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -2469,12 +2937,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13498,
-      "sqlSha256": "2fe7085cc41268b29eee66797d41c9578e5ba62be4e6401b0d900f06edc1c4ac"
+      "sqlBytes": 10174,
+      "sqlSha256": "8072521aaa2c7a3692b52f62538697d9215fb2ca6c4ef33fb2c3458c5e3776ec"
     },
     {
       "code": "DR0102",
       "key": "thipReportCandidate_DR0102",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -2492,12 +2964,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13672,
-      "sqlSha256": "29344aec0e0b9ea365ad63bd61848a34487c16e81826239e8621026869a89c63"
+      "sqlBytes": 10348,
+      "sqlSha256": "83ee12225d20df2fb8fbdd2fd9ff1f8b0ee2b95958a918b4b6b75bdb53819639"
     },
     {
       "code": "DR0103",
       "key": "thipReportCandidate_DR0103",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -2515,72 +2991,92 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15948,
-      "sqlSha256": "4f9c816c13fa1ded90cb5b7446630544815b1327c07f75ad71c09c5ff444ae3a"
+      "sqlBytes": 12624,
+      "sqlSha256": "56138a37897e6dbf9fd625362bd117dc38d06c9110c51bfd9b2262f593bc6782"
     },
     {
       "code": "DR0201",
       "key": "thipReportCandidate_DR0201",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 12610,
-      "sqlSha256": "1b1bbd4f09bea3f18e72e75a4d8b165e4b51b1dc69c9bf079ab4ae530e9c263e"
+      "sqlBytes": 9286,
+      "sqlSha256": "52c4fd133b9391dc192eab6794baf890c3ff6091ac66d13ef99c687bdd41ce06"
     },
     {
       "code": "DR0202",
       "key": "thipReportCandidate_DR0202",
+      "cteDependencies": [
+        "chronic_periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14448,
-      "sqlSha256": "e95e9596aa91ffa4b463a05aa54c038ed91a2c25e7b22aabee505e36589bdde6"
+      "sqlBytes": 4881,
+      "sqlSha256": "0de96f762e9d6549a73016b4a24e21c4cc7160563c41d1a85c48f3da1e664bbc"
     },
     {
       "code": "DR0203",
       "key": "thipReportCandidate_DR0203",
+      "cteDependencies": [
+        "chronic_periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14285,
-      "sqlSha256": "50d45d35abd44088658011d20c69b254b3386577356dd143be9cb5795fb95686"
+      "sqlBytes": 4718,
+      "sqlSha256": "08fb7cc7f1e679dd40bc50984fe6109abb53728ba0e03ebd78f4b74b1a41ef10"
     },
     {
       "code": "DR0204",
       "key": "thipReportCandidate_DR0204",
+      "cteDependencies": [
+        "chronic_periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14347,
-      "sqlSha256": "57dbcd471e111eacb6ea2e7a5fa20a2af7f3f9468e54180f53d528c2e918676b"
+      "sqlBytes": 4780,
+      "sqlSha256": "cc11148a18520d93e60839a4b0d819563054e14197f58c22e084b24e84e49ff1"
     },
     {
       "code": "DR0205",
       "key": "thipReportCandidate_DR0205",
+      "cteDependencies": [
+        "chronic_periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14336,
-      "sqlSha256": "774d7349622f7895ca4a8167407b060736386f5834e111560ba5c9cf42460189"
+      "sqlBytes": 4769,
+      "sqlSha256": "3407e290695f09b47865324b73764f5ac736977431909d6c2e35b05050f54d03"
     },
     {
       "code": "DR0301",
       "key": "thipReportCandidate_DR0301",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -2598,12 +3094,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13531,
-      "sqlSha256": "3371cc4c4ef8dd449bcf278173c83837210bc3a0d45189990230d81d37aff782"
+      "sqlBytes": 10207,
+      "sqlSha256": "3b127ae1af8e76c898f2fd31b0bb1539a35eb574ffb4dfbd63afa7a53243b3ba"
     },
     {
       "code": "DR0302",
       "key": "thipReportCandidate_DR0302",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -2621,12 +3121,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14637,
-      "sqlSha256": "cc58223558005a20d1a4690be22a07b560eb15935603d546851a807c0446eb42"
+      "sqlBytes": 11313,
+      "sqlSha256": "4250442ea14237bea8949100c748c117245ece5a843d2a53ffa23fcbf955bfdc"
     },
     {
       "code": "DR0401",
       "key": "thipReportCandidate_DR0401",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -2644,12 +3148,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13537,
-      "sqlSha256": "0a7261db0fd276025c15420aca94a190b34062379193867cfcb839bb96e09de4"
+      "sqlBytes": 10213,
+      "sqlSha256": "ae48379e28d3cde08f7bce138e096ab73c4055f2a2511aa8b23c3009c8b0f8e5"
     },
     {
       "code": "DR0403",
       "key": "thipReportCandidate_DR0403",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -2667,12 +3175,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 12955,
-      "sqlSha256": "a5b29405b1ac83e809e8338d3a9a618ae129a56403835835d834ff4541a1d6fd"
+      "sqlBytes": 9631,
+      "sqlSha256": "0a623febb6e3c7727225d29a4fd828300756a800d8986abafec77ca6ee650551"
     },
     {
       "code": "DR0404",
       "key": "thipReportCandidate_DR0404",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "quarterly",
       "expectedMonths": [
         1,
@@ -2682,12 +3194,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15001,
-      "sqlSha256": "7beb66217f216f94ea4fe8241e4c5f945a38e3e82cf024af78e5895184b1b4c2"
+      "sqlBytes": 11677,
+      "sqlSha256": "2f3ca44ffb86eb8a91c2c9aedfb95b00b2be398d9d91b0c30fbe8bac249f236e"
     },
     {
       "code": "DS0401",
       "key": "thipReportCandidate_DS0401",
+      "cteDependencies": [
+        "chronic_periodized"
+      ],
       "cadence": "quarterly",
       "expectedMonths": [
         1,
@@ -2697,108 +3212,123 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14181,
-      "sqlSha256": "672de1d37d87157ac12f3da260f28066d111cf50218792010d69135d7572bcb8"
+      "sqlBytes": 4614,
+      "sqlSha256": "3d91e446940d50a44f6752d5d98b4905f6b79b1656dc4f7f0055b7f8e31cbac9"
     },
     {
       "code": "HC0101",
       "key": "thipReportCandidate_HC0101",
+      "cteDependencies": [
+        "opd_periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14175,
-      "sqlSha256": "8a369149434d82d8e17d1de2b8ce5223bdb361b874268a293b88db5139b74e50"
+      "sqlBytes": 4913,
+      "sqlSha256": "eca4379919a5ab2f0077c89d873544973b5f7756934ab962d043645140c8c09f"
     },
     {
       "code": "HC0102",
       "key": "thipReportCandidate_HC0102",
+      "cteDependencies": [
+        "opd_periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14539,
-      "sqlSha256": "9eb79a729e001d491c8546724746b8ee43a93145722f03d841ad11c6ff055359"
+      "sqlBytes": 5277,
+      "sqlSha256": "b090d96e2dd2270b39ee17111796da966acb1f96c6c94817e728721cca8d23ad"
     },
     {
       "code": "HE0101",
       "key": "thipReportCandidate_HE0101",
+      "cteDependencies": [],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13784,
-      "sqlSha256": "26ddf4c9f3145f37f2cd62e31edd41ead56608f4bd3b25200935c8053b5824d9"
+      "sqlBytes": 3581,
+      "sqlSha256": "48a8ac9d3f101bac1e4c8d226a9578fdebb0fec3aa7e355ef9de4cc83f7caa57"
     },
     {
       "code": "HE0102",
       "key": "thipReportCandidate_HE0102",
+      "cteDependencies": [],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14178,
-      "sqlSha256": "8de2491f2f99a1b5e66ccc66ebbf7d02052f69a166e0649b96062bb3d422d665"
+      "sqlBytes": 3975,
+      "sqlSha256": "2a754495361c886c9aabc03f843d448cd06e3dae037b502d1969f8071a2e272e"
     },
     {
       "code": "HE0103",
       "key": "thipReportCandidate_HE0103",
+      "cteDependencies": [],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13781,
-      "sqlSha256": "8b89f77d15a3329fbbd1c0ef37cbed002c9bae8198073e432fa5352097e2345f"
+      "sqlBytes": 3578,
+      "sqlSha256": "6564e09f3b1eea4b7a0fc8611a8207d92e4ad3bd6167b786601718142bed4c57"
     },
     {
       "code": "HE0104",
       "key": "thipReportCandidate_HE0104",
+      "cteDependencies": [],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14392,
-      "sqlSha256": "e3058c79967915f6d513135942225d41dc9de7e954d6ec6e00ddcb346c283860"
+      "sqlBytes": 4189,
+      "sqlSha256": "3485542d5d16a21c51b8e801544750cf2a78e64b0652b3dc2e950221f3beabb1"
     },
     {
       "code": "HE0105",
       "key": "thipReportCandidate_HE0105",
+      "cteDependencies": [],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14410,
-      "sqlSha256": "9cde27f79897afd2749ce0ecee8a252fd27d28f7d1e3263f7c64be04ea30b163"
+      "sqlBytes": 4207,
+      "sqlSha256": "4fe23a2e11adf1174f4cef75acee772137690a15c9d437d7aa726190fc10aa56"
     },
     {
       "code": "HE0106",
       "key": "thipReportCandidate_HE0106",
+      "cteDependencies": [],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14023,
-      "sqlSha256": "0316740e30477a3c0f26be51d930b25f1c64319db173d8bff07636278acbb3e3"
+      "sqlBytes": 3820,
+      "sqlSha256": "e9a67cb29ca91b3f9cce8b657971ea4b527032d9eac05618c426b9ec36708e7c"
     },
     {
       "code": "HH0101.1",
       "key": "thipReportCandidate_HH0101_1",
+      "cteDependencies": [
+        "opd_periodized"
+      ],
       "cadence": "quarterly",
       "expectedMonths": [
         1,
@@ -2808,12 +3338,16 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13703,
-      "sqlSha256": "2961594ccea674faa2c446ac1850a9366f8285476dee443195d83ac795fa9391"
+      "sqlBytes": 4441,
+      "sqlSha256": "44d21f26a1714bdf62c654ba153fd8099281320a15a4bb3f10b0e74abdc439ba"
     },
     {
       "code": "HH0101.2",
       "key": "thipReportCandidate_HH0101_2",
+      "cteDependencies": [
+        "ipd",
+        "periodized"
+      ],
       "cadence": "quarterly",
       "expectedMonths": [
         1,
@@ -2823,12 +3357,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13741,
-      "sqlSha256": "9b972c2d0edd2ed59823dd9be7cfde09cccf8f227d7cc3db20963c900a168985"
+      "sqlBytes": 10417,
+      "sqlSha256": "cef605a2ba9b6c5e8bda923fdc481bba824accc6aaa5036b29187b4fc691dca3"
     },
     {
       "code": "HH0102",
       "key": "thipReportCandidate_HH0102",
+      "cteDependencies": [
+        "opd_periodized"
+      ],
       "cadence": "semiannual",
       "expectedMonths": [
         1,
@@ -2836,12 +3373,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15810,
-      "sqlSha256": "c452824fa693a84cc787c23899be716ca1a829aee433286349c6f5d70b4b1644"
+      "sqlBytes": 6548,
+      "sqlSha256": "7e50e254bb88039782d1139be67b827ee5b5242ea10050de42429bac9999f6ef"
     },
     {
       "code": "HH0103.1",
       "key": "thipReportCandidate_HH0103_1",
+      "cteDependencies": [
+        "opd_periodized"
+      ],
       "cadence": "semiannual",
       "expectedMonths": [
         1,
@@ -2849,12 +3389,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 16456,
-      "sqlSha256": "31b1943dddcf39501d906a6e0a72f8a1a68e30c92f11039035322ef1ce4962ca"
+      "sqlBytes": 7194,
+      "sqlSha256": "3576806f35ba68d78671d01ad8ad1ca47cd757b766621b88a9ff46109d69028b"
     },
     {
       "code": "HH0103.2",
       "key": "thipReportCandidate_HH0103_2",
+      "cteDependencies": [
+        "opd_periodized"
+      ],
       "cadence": "semiannual",
       "expectedMonths": [
         1,
@@ -2862,12 +3405,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 16470,
-      "sqlSha256": "2ed7f6dee1df0644ede5fdf6c75cc62d847c0e896c72a6c335e1e21fe6d6e38b"
+      "sqlBytes": 7208,
+      "sqlSha256": "c8c6af9c2660619b50ac740844be6852812d29734588915189b2baa1e1d47bf0"
     },
     {
       "code": "HH0103.3",
       "key": "thipReportCandidate_HH0103_3",
+      "cteDependencies": [
+        "opd_periodized"
+      ],
       "cadence": "semiannual",
       "expectedMonths": [
         1,
@@ -2875,12 +3421,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 16414,
-      "sqlSha256": "f1f0033789fe942071149404851c871d0e102274d4667dbcae5fd8491e97e0ce"
+      "sqlBytes": 7152,
+      "sqlSha256": "81d775707ce3c207858ef8823fb56a036bc83d8bbe64a89a7d250dbab56779dd"
     },
     {
       "code": "HH0103.4",
       "key": "thipReportCandidate_HH0103_4",
+      "cteDependencies": [
+        "opd_periodized"
+      ],
       "cadence": "semiannual",
       "expectedMonths": [
         1,
@@ -2888,12 +3437,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 16400,
-      "sqlSha256": "72604480ad3547ca1ada5e4b909ba94acfe835922a5bf09d906d65e35b3ac067"
+      "sqlBytes": 7138,
+      "sqlSha256": "4f9d1b8a73a6a9548bd08dc2abc56ffb6fd655fa927b906ec8ee2c117a00770d"
     },
     {
       "code": "HH0103.5",
       "key": "thipReportCandidate_HH0103_5",
+      "cteDependencies": [
+        "opd_periodized"
+      ],
       "cadence": "semiannual",
       "expectedMonths": [
         1,
@@ -2901,12 +3453,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 16351,
-      "sqlSha256": "27eb0edab8c7e96f6a57e0e2c72d14734e4ef21ce8c77b0830a30f6be40673de"
+      "sqlBytes": 7089,
+      "sqlSha256": "605a544111cbfbfcfbab41ed40b2900461f049e41b5bda2e04a142523be239a9"
     },
     {
       "code": "HH0103.6",
       "key": "thipReportCandidate_HH0103_6",
+      "cteDependencies": [
+        "opd_periodized"
+      ],
       "cadence": "semiannual",
       "expectedMonths": [
         1,
@@ -2914,108 +3469,127 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 16400,
-      "sqlSha256": "53c9fb4c0690601fe2f1e93c058d89b75135dcefc4f1b0f7211fab49a4066220"
+      "sqlBytes": 7138,
+      "sqlSha256": "70c40ca0979c3b578b4b855f9323ef38ea410e0b0c73295dd09b18d802f9d17c"
     },
     {
       "code": "HH0104.1",
       "key": "thipReportCandidate_HH0104_1",
+      "cteDependencies": [
+        "opd_periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 19847,
-      "sqlSha256": "a16c43fd18e84780de766cae0a9625d64b22eae18ad5e37aafbc19cb9a49e0a6"
+      "sqlBytes": 10585,
+      "sqlSha256": "21cfbd89fa0735e7eb7adcc8c9e90303633217bc6bd7ff54e825aed7aabdac27"
     },
     {
       "code": "HH0104.2",
       "key": "thipReportCandidate_HH0104_2",
+      "cteDependencies": [
+        "opd_periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 19861,
-      "sqlSha256": "e5a9ba57b062915b40feccc57359e11ee040380dd646db5c4e5afc6be72f1332"
+      "sqlBytes": 10599,
+      "sqlSha256": "0ae469b8841b7038e809edb5d18f9e1f83b057e09cdfe82205fc2edb09edc3b7"
     },
     {
       "code": "HH0104.3",
       "key": "thipReportCandidate_HH0104_3",
+      "cteDependencies": [
+        "opd_periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 19805,
-      "sqlSha256": "c07f74f4dc5742dc48b82e8752f5ae36ae5b52286a19115fe992eeb3df38905e"
+      "sqlBytes": 10543,
+      "sqlSha256": "757719da28307b4b35a0c515cf0d4cc0240376a15d51e4a8da8c402d2980b6aa"
     },
     {
       "code": "HH0104.4",
       "key": "thipReportCandidate_HH0104_4",
+      "cteDependencies": [
+        "opd_periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 19791,
-      "sqlSha256": "83f8e67b7bf3f46baa3ec91e4105b9ab07fecdff1b8ed517a09d223cb76c1059"
+      "sqlBytes": 10529,
+      "sqlSha256": "a22fff1da4ee6ce8522fff79d035b474a349ae3bb9bf2baba26a5d4ae98f4040"
     },
     {
       "code": "HH0104.5",
       "key": "thipReportCandidate_HH0104_5",
+      "cteDependencies": [
+        "opd_periodized"
+      ],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 19742,
-      "sqlSha256": "eb9e0cd240051167a8ecec87abfa51df0148accda4d9c966c91325019e565a56"
+      "sqlBytes": 10480,
+      "sqlSha256": "7f924ad39f9c0ce18df8bc3df9496a99c7344d9f99d1c702d2ebc744e5d32d3b"
     },
     {
       "code": "SH0101",
       "key": "thipReportCandidate_SH0101",
+      "cteDependencies": [],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15502,
-      "sqlSha256": "484ea7f75678b62ac6f9b065a053d9ac98e255584d9086f0525d4b4b27cf3bbd"
+      "sqlBytes": 5299,
+      "sqlSha256": "1e80262cb99bee86c6689e6d27a4dc20393896ef9f70644bcfd9ec8a537d7e6b"
     },
     {
       "code": "SH0102",
       "key": "thipReportCandidate_SH0102",
+      "cteDependencies": [],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15403,
-      "sqlSha256": "68dc2897b53babb91e1d1d0dfe490620e29e9b695516d59378e050c08e54a4fd"
+      "sqlBytes": 5200,
+      "sqlSha256": "114c16070620a784ab349912944df1323548ee34f2684a06741da2dd7503d5ac"
     },
     {
       "code": "SH0103",
       "key": "thipReportCandidate_SH0103",
+      "cteDependencies": [],
       "cadence": "annual",
       "expectedMonths": [
         1
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15480,
-      "sqlSha256": "cfd1535f216daf3d4a1ce201bab878d3465e8db7a6f60130ca6c3fbde4b4d2fc"
+      "sqlBytes": 5277,
+      "sqlSha256": "d86ffcf17e519aab7ed20d1f10072776fd91704aed6f325eec2811f840186a8b"
     },
     {
       "code": "SH0104",
       "key": "thipReportCandidate_SH0104",
+      "cteDependencies": [],
       "cadence": "quarterly",
       "expectedMonths": [
         1,
@@ -3025,12 +3599,13 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15514,
-      "sqlSha256": "c669edd388d5fdc20a2be3e5c076244df23a0cc41afb125e94ba6d4dd3fb7070"
+      "sqlBytes": 5311,
+      "sqlSha256": "0992a057f7c9efce576a6a1d111157ae9c3c3d6a9aa0957b5a371a220bc6210c"
     },
     {
       "code": "SH0105",
       "key": "thipReportCandidate_SH0105",
+      "cteDependencies": [],
       "cadence": "quarterly",
       "expectedMonths": [
         1,
@@ -3040,12 +3615,13 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15485,
-      "sqlSha256": "00a2cc902e048e031fbf0f262f9efaf925ebdc0af47f06c62a7293ed5ba5989d"
+      "sqlBytes": 5282,
+      "sqlSha256": "640b900f26be15a135c276c256bdf6a0b4c869c2ad0effb565d5813a3516d271"
     },
     {
       "code": "SH0106",
       "key": "thipReportCandidate_SH0106",
+      "cteDependencies": [],
       "cadence": "quarterly",
       "expectedMonths": [
         1,
@@ -3055,12 +3631,13 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 16974,
-      "sqlSha256": "e94f42448dc21d04c504b63cae7f78d2caace839ef52626271b350db44f2ec5d"
+      "sqlBytes": 6771,
+      "sqlSha256": "b06a4e03dbdb6f992e481cf2292c209af88dbbb4371aa891e7ebae4af4aaf240"
     },
     {
       "code": "SH0107",
       "key": "thipReportCandidate_SH0107",
+      "cteDependencies": [],
       "cadence": "quarterly",
       "expectedMonths": [
         1,
@@ -3070,12 +3647,13 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 16976,
-      "sqlSha256": "eaac4f30446c46f2634f3340d80705bf05147e84bcd615d6195d866bb28f4b4f"
+      "sqlBytes": 6773,
+      "sqlSha256": "8f456b4e527ca29410471daa17bb0667a69b995e0b37d4803f7714d511660251"
     },
     {
       "code": "SH0301",
       "key": "thipReportCandidate_SH0301",
+      "cteDependencies": [],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -3093,12 +3671,13 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 15563,
-      "sqlSha256": "96e38445b77a2ee663b8a844663b2d993217b0a6d63ad5e5de0dd364b4f3b5b5"
+      "sqlBytes": 5360,
+      "sqlSha256": "04df1f28fa7df416f034039b532b3b531cdd6f7344a0d685b1ae09ef29980acc"
     },
     {
       "code": "SH0302",
       "key": "thipReportCandidate_SH0302",
+      "cteDependencies": [],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -3116,12 +3695,13 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 17387,
-      "sqlSha256": "e404ea65ca3191c298cedd8279f51984e3222f2732280c31c20c44396b564cd7"
+      "sqlBytes": 7184,
+      "sqlSha256": "12a6564538b25b5a266004b9aa4bf5325a79fab66c2ea942c170bf441dc59224"
     },
     {
       "code": "SH0303",
       "key": "thipReportCandidate_SH0303",
+      "cteDependencies": [],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -3139,12 +3719,13 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 16706,
-      "sqlSha256": "64c0bd0758642ffb0e62156996fb85173856681bae793c9309db6cd56be2f7d5"
+      "sqlBytes": 6503,
+      "sqlSha256": "1730f7014dc16ad660055605f67b4a66b62bc09298ecd81833dabee2a63aaf6d"
     },
     {
       "code": "SH0306",
       "key": "thipReportCandidate_SH0306",
+      "cteDependencies": [],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -3162,12 +3743,13 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 18093,
-      "sqlSha256": "9eeea77d820fa80002d1adb538b01d0ea18d64fe061ad4967aa7790b3684e152"
+      "sqlBytes": 7890,
+      "sqlSha256": "456b9e277a0b1848bcb7137762c15dc886727d474cdeb44db6190b373c807e62"
     },
     {
       "code": "SH0307",
       "key": "thipReportCandidate_SH0307",
+      "cteDependencies": [],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -3185,12 +3767,13 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 17412,
-      "sqlSha256": "9f3a7526e0704f68179e0d178f88ac1b6b7b7201000b557dd40680d3c6b716c5"
+      "sqlBytes": 7209,
+      "sqlSha256": "fa1b93ca3369837a0390a945693a80ad8ac44c56bfa8e5c7a2fdf5bf05676ff8"
     },
     {
       "code": "SL0101",
       "key": "thipReportCandidate_SL0101",
+      "cteDependencies": [],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -3208,12 +3791,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13716,
-      "sqlSha256": "ec92e2ee13184ab1975dfcc0fbff91e8c9f51db861b9954d5cdc3adc5b3f7569"
+      "sqlBytes": 3513,
+      "sqlSha256": "eedeb0af0492c150dfd87376c557bbb1ab352b409c2c9ddf50777e5120aef365"
     },
     {
       "code": "SM0102",
       "key": "thipReportCandidate_SM0102",
+      "cteDependencies": [
+        "opd_periodized"
+      ],
       "cadence": "semiannual",
       "expectedMonths": [
         1,
@@ -3221,12 +3807,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14183,
-      "sqlSha256": "c316315af2b2aae4de6e575e3e6dc165b019e4dee0c8d427a7ece656e8db4224"
+      "sqlBytes": 4921,
+      "sqlSha256": "1d69e424e309d4fdd93bf440946a41d99c3fd3002656f92a3661d44500ca0b6f"
     },
     {
       "code": "SM0103",
       "key": "thipReportCandidate_SM0103",
+      "cteDependencies": [
+        "opd_periodized"
+      ],
       "cadence": "semiannual",
       "expectedMonths": [
         1,
@@ -3234,12 +3823,15 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13895,
-      "sqlSha256": "7d7ca0b178eeefa56490219644d86ca45dfcafb2ec2546cc555e95a12d2ce46b"
+      "sqlBytes": 4633,
+      "sqlSha256": "61cd0b9d6ea764c18f06527a06caa60fbc32064a090fb603d224563c55f75c19"
     },
     {
       "code": "SM0201",
       "key": "thipReportCandidate_SM0201",
+      "cteDependencies": [
+        "opd_periodized"
+      ],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -3257,12 +3849,13 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14326,
-      "sqlSha256": "82d305171d5f2503a8f4f66f7411bac8fbd68633e02bed20a3b39e4e295ff3ad"
+      "sqlBytes": 5064,
+      "sqlSha256": "e8cff07534148f6c57fff5e5155954d4a576b031faba9f7063950ba1b560d416"
     },
     {
       "code": "SS0102",
       "key": "thipReportCandidate_SS0102",
+      "cteDependencies": [],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -3280,12 +3873,13 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 14085,
-      "sqlSha256": "b033e0a7537194c6fff79be1d591b002f16b047270025a01a572d1e4c46ba04e"
+      "sqlBytes": 3882,
+      "sqlSha256": "c7042ecb2a296b3d85e2f631dd0706b607cb08da7ac70de42ab1809fcf406132"
     },
     {
       "code": "SS0103",
       "key": "thipReportCandidate_SS0103",
+      "cteDependencies": [],
       "cadence": "monthly",
       "expectedMonths": [
         1,
@@ -3303,8 +3897,8 @@
       ],
       "start": "2025-10-01",
       "end": "2026-10-01",
-      "sqlBytes": 13979,
-      "sqlSha256": "5f2abb97a59d52910acc94e2e53c37af854894b42a3ab587dc96178d00c425ee"
+      "sqlBytes": 3776,
+      "sqlSha256": "09423d3c6f21f7340a02642d478aa2bb60b943353458b40a94455ce79d389672"
     }
   ],
   "skippedExternalCodes": [

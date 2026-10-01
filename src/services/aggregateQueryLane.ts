@@ -1,3 +1,4 @@
+import { recordAppPerformance } from './appPerformance';
 import { BmsRequestError } from './bmsErrors';
 /** Shared lane for validation KPI/profile requests; no overlap and a post-query gap. */
 export class AggregateQueryLane {
@@ -14,6 +15,7 @@ export class AggregateQueryLane {
     this.consecutiveFailures = 0;
   }
   run<T>(signal: AbortSignal, work: () => Promise<T>): Promise<T> {
+    const queuedAt = performance.now();
     const result = this.tail.catch(() => undefined).then(async () => {
       if (signal.aborted) throw new DOMException('Cancelled', 'AbortError');
       if (this.held) throw this.held;
@@ -25,6 +27,7 @@ export class AggregateQueryLane {
       });
       if (signal.aborted) throw new DOMException('Cancelled', 'AbortError');
       if (this.held) throw this.held;
+      recordAppPerformance({ phase: 'queue-wait', key: 'aggregate', durationMs: performance.now() - queuedAt, success: true });
       try { const value = await work(); this.consecutiveFailures = 0; return value; }
       catch (error) {
         if (error instanceof BmsRequestError) {

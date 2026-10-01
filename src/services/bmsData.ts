@@ -1,7 +1,7 @@
 import { createNoDataIndicator, thipCatalogue, thipCatalogueByCode } from '@/data/thipCatalogue';
 import { createFoundationIndicator, type FoundationDefinition } from '@/data/liveDefinitions';
 import { getDictionaryEntry, parseBenchmark } from '@/data/thipDictionary';
-import { foundationRuleCodes, getFormulaScale, getRuleUnit, thipKpiRulesByCode } from '@/data/thipKpiRules';
+import { foundationRuleCodes, getFormulaScale, getRuleUnit, thipKpiRulesByCode } from '@/data/thipRuleSource';
 import { getExpectedFiscalMonths } from '@/data/thipReporting';
 import { BmsRequestError } from '@/services/bmsErrors';
 import { recordQueryTelemetry, type QueryTelemetryOutcome } from '@/services/queryTelemetry';

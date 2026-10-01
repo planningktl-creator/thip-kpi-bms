@@ -1,6 +1,7 @@
-import { thipCatalogueByCode } from '@/data/thipCatalogue';
+import { runtimeCatalogueByCode as thipCatalogueByCode } from '@/data/thipRuntime';
 import { getExpectedFiscalMonths, getReportingCadence } from '@/data/thipReporting';
-import { getFormulaScale, getRuleUnit, thipKpiRulesByCode } from '@/data/thipKpiRules';
+import { getFormulaScale, getRuleUnit } from '@/data/thipRuleLogic';
+import { runtimeRulesByCode as thipKpiRulesByCode, runtimeSignatures } from '@/data/thipRuntime';
 import { monitoringRulesByCode } from '@/monitoring/rules';
 import type { MonitoringUnit } from '@/monitoring/types';
 import { getFiscalMonthPeriods, getCurrentFiscalYear } from '@/utils/fiscal';
@@ -20,14 +21,14 @@ export type CandidateAggregate = {
   dataThrough: null; refreshedAt: null; approval: 'unapproved'; series: 'thip-report';
 };
 export type StepStatus = 'pending' | 'running' | 'success' | 'failed' | 'skipped';
-export type StepResult = { code: string; status: StepStatus; rows: CandidateAggregate[]; reason: string | null; latencyMs: number | null; attempts: number; origin?: 'cache' | 'query'; cachedAt?: string; expiresAt?: number };
-export type StepSnapshot = {
+export type StepResult = { code: string; status: StepStatus; rows: readonly CandidateAggregate[]; reason: string | null; latencyMs: number | null; attempts: number; origin?: 'cache' | 'query'; cachedAt?: string; expiresAt?: number };
+export type StepSnapshot = Readonly<{
   fiscalYear: number; series: 'thip-report'; state: 'idle' | 'running' | 'pausing' | 'paused' | 'cancelled' | 'complete';
-  steps: StepResult[]; total: number; succeeded: number; failed: number; finished: number;
+  steps: readonly Readonly<StepResult>[]; total: number; succeeded: number; failed: number; finished: number;
   activeCode: string | null; pauseReason: string | null; blockedBySession: boolean; retryAt: number;
   cacheHits: number; querySucceeded: number;
-};
-export type StepTask = { code: string; run: (signal: AbortSignal) => Promise<unknown[]> };
+}>;
+export type StepTask = { code: string; run: (signal: AbortSignal) => Promise<unknown[]>; queryLatencyMs?(): number | undefined };
 
 function numeric(value: unknown): number | null {
   if (value === null || value === undefined) return null;
@@ -113,9 +114,18 @@ export class ThipStepLoader {
     this.steps = [...tasks.map((task): StepResult => ({ code: task.code, status: 'pending', rows: [], reason: null, latencyMs: null, attempts: 0 })), ...skipped.map((code): StepResult => ({ code, status: 'skipped', rows: [], reason: 'รอ external aggregate source; ไม่เติมศูนย์', latencyMs: null, attempts: 0 }))];
   }
 
+  private views = new WeakMap<StepResult, { stamp: string; rows: readonly CandidateAggregate[]; view: Readonly<StepResult> }>();
+  private presentation(step: StepResult): Readonly<StepResult> {
+    const stamp = JSON.stringify([step.status, step.reason, step.latencyMs, step.attempts, step.origin, step.cachedAt, step.expiresAt]);
+    const cached = this.views.get(step);
+    if (cached?.stamp === stamp && cached.rows === step.rows) return cached.view;
+    const view = Object.freeze({ ...step, rows: Object.freeze(step.rows.map(row => Object.freeze({ ...row }))) });
+    this.views.set(step, { stamp, rows: step.rows, view });
+    return view;
+  }
   snapshot(): StepSnapshot {
     const succeeded = this.steps.filter((step) => step.status === 'success').length, failed = this.steps.filter((step) => step.status === 'failed').length;
-    return { fiscalYear: this.fiscalYear, series: 'thip-report', state: this.state, steps: this.steps.map((step) => ({ ...step, rows: step.rows.map((row) => ({ ...row })) })), total: this.tasks.length, succeeded, failed, finished: succeeded + failed, activeCode: this.activeCode, pauseReason: this.pauseReason, blockedBySession: this.blockedBySession, retryAt: this.retryAt, cacheHits: this.steps.filter((step) => step.origin === 'cache').length, querySucceeded: this.steps.filter((step) => step.status === 'success' && step.origin === 'query').length };
+    return Object.freeze({ fiscalYear: this.fiscalYear, series: 'thip-report', state: this.state, steps: Object.freeze(this.steps.map(step => this.presentation(step))), total: this.tasks.length, succeeded, failed, finished: succeeded + failed, activeCode: this.activeCode, pauseReason: this.pauseReason, blockedBySession: this.blockedBySession, retryAt: this.retryAt, cacheHits: this.steps.filter((step) => step.origin === 'cache').length, querySucceeded: this.steps.filter((step) => step.status === 'success' && step.origin === 'query').length });
   }
   private emit() { this.onProgress(this.snapshot()); }
   start(): Promise<void> { return this.resume(); }
@@ -189,16 +199,16 @@ export class ThipStepLoader {
       if (this.paused || this.controller.signal.aborted) continue;
       if (Date.now() < this.nextAt) continue;
       const started = Date.now();
+      const task = this.tasks.find((item) => item.code === step.code)!;
       this.activeCode = step.code; step.status = 'running'; step.reason = null; step.attempts++; this.emit();
       try {
-        const task = this.tasks.find((item) => item.code === step.code)!;
         const inputs = await task.run(this.controller.signal);
         if (this.controller.signal.aborted) return;
         step.rows = validateCandidateRows(inputs, step.code, this.fiscalYear);
         step.origin = 'query';
         step.status = 'success'; step.reason = step.rows.length ? null : 'query สำเร็จแต่ไม่พบแถว; ไม่เติมศูนย์';
         this.consecutiveFailures = 0;
-        step.latencyMs = Date.now() - started;
+        step.latencyMs = task.queryLatencyMs?.() ?? Date.now() - started;
         this.emit();
         const saved = await this.cache?.write(step.code, step.rows, this.controller.signal).catch(() => null);
         if (this.controller.signal.aborted) return;
@@ -214,7 +224,7 @@ export class ThipStepLoader {
           this.retryAt = info.rateLimit ? Date.now() + info.retryMs : 0;
         }
       }
-      if (step.status !== 'success') step.latencyMs = Date.now() - started;
+      if (step.status !== 'success') step.latencyMs = task.queryLatencyMs?.() ?? Date.now() - started;
       this.activeCode = null;
       this.nextAt = Date.now() + this.gapMs;
       if (this.paused) this.state = 'paused';
@@ -233,10 +243,17 @@ export function planThipSteps(fiscalYear: number) {
 }
 
 export function createThipStepLoader(runtime: BmsRuntimeConfig, fiscalYear: number, onProgress: (snapshot: StepSnapshot) => void, cache?: StepCachePort): ThipStepLoader {
-  const tasks = planThipSteps(fiscalYear).map((request): StepTask => {
-    const code = request.code;
-    return { code, run: async (signal) => {
-      const payload = await aggregateQueryLane(runtime).run(signal, () => executeRegisteredQuery(request.query, runtime, { start_date: { value: request.start, value_type: 'date' }, end_date: { value: request.end, value_type: 'date' } }, runtime.marketplaceToken, { signal }));
+  const tasks = runtimeSignatures.map(({ code }): StepTask => {
+    let queryMs: number | undefined;
+    return { code, queryLatencyMs: () => queryMs, run: async (signal) => {
+      queryMs = undefined;
+      const payload = await aggregateQueryLane(runtime).run(signal, async () => {
+        const request = planFoundationRequests({ fiscalYear, chunkSize: 1, codes: [code] })[0]!;
+        const query = { ...request.query, key: `thipReportCandidate_${code.replace(/\./g, '_')}` };
+        const started = Date.now();
+        try { return await executeRegisteredQuery(query, runtime, { start_date: { value: request.start, value_type: 'date' }, end_date: { value: request.end, value_type: 'date' } }, runtime.marketplaceToken, { signal }); }
+        finally { queryMs = Date.now() - started; }
+      });
       const rows = payload.data ?? payload.result;
       if (!Array.isArray(rows)) throw new BmsRequestError('data', 'response', 'Missing aggregate array');
       return rows;

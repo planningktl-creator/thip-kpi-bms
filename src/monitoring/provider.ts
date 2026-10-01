@@ -1,4 +1,4 @@
-import { executeRegisteredQuery, type RegisteredQuery } from '@/services/queryRegistry';
+import { executeRegisteredQuery, type RegisteredQuery } from '@/services/queryTransport';
 import type { BmsRuntimeConfig } from '@/services/bmsSession';
 import type { MonitoringProvider } from './types';
 

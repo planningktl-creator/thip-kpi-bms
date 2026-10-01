@@ -19,7 +19,7 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RULES_PATH = ROOT / "src" / "data" / "thipKpiRules.ts"
+RULES_PATH = ROOT / "src" / "data" / "thipRuleSource.ts"
 REPORTING_PATH = ROOT / "src" / "data" / "thipReporting.ts"
 
 CADENCES = {

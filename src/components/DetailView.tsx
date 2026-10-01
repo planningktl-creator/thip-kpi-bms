@@ -15,7 +15,7 @@ import type { Indicator } from '@/types/thip';
 import { formatFiscalRange, formatFiscalYear, formatFiscalYearShort } from '@/utils/fiscal';
 import { groupMeta } from '@/data/thipMeta';
 import { getExpectedFiscalMonths } from '@/data/thipReporting';
-import { thipKpiRulesByCode } from '@/data/thipKpiRules';
+import { thipKpiRulesByCode } from '@/data/thipRuleSource';
 import { formatDelta, formatIndicatorValue, formatNumber, formatTargetValue } from '@/utils/format';
 import { exportIndicatorCsv } from '@/utils/export';
 import { StatusPill } from '@/components/StatusPill';

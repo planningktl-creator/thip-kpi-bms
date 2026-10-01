@@ -134,6 +134,12 @@ describe('monitoring accumulation and targets', () => {
     const csv = monitoringCsv(snapshot,rows,2026);
     expect(csv.split('\r\n')).toHaveLength(13); expect(csv).toContain('SYNTHETIC DEVELOPMENT PREVIEW');
     expect(csv).toContain('missing-source'); expect(csv).toContain('period_end_exclusive');
+    const lines = csv.replace(/^\uFEFF/, '').split('\r\n').map((line) => line.split(','));
+    const column = (name: string) => lines[1][lines[0].indexOf(name)];
+    expect(column('period_start')).toBe('2025-10-01');
+    expect(column('period_start_be')).toBe('1 ต.ค. พ.ศ. 2568');
+    expect(column('period_end_exclusive_be')).toBe('1 พ.ย. พ.ศ. 2568');
+    expect(column('refreshed_at_be')).toContain('พ.ศ. 2569');
     expect(() => monitoringCsv(snapshot,rows,2025)).toThrow('year mismatch');
     expect(escapeCsv('=HYPERLINK("synthetic")')).toContain("'=HYPERLINK");
     expect(escapeCsv('  @synthetic')).toBe("'  @synthetic"); expect(escapeCsv(-1)).toBe('-1');

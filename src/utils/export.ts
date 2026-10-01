@@ -1,5 +1,5 @@
 import type { FiscalYear, Indicator } from '@/types/thip';
-import { toBuddhistYear } from '@/utils/fiscal';
+import { formatThaiDate, toBuddhistYear } from '@/utils/fiscal';
 
 export function escapeCsv(value: string | number | null): string {
   if (value === null) return '';
@@ -40,7 +40,7 @@ export function exportIndicatorCsv(indicator: Indicator): void {
  */
 export function exportAggregateCsv(indicators: Indicator[], fiscalYear: FiscalYear): void {
   if (indicators.some((indicator) => indicator.fiscalYear !== fiscalYear)) throw new Error('Export snapshot does not match the selected fiscal year');
-  const header = ['indicator_code', 'indicator_group', 'fiscal_year_be', 'fiscal_month', 'period_start', 'numerator', 'denominator', 'value', 'target', 'percentile', 'status', 'rule_reference'];
+  const header = ['indicator_code', 'indicator_group', 'fiscal_year_be', 'fiscal_month', 'period_start', 'numerator', 'denominator', 'value', 'target', 'percentile', 'status', 'rule_reference', 'period_start_be'];
   const rows = indicators
     .filter((indicator) => indicator.dataSource === 'bms')
     .flatMap((indicator) => indicator.monthly
@@ -58,13 +58,14 @@ export function exportAggregateCsv(indicators: Indicator[], fiscalYear: FiscalYe
         month.percentile,
         month.status,
         indicator.reference,
+        formatThaiDate(month.periodStart),
       ]));
   const csv = [header, ...rows].map((row) => row.map(escapeCsv).join(',')).join('\n');
   const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = url;
-  anchor.download = `thip-kpi-aggregate-${fiscalYear}.csv`;
+  anchor.download = `thip-kpi-aggregate-${toBuddhistYear(fiscalYear)}.csv`;
   anchor.click();
   URL.revokeObjectURL(url);
 }

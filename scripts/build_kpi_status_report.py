@@ -23,7 +23,7 @@ SRC = ROOT / "src"
 DOCS = ROOT / "docs"
 
 CADENCE_FILE = SRC / "data" / "thipReporting.ts"
-RULES_FILE = SRC / "data" / "thipKpiRules.ts"
+RULES_FILE = SRC / "data" / "thipRuleSource.ts"
 DICTIONARY_FILE = SRC / "data" / "thipKpiDictionary.json"
 REGISTRY_FILE = SRC / "services" / "queryRegistry.ts"
 FAMILIES_DIR = SRC / "services" / "thipFamilies"

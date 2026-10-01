@@ -4,6 +4,7 @@ import { createServer } from 'vite';
 
 const server = await createServer({ logLevel: 'error', server: { middlewareMode: true, hmr: false }, appType: 'custom' });
 try {
+  const { codeCteDependencies } = await server.ssrLoadModule('/src/services/thipFoundationPlan.ts');
   const { planThipSteps } = await server.ssrLoadModule('/src/services/thipStepLoader.ts');
   const { assertRegisteredReadOnlyQuery, externalRegisteredCodes } = await server.ssrLoadModule('/src/services/queryRegistry.ts');
   const { getExpectedFiscalMonths, getReportingCadence } = await server.ssrLoadModule('/src/data/thipReporting.ts');
@@ -13,7 +14,7 @@ try {
     assertRegisteredReadOnlyQuery(query);
     if (/\*\s*(100|1000|100000)\s*\//.test(query.sql)) throw new Error(`Integer ratio in ${code}`);
     if ([...query.sql.matchAll(/'([A-Z]{2}\d{4}(?:\.\d)?)' AS indicator_code/g)].length !== 1) throw new Error(`Multi-code query in ${code}`);
-    return { code, key, cadence: getReportingCadence(code), expectedMonths: getExpectedFiscalMonths(code), start, end, sqlBytes: Buffer.byteLength(query.sql), sqlSha256: createHash('sha256').update(query.sql).digest('hex') };
+    return { code, key, cteDependencies: codeCteDependencies([code]), cadence: getReportingCadence(code), expectedMonths: getExpectedFiscalMonths(code), start, end, sqlBytes: Buffer.byteLength(query.sql), sqlSha256: createHash('sha256').update(query.sql).digest('hex') };
   });
   const text = JSON.stringify({ schemaVersion: 'thip-sequential-candidates/1', series: 'thip-report', concurrency: 1, gapMs: 1000, observationWindow: 'full-fiscal-year', approval: 'unapproved', steps, skippedExternalCodes: externalRegisteredCodes }, null, 2) + '\n';
   const path = 'reporting/thip_step_queries.manifest.json';

@@ -65,6 +65,10 @@ type AnnualResult = {
 
 The BMS/database boundary keeps ISO dates such as `2025-10-01`. The frontend must not expose that Gregorian date as a user-facing month/year: `src/utils/fiscal.ts` maps the October–September fiscal year to Thai Buddhist Era labels, so `2025-10-01` appears as `ต.ค. 2568` and fiscal-year key `2026` appears as `ปีงบประมาณ 2569`. CSV export uses `fiscal_year_be` and `month_label_be` for the same reason.
 
+All operational dates in monitoring drill-through, Step validation, cohort profiles and refresh/cache metadata use the shared Buddhist Era formatters. Date-only ISO fields display as `1 ต.ค. พ.ศ. 2568` without timezone conversion. Offset-qualified timestamps and cache epoch milliseconds display with an explicit Buddhist calendar and `Asia/Bangkok`, regardless of the computer's timezone; invalid/ambiguous dates display `—`. Database, query parameters, validators and cache continue using Gregorian ISO dates. Rule versions and verbatim source references remain unchanged identifiers.
+
+Aggregate CSV filenames use the Buddhist fiscal year. Aggregate and monitoring CSVs retain their original ISO machine columns for compatibility and add corresponding `_be` display columns (including monitoring target intervals, cutoff, cumulative cutoff and refresh). Missing dates remain empty fields; Buddhist years are never written into ISO machine columns.
+
 ## Source catalogue
 
 `src/data/thipCatalogue.ts` contains the 232 indicator definitions extracted from the THIP KPI Dictionary 2025. `src/data/thipReporting.ts` records the dictionary reporting cadence for every code. A catalogue entry is enough to navigate to a detail route, but it is not evidence that the hospital has a queryable result. Until an entry is mapped to a registered read-only source view, `createNoDataIndicator()` returns twelve display slots with null numerator, denominator, value, target, and percentile fields.
@@ -123,3 +127,13 @@ Transport deadlines cover fetch and response-body parsing and respond to cancell
 ## Cohort profiles and rule evidence (2026-10-01)
 
 Validation-only `cohort-profile` aggregates have an independent contract and cache namespace, documented in [THIP-COHORT-PROFILES.md](THIP-COHORT-PROFILES.md). Six registered SELECTs return only profile_key/metric_key/count_value, share the single-request Step lane, and never populate reporting or monitoring. Current registry snapshots are labelled at read time; monthly service/admission/headcount cohorts preserve their own dates and units. `CohortDefinition` evidence covers all 232 codes; structural mapping cannot satisfy publication approval or hospital readiness. Generated human/machine mapping and profile manifests are checked with `pnpm cohorts:check`.
+
+## Runtime performance boundary (2026-10-02)
+
+Session probing and transport/read-only checks live in `queryTransport.ts` without importing the full SQL registry. The compatibility exports from `queryRegistry.ts` retain the same API and BMS HTTP payload. Monitoring startup uses generated catalogue/rules/readiness metadata; reporting adapters, charts and validation load when their route opens. Dictionary/cohort detail evidence is generated in 29 family modules and fetched on demand in validation. Canonical dictionary and rich evidence remain available to build/audit tools and the official reporting adapter; they are excluded from monitoring startup.
+
+`pnpm runtime:check` verifies all 232 rule records, 177 SQL/rule fingerprints and family evidence against canonical sources. The rule hash includes full cohort evidence even though the compact runtime record omits it. No generation or cache lookup grants publication approval.
+
+Single-code foundation queries include only the registered CTE dependency closure recorded in `reporting/thip_step_queries.manifest.json`. They retain full fiscal-year parameters, facts, cadence grid, aggregates and NULL semantics. Synthetic PostgreSQL equivalence covers six representative branches; new query syntax/dependencies require review and generated checks. No date splitting or hospital index creation is introduced.
+
+In-memory performance diagnostics retain at most 256 numeric duration/outcome samples with internal keys. They contain no URL, SQL parameters, credentials or measured values and are not sent to an analytics endpoint. Cache schema v2 and readonly progress references are described in [candidate cache](THIP-CANDIDATE-CACHE.md). Benchmark limits, reproduction and external acceptance still required are documented in [performance report](THIP-PERFORMANCE-2026-10-02.md).

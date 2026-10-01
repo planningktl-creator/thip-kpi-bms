@@ -1,4 +1,4 @@
-import { getRuleReadiness, thipKpiRulesByCode } from '@/data/thipKpiRules';
+import { getRuleReadiness, thipKpiRulesByCode } from '@/data/thipRuleSource';
 import type { Indicator } from '@/types/thip';
 import type { BmsDataLoadResult } from './bmsData';
 

@@ -1,0 +1,94 @@
+{
+  "hospitalQueries": 0,
+  "postgresImage": "postgres:16-alpine",
+  "syntheticOnly": true,
+  "hospitalIndexApplied": false,
+  "fixtureIndexes": [
+    "iptdiag(an)",
+    "an_stat(an)"
+  ],
+  "results": [
+    {
+      "code": "DH0101",
+      "sameAggregate": true,
+      "cells": 12,
+      "ctes": [
+        "ipd",
+        "periodized"
+      ],
+      "beforeBytes": 13201,
+      "afterBytes": 9877,
+      "beforeExecutionMedianMs": 111.64,
+      "afterExecutionMedianMs": 109.099,
+      "beforePlanningMedianMs": 2.951,
+      "afterPlanningMedianMs": 2.663
+    },
+    {
+      "code": "DH0112",
+      "sameAggregate": true,
+      "cells": 12,
+      "ctes": [
+        "ipd",
+        "periodized"
+      ],
+      "beforeBytes": 12937,
+      "afterBytes": 9613,
+      "beforeExecutionMedianMs": 13.675,
+      "afterExecutionMedianMs": 13.675,
+      "beforePlanningMedianMs": 2.138,
+      "afterPlanningMedianMs": 2.125
+    },
+    {
+      "code": "CE0102",
+      "sameAggregate": true,
+      "cells": 12,
+      "ctes": [
+        "opd_periodized"
+      ],
+      "beforeBytes": 13321,
+      "afterBytes": 4059,
+      "beforeExecutionMedianMs": 0.377,
+      "afterExecutionMedianMs": 0.384,
+      "beforePlanningMedianMs": 1.855,
+      "afterPlanningMedianMs": 1.185
+    },
+    {
+      "code": "HH0102",
+      "sameAggregate": true,
+      "cells": 2,
+      "ctes": [
+        "opd_periodized"
+      ],
+      "beforeBytes": 15810,
+      "afterBytes": 6548,
+      "beforeExecutionMedianMs": 0.772,
+      "afterExecutionMedianMs": 1.234,
+      "beforePlanningMedianMs": 2.386,
+      "afterPlanningMedianMs": 2.641
+    },
+    {
+      "code": "HE0101",
+      "sameAggregate": true,
+      "cells": 1,
+      "ctes": [],
+      "beforeBytes": 13784,
+      "afterBytes": 3581,
+      "beforeExecutionMedianMs": 0.491,
+      "afterExecutionMedianMs": 0.513,
+      "beforePlanningMedianMs": 1.601,
+      "afterPlanningMedianMs": 1.357
+    },
+    {
+      "code": "SH0101",
+      "sameAggregate": true,
+      "cells": 1,
+      "ctes": [],
+      "beforeBytes": 15502,
+      "afterBytes": 5299,
+      "beforeExecutionMedianMs": 0.607,
+      "afterExecutionMedianMs": 0.587,
+      "beforePlanningMedianMs": 2.217,
+      "afterPlanningMedianMs": 1.82
+    }
+  ]
+}

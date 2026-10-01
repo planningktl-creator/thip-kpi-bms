@@ -1,5 +1,5 @@
 import type { Indicator, IndicatorStatus, MonthlyResult } from '@/types/thip';
-import { getFormulaScale, thipKpiRulesByCode } from '@/data/thipKpiRules';
+import { getFormulaScale, thipKpiRulesByCode } from '@/data/thipRuleSource';
 import { getStatus } from '@/utils/status';
 
 /**

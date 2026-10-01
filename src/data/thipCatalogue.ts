@@ -1,7 +1,7 @@
 import { benchmarkSourceFromTarget, getDictionaryEntry } from '@/data/thipDictionary';
 import { groupMeta } from '@/data/thipMeta';
 import { getImplementationTier, getPendingReason } from '@/data/thipImplementation';
-import { getRuleUnit, thipKpiRulesByCode } from '@/data/thipKpiRules';
+import { getRuleUnit, thipKpiRulesByCode } from '@/data/thipRuleSource';
 import { getExpectedFiscalMonths, getReportingCadence, reportingCadenceLabels } from '@/data/thipReporting';
 import type { FiscalYear, Indicator, IndicatorGroup, MonthlyResult } from '@/types/thip';
 import { getCurrentFiscalYear, getFiscalMonthPeriods } from '@/utils/fiscal';
