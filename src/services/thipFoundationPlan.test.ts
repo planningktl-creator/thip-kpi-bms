@@ -112,36 +112,13 @@ describe('foundation fan-out plan', () => {
     }
   });
 
-  it('halves a window for cadences that bucket into months, quarters or half-years', () => {
-    const monthly = planFoundationRequests({ fiscalYear: 2026, codes: [firstCodeWithCadence('monthly')] })[0]!;
-    const halves = splitFoundationRequestByWindow(monthly);
-    expect(halves).toHaveLength(2);
-    expect(halves[0]!.start).toBe('2025-10-01');
-    expect(halves[0]!.end).toBe('2026-04-01');
-    expect(halves[1]!.start).toBe('2026-04-01');
-    expect(halves[1]!.end).toBe('2026-10-01');
-  });
-
-  it('bisects down to a single month without ever skipping one', () => {
-    // Repeated halving has to reach 1-month windows: that is the granularity that
-    // makes the heaviest monthly-cadence branches measurable on a live site.
-    let requests = [planFoundationRequests({ fiscalYear: 2026, codes: [firstCodeWithCadence('monthly')] })[0]!];
-    for (let round = 0; round < 5; round += 1) {
-      requests = requests.flatMap((request) => {
-        const halves = splitFoundationRequestByWindow(request);
-        return halves.length === 2 ? halves : [request];
-      });
+  it('retains the full observation window for every cadence without partition evidence', () => {
+    for (const cadence of ['monthly', 'quarterly', 'semiannual', 'annual'] as const) {
+      const request = planFoundationRequests({ fiscalYear: 2026, codes: [firstCodeWithCadence(cadence)] })[0]!;
+      expect(splitFoundationRequestByWindow(request)).toEqual([]);
+      expect(request.start).toBe('2025-10-01');
+      expect(request.end).toBe('2026-10-01');
     }
-    const months = requests.map((request) => monthsBetween(request.start, request.end));
-    expect(months.filter((count) => count === 1).length).toBeGreaterThan(0);
-    expect(new Set(requests.map((request) => request.start)).size).toBeGreaterThan(1);
-    // Windows tile the fiscal year exactly: no gap, no overlap.
-    const sorted = [...requests].sort((a, b) => a.start.localeCompare(b.start));
-    for (let index = 1; index < sorted.length; index += 1) {
-      expect(sorted[index]!.start).toBe(sorted[index - 1]!.end);
-    }
-    expect(sorted[0]!.start).toBe('2025-10-01');
-    expect(sorted[sorted.length - 1]!.end).toBe('2026-10-01');
   });
 
   it('never halves an annual window, because a year is one bucket', () => {

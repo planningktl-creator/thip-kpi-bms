@@ -206,48 +206,11 @@ export function fiscalYearWindow(fiscalYear: number): { start: string; end: stri
   return { start: `${fiscalYear - 1}-10-01`, end: `${fiscalYear}-10-01` };
 }
 
-function monthsBetween(start: string, end: string): number {
-  const [startYear, startMonth] = start.split('-').map(Number) as [number, number];
-  const [endYear, endMonth] = end.split('-').map(Number) as [number, number];
-  return (endYear - startYear) * 12 + (endMonth - startMonth);
-}
-
-function addMonths(iso: string, months: number): string {
-  const [year, month] = iso.split('-').map(Number) as [number, number];
-  const total = year * 12 + (month - 1) + months;
-  return `${Math.floor(total / 12)}-${String((total % 12) + 1).padStart(2, '0')}-01`;
-}
-
-function codesOfChunk(chunk: RegisteredQuery): string[] {
-  return Array.from(new Set(
-    Array.from(chunk.sql.matchAll(/'([A-Z]{2}\d{4}(?:\.\d)?)' AS indicator_code/g), (match) => match[1]!),
-  ));
-}
-
-/**
- * Splits a request's date window in half.
- *
- * Loss-free for every cadence except `annual`: fact branches bucket to their
- * cadence anchor, so a monthly/quarterly/semiannual code measured over Oct-Mar and
- * Apr-Sep produces exactly the cells it would produce over the whole fiscal year.
- * An annual code covers the year in one bucket, so it can never be windowed — the
- * function returns an empty array and the caller must treat the code as unmeasurable
- * rather than reporting half a year as if it were the annual result.
- *
- * The split is by calendar month (`YYYY-MM-01` boundaries), so repeated bisection
- * bottoms out at a single month, which is the natural window for monthly-cadence
- * codes.
+/** No branch currently has evidence proving window partition equivalence.
+ * Cohorts, snapshots and observation windows must retain the full fiscal window.
  */
-export function splitFoundationRequestByWindow(request: FoundationRequest): FoundationRequest[] {
-  const codes = codesOfChunk(request.query);
-  if (codes.some((code) => getReportingCadence(code) === 'annual')) return [];
-  const months = monthsBetween(request.start, request.end);
-  if (months < 2) return [];
-  const middle = addMonths(request.start, Math.floor(months / 2));
-  return [
-    { ...request, key: `${request.key}.w1`, end: middle },
-    { ...request, key: `${request.key}.w2`, start: middle },
-  ];
+export function splitFoundationRequestByWindow(_request: FoundationRequest): FoundationRequest[] {
+  return [];
 }
 
 // ---------------------------------------------------------------------------

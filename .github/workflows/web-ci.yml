@@ -26,9 +26,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
       - run: pnpm fixture:export
-      - run: pnpm sourceview:build
+      - run: pnpm sourceview:check
       - run: python scripts/check-thip-fixtures.py
       - run: pnpm run build
+      - run: pnpm monitoring:release-check
       # CI validates the production image contract with a safe identifier only;
       # the hospital's approved view name is supplied by the deployment owner.
       - run: docker build --build-arg BMS_ALLOWED_ORIGINS="https://hosxp.net https://10929-f446.tunnel.hosxp.net" --build-arg VITE_BMS_APP_IDENTIFIER="THIP.KPI.BMS" --build-arg VITE_BMS_KPI_SOURCE_VIEW="thip_kpi_monthly" --tag thip-kpi-bms:ci .
@@ -39,5 +40,9 @@ jobs:
 
       - run: python -m pip install playwright
       - run: python -m playwright install --with-deps chromium
+      - run: python scripts/check-nginx-security.py
       - run: pnpm dev -- --host 127.0.0.1 --port 5173 > /tmp/thip-kpi-bms-preview.log 2>&1 &
+      - run: VITE_THIP_MONITORING_PREVIEW=true pnpm exec vite --host 127.0.0.1 --port 5174 > /tmp/thip-kpi-synthetic.log 2>&1 &
+      - run: VITE_BMS_KPI_SOURCE_VIEW=reporting.thip_kpi_monthly VITE_BMS_MONITORING_SOURCE_VIEW=reporting.thip_monthly_monitoring pnpm exec vite --host 127.0.0.1 --port 5175 > /tmp/thip-kpi-mocked-source.log 2>&1 &
       - run: python scripts/visual_smoke.py
+      - run: python scripts/monitoring_browser_smoke.py

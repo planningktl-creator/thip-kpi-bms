@@ -30,7 +30,7 @@ describe('THIP reporting-layer source view', () => {
     expect(refresh).toContain("CASE WHEN m.tier = 'registered' THEN f.value ELSE NULL END");
     // A registered query that ran over an empty cohort is a measured zero
     // cohort: 0 facts with a NULL value from the completed fact grid.
-    expect(refresh).toContain('COALESCE(fe.numerator, 0) AS numerator');
+    expect(refresh).toContain('ELSE COALESCE(fe.numerator, 0) END AS numerator');
     expect(refresh).toContain('fe.value');
     expect(refresh).not.toContain('COALESCE(f.numerator, 0)');
     expect(refresh).not.toContain('COALESCE(f.denominator, 0)');

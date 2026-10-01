@@ -58,7 +58,7 @@ export function buildControlChart(indicator: Indicator): ControlChartModel {
     (month) => month.numerator !== null && month.denominator !== null && month.denominator > 0
       && month.numerator <= month.denominator,
   );
-  const proportionsFit = unit !== 'count'
+  const proportionsFit = (unit === 'percent' || unit === 'rate')
     && measured.length >= 2
     && pChartFacts.length === measured.length;
   const kind: ControlChartKind = proportionsFit ? 'p-chart' : 'individuals';
@@ -127,7 +127,8 @@ export function buildControlChart(indicator: Indicator): ControlChartModel {
     let runIndices: number[] = [];
     for (const point of points) {
       if (point.value === null) continue;
-      const side = point.value >= cl ? 'above' : 'below';
+      if (point.value === cl) { runSide = null; runLength = 0; runIndices = []; continue; }
+      const side = point.value > cl ? 'above' : 'below';
       if (side === runSide) {
         runLength += 1;
         runIndices.push(point.fiscalMonth);

@@ -21,11 +21,11 @@
 import { branchFact, branchIpd } from '@/services/thipFamilyBase';
 
 function ratio100Value(numerator: string, denominator: string): string {
-  return `ROUND((${numerator}) * 100 / NULLIF((${denominator}), 0), 2)`;
+  return `ROUND((${numerator}) * 100.0 / NULLIF((${denominator}), 0), 2)`;
 }
 
 function ratio1Value(numerator: string, denominator: string): string {
-  return `ROUND((${numerator}) * 1 / NULLIF((${denominator}), 0), 2)`;
+  return `ROUND((${numerator}) * 1.0 / NULLIF((${denominator}), 0), 2)`;
 }
 
 // --- Cohort predicates (dotless ICD literals only) ---

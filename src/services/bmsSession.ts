@@ -1,3 +1,4 @@
+import { abortable } from './abortable';
 import { executeRegisteredQuery, queryRegistry } from '@/services/queryRegistry';
 import { BmsRequestError, getBmsConnectionErrorMessage } from '@/services/bmsErrors';
 import type { BmsConnection } from '@/types/thip';
@@ -84,25 +85,19 @@ export function stripLaunchCredentialsFromUrl(): void {
 async function retrieveSession(sessionId: string): Promise<RawSession> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), SESSION_TIMEOUT_MS);
-  let response: Response;
   try {
-    response = await fetch(`${pasteJsonUrl}?Action=GET&code=${encodeURIComponent(sessionId)}`, { signal: controller.signal });
-  } catch (error) {
-    if (controller.signal.aborted) {
-      throw new BmsRequestError('session', 'timeout', `PasteJSON request timed out after ${SESSION_TIMEOUT_MS} ms`, undefined, { cause: error });
+    const response = await abortable(fetch(`${pasteJsonUrl}?Action=GET&code=${encodeURIComponent(sessionId)}`, { signal: controller.signal }), controller.signal);
+    if (!response.ok) throw new BmsRequestError('session', 'http', `PasteJSON returned HTTP ${response.status}`, response.status);
+    try { return (await abortable(response.json(), controller.signal)) as RawSession; }
+    catch (error) {
+      if (controller.signal.aborted) throw error;
+      throw new BmsRequestError('session', 'response', 'PasteJSON returned invalid JSON', response.status, { cause: error });
     }
-    throw new BmsRequestError('session', 'network', 'PasteJSON request failed', undefined, { cause: error });
-  } finally {
-    clearTimeout(timer);
-  }
-  if (!response.ok) {
-    throw new BmsRequestError('session', 'http', `PasteJSON returned HTTP ${response.status}`, response.status);
-  }
-  try {
-    return (await response.json()) as RawSession;
   } catch (error) {
-    throw new BmsRequestError('session', 'response', 'PasteJSON returned invalid JSON', response.status, { cause: error });
-  }
+    if (controller.signal.aborted) throw new BmsRequestError('session', 'timeout', `PasteJSON request timed out after ${SESSION_TIMEOUT_MS} ms`, undefined, { cause: error });
+    if (error instanceof BmsRequestError) throw error;
+    throw new BmsRequestError('session', 'network', 'PasteJSON request failed', undefined, { cause: error });
+  } finally { clearTimeout(timer); }
 }
 
 export async function connectBmsSession(): Promise<{

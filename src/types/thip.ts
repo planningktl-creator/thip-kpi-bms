@@ -44,6 +44,7 @@ export type AnnualResult = {
 
 export type Indicator = {
   code: string;
+  ruleVersion?: string;
   dataSource?: IndicatorDataSource;
   /** Whether the code has a registered read-only query or still needs a local source. */
   implementationTier: 'registered' | 'pending-local-source';

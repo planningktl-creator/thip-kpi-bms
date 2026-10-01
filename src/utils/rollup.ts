@@ -118,14 +118,13 @@ export function rollupMonths(indicator: Indicator): PeriodRollup[] {
 
 /** One row per fiscal quarter (Q1 = ต.ค.–ธ.ค. … Q4 = ก.ค.–ก.ย.), weighted. */
 export function rollupQuarters(indicator: Indicator): PeriodRollup[] {
-  const monthlyTarget = indicator.targetScope === 'monthly'
-    ? indicator.monthly.find((month) => month.target !== null)?.target ?? null
-    : null;
-  const target = indicator.targetScope === 'monthly' ? monthlyTarget : indicator.annual.target;
-  const targetLabel = indicator.targetScope === 'monthly' ? 'เป้าหมายรายเดือน' : 'เทียบเป้าหมายทั้งปี';
-  return quarterDefs.map((quarter) =>
-    buildRollup(indicator, quarter.key, quarter.label, quarter.hint, [...quarter.fiscalMonths], target, targetLabel),
-  );
+  return quarterDefs.map((quarter) => {
+    const targets = indicator.monthly.filter((month) => quarter.fiscalMonths.includes(month.fiscalMonth)).map((month) => month.target);
+    const consistent = targets.length > 0 && targets.every((target) => target === targets[0]);
+    const target = indicator.targetScope === 'monthly' && consistent ? targets[0] : null;
+    const label = indicator.targetScope === 'annual' ? 'เป้าหมายทั้งปีไม่ใช้เทียบไตรมาส' : consistent ? 'เป้าหมายในไตรมาส' : 'เป้าหมายต่างกันหรือขาดบางงวด';
+    return buildRollup(indicator, quarter.key, quarter.label, quarter.hint, [...quarter.fiscalMonths], target, label);
+  });
 }
 
 /** The single fiscal-year row (weighted over every measured period). */

@@ -1219,11 +1219,13 @@ describe('BMS KPI data adapter', () => {
   });
 
   it('stamps the load result with a refresh timestamp', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+    vi.stubGlobal('fetch', vi.fn((_url: string, init?: RequestInit) => {
+      const included = String(init?.body).includes("'DH0101' AS indicator_code");
+      return Promise.resolve({
       ok: true,
       status: 200,
       text: vi.fn().mockResolvedValue(JSON.stringify({
-        data: [{
+        data: included ? [{
           indicator_code: 'DH0101',
           period_start: '2025-10-01',
           fiscal_year: 2026,
@@ -1231,9 +1233,9 @@ describe('BMS KPI data adapter', () => {
           numerator: 1,
           denominator: 4,
           value: 25,
-        }],
+        }] : [],
       })),
-    }));
+    }); }));
 
     try {
       const result = await loadBmsIndicators({
@@ -1248,11 +1250,13 @@ describe('BMS KPI data adapter', () => {
   });
 
   it('accepts the BMS result response envelope', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+    vi.stubGlobal('fetch', vi.fn((_url: string, init?: RequestInit) => {
+      const included = String(init?.body).includes("'DH0101' AS indicator_code");
+      return Promise.resolve({
       ok: true,
       status: 200,
       text: vi.fn().mockResolvedValue(JSON.stringify({
-        result: [{
+        result: included ? [{
           indicator_code: 'DH0101',
           period_start: '2025-10-01',
           fiscal_year: 2026,
@@ -1260,9 +1264,9 @@ describe('BMS KPI data adapter', () => {
           numerator: 1,
           denominator: 4,
           value: 25,
-        }],
+        }] : [],
       })),
-    }));
+    }); }));
 
     try {
       const result = await loadBmsIndicators({
@@ -1279,11 +1283,13 @@ describe('BMS KPI data adapter', () => {
   });
 
   it('keeps the complete catalogue visible when local foundation data is partial', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+    vi.stubGlobal('fetch', vi.fn((_url: string, init?: RequestInit) => {
+      const included = String(init?.body).includes("'DH0101' AS indicator_code");
+      return Promise.resolve({
       ok: true,
       status: 200,
       text: vi.fn().mockResolvedValue(JSON.stringify({
-        data: [{
+        data: included ? [{
           indicator_code: 'DH0101',
           period_start: '2025-10-01',
           fiscal_year: 2026,
@@ -1291,9 +1297,9 @@ describe('BMS KPI data adapter', () => {
           numerator: 1,
           denominator: 4,
           value: 25,
-        }],
+        }] : [],
       })),
-    }));
+    }); }));
 
     try {
       const result = await loadBmsIndicators({

@@ -1,3 +1,4 @@
+import { abortable } from './abortable';
 import { BmsRequestError } from '@/services/bmsErrors';
 import { thipKpiRulesByCode } from '@/data/thipKpiRules';
 import { registeredRuleCodes } from '@/data/thipImplementation';
@@ -1118,7 +1119,7 @@ export async function executeRegisteredQuery(
   const abort = () => controller.abort();
   if (options?.signal) {
     if (options.signal.aborted) controller.abort();
-    else options.signal.addEventListener('abort', () => controller.abort(), { once: true });
+    else options.signal.addEventListener('abort', abort, { once: true });
   }
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   const startedAt = Date.now();
@@ -1126,9 +1127,10 @@ export async function executeRegisteredQuery(
     recordQueryTelemetry({ key: query.key, outcome, latencyMs: Date.now() - startedAt, rowCount, at: new Date().toISOString() });
   };
 
+  try {
   let response: Response;
   try {
-    response = await fetch(`${config.apiUrl.replace(/\/$/, '')}/api/sql`, {
+    response = await abortable(fetch(`${config.apiUrl.replace(/\/$/, '')}/api/sql`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${config.bearerToken}`,
@@ -1136,7 +1138,7 @@ export async function executeRegisteredQuery(
       },
       body: JSON.stringify(body),
       signal: controller.signal,
-    });
+    }), controller.signal);
   } catch (error) {
     if (controller.signal.aborted) {
       record('timeout');
@@ -1144,11 +1146,15 @@ export async function executeRegisteredQuery(
     }
     record('network');
     throw new BmsRequestError('api', 'network', 'BMS API request failed', undefined, { cause: error });
-  } finally {
-    clearTimeout(timer);
   }
 
-  const responseText = await response.text();
+  let responseText: string;
+  try { responseText = await abortable(response.text(), controller.signal); }
+  catch (error) {
+    const failure = controller.signal.aborted ? 'timeout' : 'network';
+    record(failure);
+    throw new BmsRequestError('api', failure, 'BMS response body did not complete', undefined, { cause: error });
+  }
   if (!response.ok) {
     record('http');
     throw new BmsRequestError('api', 'http', `BMS API returned HTTP ${response.status}`, response.status);
@@ -1169,4 +1175,8 @@ export async function executeRegisteredQuery(
   }
   record('success', responseRowCount(payload));
   return payload;
+  } finally {
+    clearTimeout(timer);
+    options?.signal?.removeEventListener('abort', abort);
+  }
 }

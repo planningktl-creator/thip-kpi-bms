@@ -1,4 +1,4 @@
-import { benchmarkSourceFromTarget, getDictionaryEntry, parseBenchmark } from '@/data/thipDictionary';
+import { benchmarkSourceFromTarget, getDictionaryEntry } from '@/data/thipDictionary';
 import { groupMeta } from '@/data/thipMeta';
 import { getImplementationTier, getPendingReason } from '@/data/thipImplementation';
 import { getRuleUnit, thipKpiRulesByCode } from '@/data/thipKpiRules';
@@ -1417,13 +1417,11 @@ export function createNoDataIndicator(entry: ThipCatalogueEntry, fiscalYear: Fis
   const rule = thipKpiRulesByCode.get(entry.code);
   const dictionary = getDictionaryEntry(entry.code);
   const targetText = dictionary?.target ?? null;
-  const benchmark = parseBenchmark(targetText);
   const targetScope = rule && getReportingCadence(entry.code) === 'annual' ? 'annual' : 'monthly';
   const ruleStatus = rule?.status === 'foundation' ? 'มี foundation query สำหรับตรวจสอบ' : 'ยังต้องทำ local mapping และ source view';
   const expectedMonths = new Set(getExpectedFiscalMonths(entry.code));
-  // Monthly-scope benchmarks are per-period targets; annual-scope benchmarks
-  // live on the annual rollup. Every indicator keeps a target slot either way.
-  const monthlyTarget = targetScope === 'monthly' ? benchmark.value : null;
+  // Dictionary benchmark text stays descriptive until a hospital target is approved.
+  const monthlyTarget = null; // Hospital targets require a confirmed source/crosswalk.
   const monthly: MonthlyResult[] = periods.map((period) => ({
     periodStart: period.periodStart,
     fiscalYear: period.fiscalYear,
@@ -1449,7 +1447,7 @@ export function createNoDataIndicator(entry: ThipCatalogueEntry, fiscalYear: Fis
     titleTh: entry.titleTh,
     unit: rule ? getRuleUnit(rule) : 'percent',
     direction: dictionary?.direction ?? 'neutral',
-    target: benchmark.value,
+    target: null,
     targetScope,
     targetText,
     benchmarkSource: benchmarkSourceFromTarget(targetText),
@@ -1469,7 +1467,7 @@ export function createNoDataIndicator(entry: ThipCatalogueEntry, fiscalYear: Fis
       numerator: null,
       denominator: null,
       value: null,
-      target: targetScope === 'annual' ? benchmark.value : null,
+      target: null,
       status: 'no-data',
     },
     monthly,

@@ -71,6 +71,8 @@ def mock_bms_routes(page) -> None:
                     {"indicator_code": "DN0302", "period_start": "2025-10-01", "fiscal_year": 2026, "fiscal_month": 1, "numerator": 1, "denominator": 3, "value": 33.33},
                 ]
             }
+        if "result" in payload:
+            payload["result"] = [row for row in payload["result"] if f"'{row['indicator_code']}' AS indicator_code" in sql]
         route.fulfill(status=200, headers={**headers, "Content-Type": "application/json"}, body=json.dumps(payload))
 
     page.route("https://hosxp.net/phapi/PasteJSON**", paste_json)
@@ -83,7 +85,7 @@ def main() -> None:
         browser = playwright.chromium.launch(headless=True)
         desktop = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1)
         desktop.on("console", lambda message: console_errors.append(message.text) if message.type == "error" else None)
-        desktop.goto(BASE_URL, wait_until="networkidle")
+        desktop.goto(f"{BASE_URL}/?view=dashboard&fy=2026", wait_until="networkidle")
         desktop.screenshot(path=str(ARTIFACTS / "dashboard-desktop.png"), full_page=True)
         assert desktop.get_by_role("link", name="ข้ามไปยังเนื้อหาหลัก").count() == 1
         assert desktop.get_by_label("ค้นหารหัสหรือชื่อตัวชี้วัด").count() == 1
@@ -92,11 +94,12 @@ def main() -> None:
         assert desktop.get_by_text("ภาพรวมคุณภาพ", exact=True).count() >= 1
         assert desktop.get_by_text("สัญญาณที่ควรดูในงวดนี้", exact=True).count() == 1
         assert desktop.locator(".indicator-table tbody tr").count() == 232
+        assert desktop.locator(".hero-aside-foot strong").inner_text() == "0%"
 
         desktop.locator(".indicator-table tbody tr").first.click()
         desktop.wait_for_load_state("networkidle")
         desktop.screenshot(path=str(ARTIFACTS / "detail-desktop.png"), full_page=True)
-        assert desktop.get_by_text("ตัวตั้ง ตัวหาร และสถานะของทุกงวดรายงาน", exact=True).count() == 1
+        assert desktop.get_by_test_id("period-breakdown").count() == 1
         assert desktop.locator(".monthly-table tbody tr").count() == 12
         assert desktop.get_by_text("AA0101", exact=True).count() >= 1
         assert desktop.get_by_text("ปีงบประมาณ 2569", exact=False).count() >= 1
@@ -109,18 +112,18 @@ def main() -> None:
         assert desktop.locator("[data-testid='monthly-bar-chart']").count() == 1
 
         overview = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1)
-        overview.goto(BASE_URL, wait_until="networkidle")
+        overview.goto(f"{BASE_URL}/?view=dashboard&fy=2026", wait_until="networkidle")
         overview.get_by_role("button", name="ดูทั้งหมด").click()
         overview.wait_for_selector(".catalog-page")
 
         annual = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1)
-        annual.goto(f"{BASE_URL}/?view=detail&indicator=AA0101", wait_until="networkidle")
+        annual.goto(f"{BASE_URL}/?fy=2026&view=detail&indicator=AA0101", wait_until="networkidle")
         assert annual.get_by_text("ยังไม่มีข้อมูลจริง", exact=True).count() >= 1
-        assert annual.get_by_text("a/b x 100,000", exact=True).count() == 1
+        assert "100,000" in annual.locator(".definition-block strong").first.inner_text()
         assert annual.get_by_text("ผลงานล่าสุด · ต.ค. 2568", exact=True).count() == 1
 
         catalog = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1)
-        catalog.goto(f"{BASE_URL}/?view=catalog", wait_until="networkidle")
+        catalog.goto(f"{BASE_URL}/?fy=2026&view=catalog", wait_until="networkidle")
         catalog.screenshot(path=str(ARTIFACTS / "catalog-desktop.png"), full_page=True)
         assert catalog.locator(".catalog-page").count() == 1
         assert catalog.locator(".catalog-table tbody tr").count() == 232
@@ -128,14 +131,14 @@ def main() -> None:
         assert pending_row.count() == 1
         pending_row.focus()
         pending_row.press("Enter")
-        catalog.wait_for_selector(".monthly-detail-panel")
+        catalog.wait_for_selector("[data-testid=period-breakdown]")
         catalog.screenshot(path=str(ARTIFACTS / "catalog-pending-detail-desktop.png"), full_page=True)
         assert catalog.locator(".monthly-table tbody tr").count() == 12
         assert catalog.locator(".status-muted").count() >= 1
-        assert catalog.locator(".chart-empty-state").count() == 1
+        assert catalog.locator(".chart-empty-state").count() == 2
 
         mobile = browser.new_page(viewport={"width": 390, "height": 844}, device_scale_factor=1)
-        mobile.goto(BASE_URL, wait_until="networkidle")
+        mobile.goto(f"{BASE_URL}/?view=dashboard&fy=2026", wait_until="networkidle")
         mobile.screenshot(path=str(ARTIFACTS / "dashboard-mobile.png"), full_page=True)
         mobile.locator(".mobile-menu-button").click()
         assert mobile.locator(".app-sidebar.is-open").count() == 1
@@ -145,13 +148,15 @@ def main() -> None:
         live = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1)
         live.on("console", lambda message: console_errors.append(message.text) if message.type == "error" else None)
         mock_bms_routes(live)
-        live.goto(f"{BASE_URL}/?bms-session-id=smoke-session", wait_until="networkidle")
-        live.get_by_text("BMS live data บางส่วน", exact=True).wait_for()
-        assert live.get_by_text("Live data บางส่วน", exact=True).count() == 1
-        assert live.get_by_text("อ่านข้อมูลจริง 13/232 ตัวชี้วัด", exact=False).count() == 1
-        assert live.get_by_role("button", name="รีเฟรชข้อมูล").count() == 1
+        live.goto(f"{BASE_URL}/?fy=2026&view=dashboard&bms-session-id=smoke-session", wait_until="networkidle")
+        live.get_by_text("ผลยังไม่รับรอง", exact=True).wait_for()
+        assert live.get_by_text("ผลยังไม่รับรอง", exact=True).count() == 1
+        assert live.get_by_text("รับ aggregate 13/232 รหัส · เผยแพร่ได้ 0 รหัส", exact=False).count() == 1
+        assert live.get_by_role("button", name="ลองอีกครั้ง", exact=True).count() == 1
         assert live.get_by_text("ยังไม่กำหนดเป้าหมาย", exact=False).count() >= 1
         assert live.locator(".indicator-table tbody tr").count() == 232
+        assert live.locator(".hero-aside-foot strong").inner_text() == "0%"
+        assert not live.get_by_role("button",name="ส่งออก aggregate CSV").is_enabled()
         assert live.get_by_text("DH0101", exact=False).count() >= 1
         assert live.get_by_text("CE0101", exact=False).count() >= 1
         assert live.get_by_text("DH0102", exact=False).count() >= 1

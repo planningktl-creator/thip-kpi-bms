@@ -2,9 +2,17 @@
 
 These notes record the source boundary for the first implementation slice.
 
+## Monitoring release boundary — 2026-10-01
+
+The complete [audit matrix](THIP-KPI-DEVELOPMENT-MATRIX-2026-09-30.json) records all 232 definitions/pages and candidate table/column/PK joins against `HOSxP Structure with primary key.json` (6,109 tables / 56,891 columns; no declared foreign keys). Shared column names remain unconfirmed relations. Monitoring capability totals are 101 candidate monthly, 71 additional-rule design, 55 external aggregate and 5 external population. Compact page/unit/path evidence and generated rule registry are checked for drift against the full matrix.
+
+Official THIP cadence stays 1,552 cells. Monthly monitoring is an independent 2,784-cell series with NULL/reasons, versioned accumulation and target provenance; see [contract](THIP-MONITORING-CONTRACT.md). Every real rule is unapproved for publication. Seven development-only synthetic examples illustrate behavior without claiming clinical correctness.
+
+Local PostgreSQL 16 tests used a disposable empty schema and synthetic episode/event/aggregate rows only. They verified a complete 1,552-cell refresh, retained DE1601 external facts, discharge-period DH0101 without duplicate detail counts, and a SH0104 full-window/partial-window counterexample that justifies disabling date bisection. They also executed the offline monitoring DDL. This validates selected SQL mechanics, not hospital cohort definitions or all clinical formulas. No real BMS/HOSxP connection, database migration or deployment occurred.
+
 ## THIP KPI Dictionary 2025
 
-- Source: `C:/Users/KTLho/Desktop/THIP KPI.pdf`.
+- Source for the complete audit and first monitoring release: `C:/Users/KTLho/Desktop/02_PDF/THIP KPI.pdf` (317 pages).
 - The document describes 232 benchmark indicators for the 2025 dictionary.
 - The catalogue is organised into five groups: Disease (D), Care process (C), System (S), Health promotion (H), and Ambulatory care (A).
 - Indicator codes use two group/category letters followed by two two-digit sequences, for example `DH0101`.

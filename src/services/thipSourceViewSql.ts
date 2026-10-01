@@ -66,7 +66,7 @@ function metadataRow(code: string): string {
     sqlArray(sourceTables),
     sqlText(reportingCadenceLabels[cadence]),
     sqlText(reference),
-    sqlText(tier === 'registered' ? 'registered-2026.1' : 'pending-local-source-2026.1'),
+    sqlText(rule.ruleVersion ?? (tier === 'registered' ? 'registered-2026.1' : 'pending-local-source-2026.1')),
     pendingReason === null ? 'NULL' : sqlText(pendingReason),
     sqlText(tier),
   ].join(', ')})`;
@@ -185,7 +185,7 @@ fiscal_periods AS (
 -- Registered HOSxP codes get a complete fact grid: a period whose registered
 -- query ran and found an empty cohort is a measured zero cohort (0 facts, NULL
 -- value), never a fabricated rate. External-fact codes (hospital-loaded
--- staging) and pending tiers stay out of the grid, so a missing source row
+-- staging) preserve NULL facts, so a missing source row
 -- remains an explicit unavailable row in the outer SELECT instead of a zero.
 facts AS (
   SELECT
@@ -193,14 +193,13 @@ facts AS (
     fp.period_start,
     fp.fiscal_year,
     fp.fiscal_month,
-    COALESCE(fe.numerator, 0) AS numerator,
-    CASE WHEN m.unit = 'count' THEN fe.denominator ELSE COALESCE(fe.denominator, 0) END AS denominator,
+    CASE WHEN m.indicator_code = ANY(${sqlArray(externalCodes)}) THEN fe.numerator ELSE COALESCE(fe.numerator, 0) END AS numerator,
+    CASE WHEN m.unit = 'count' OR m.indicator_code = ANY(${sqlArray(externalCodes)}) THEN fe.denominator ELSE COALESCE(fe.denominator, 0) END AS denominator,
     fe.value
   FROM expected e
   JOIN metadata m
     ON m.indicator_code = e.indicator_code
    AND m.tier = 'registered'
-   AND NOT (m.indicator_code = ANY(${sqlArray(externalCodes)}))
   JOIN fiscal_periods fp
     ON fp.fiscal_month = e.fiscal_month
   LEFT JOIN fact_events fe
@@ -234,7 +233,8 @@ SELECT
   m.frequency,
   m.reference,
   m.rule_version,
-  m.pending_reason,
+  CASE WHEN f.numerator IS NULL AND f.denominator IS NULL AND f.value IS NULL
+    THEN COALESCE(m.pending_reason, 'missing-source: aggregate not loaded') ELSE m.pending_reason END AS pending_reason,
   m.tier,
   NOW() AS refreshed_at
 FROM metadata m

@@ -483,7 +483,7 @@ fact_events AS (
           OR ol.intra_anes_operation_note ILIKE '%หัวใจหยุดเต้น%'
           OR LOWER(ol.intra_anes_operation_note) LIKE '%cardiac arrest%'
         )
-    )) * 10000 / NULLIF(COUNT(DISTINCT periodized.an) FILTER (WHERE EXISTS (
+    )) * 10000.0 / NULLIF(COUNT(DISTINCT periodized.an) FILTER (WHERE EXISTS (
       SELECT 1
       FROM operation_list ol
       WHERE ol.an = periodized.an
@@ -600,7 +600,7 @@ fact_events AS (
               )
           )
         )
-    )) * 100 / NULLIF(COUNT(DISTINCT periodized.an) FILTER (WHERE EXISTS (
+    )) * 100.0 / NULLIF(COUNT(DISTINCT periodized.an) FILTER (WHERE EXISTS (
       SELECT 1
       FROM operation_list ol
       WHERE ol.an = periodized.an
@@ -685,7 +685,7 @@ fact_events AS (
             FROM operation_recovery_room rr
             WHERE rr.operation_id = ol.operation_id
           )
-    )) * 100 / NULLIF(COUNT(DISTINCT periodized.an) FILTER (WHERE EXISTS (
+    )) * 100.0 / NULLIF(COUNT(DISTINCT periodized.an) FILTER (WHERE EXISTS (
       SELECT 1
       FROM operation_list ol
       WHERE ol.an = periodized.an
@@ -807,7 +807,7 @@ fact_events AS (
                     (COALESCE(oa.end_date_time, oa.end_date + COALESCE(oa.end_time, TIME '23:59:59'))) + INTERVAL '2 hours'
               )
           )
-    )) * 100 / NULLIF(COUNT(DISTINCT periodized.an) FILTER (WHERE EXISTS (
+    )) * 100.0 / NULLIF(COUNT(DISTINCT periodized.an) FILTER (WHERE EXISTS (
       SELECT 1
       FROM operation_list ol
       WHERE ol.an = periodized.an
@@ -834,7 +834,7 @@ fact_events AS (
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(DISTINCT periodized.an) FILTER (WHERE COALESCE(operation_flags.ga_capno, FALSE)) AS numerator,
         COUNT(DISTINCT periodized.an) FILTER (WHERE COALESCE(operation_flags.ga, FALSE)) AS denominator,
-        ROUND(COUNT(DISTINCT periodized.an) FILTER (WHERE COALESCE(operation_flags.ga_capno, FALSE)) * 100 / NULLIF(COUNT(DISTINCT periodized.an) FILTER (WHERE COALESCE(operation_flags.ga, FALSE)), 0), 2) AS value
+        ROUND(COUNT(DISTINCT periodized.an) FILTER (WHERE COALESCE(operation_flags.ga_capno, FALSE)) * 100.0 / NULLIF(COUNT(DISTINCT periodized.an) FILTER (WHERE COALESCE(operation_flags.ga, FALSE)), 0), 2) AS value
       FROM periodized
       LEFT JOIN LATERAL (
           SELECT
@@ -944,7 +944,7 @@ fact_events AS (
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE antibiotics_datetime IS NOT NULL AND doctor_tx_time IS NOT NULL AND antibiotics_datetime >= doctor_tx_time AND antibiotics_datetime <= doctor_tx_time + INTERVAL '1 hour') AS numerator,
         COUNT(*) AS denominator,
-        ROUND((COUNT(*) FILTER (WHERE antibiotics_datetime IS NOT NULL AND doctor_tx_time IS NOT NULL AND antibiotics_datetime >= doctor_tx_time AND antibiotics_datetime <= doctor_tx_time + INTERVAL '1 hour')) * 100 / NULLIF((COUNT(*)), 0), 2) AS value
+        ROUND((COUNT(*) FILTER (WHERE antibiotics_datetime IS NOT NULL AND doctor_tx_time IS NOT NULL AND antibiotics_datetime >= doctor_tx_time AND antibiotics_datetime <= doctor_tx_time + INTERVAL '1 hour')) * 100.0 / NULLIF((COUNT(*)), 0), 2) AS value
       FROM opd_periodized
       WHERE age_y >= 18 AND (
           pdx IN ('A400', 'A419', 'R572', 'R651')
@@ -1006,7 +1006,7 @@ fact_events AS (
                 )
             )
           )
-        )) * 1000 / NULLIF(SUM(COALESCE(periodized.los, 0)), 0), 2) AS value
+        )) * 1000.0 / NULLIF(SUM(COALESCE(periodized.los, 0)), 0), 2) AS value
       FROM periodized
       WHERE TRUE
       GROUP BY 2, 3, 4
@@ -1087,7 +1087,7 @@ fact_events AS (
                 )
             )
           )
-        )) * 1000 / NULLIF(SUM(COALESCE(periodized.los, 0)) FILTER (WHERE EXISTS (
+        )) * 1000.0 / NULLIF(SUM(COALESCE(periodized.los, 0)) FILTER (WHERE EXISTS (
             SELECT 1
             FROM ipd_nurse_note rn
             WHERE rn.an = periodized.an
@@ -1725,7 +1725,7 @@ fact_events AS (
               AND osi.perioperative_record IS NOT NULL
               AND osi.postoperative_record IS NOT NULL
           )
-        )) * 100 / NULLIF(COUNT(DISTINCT ol.operation_id), 0), 2) AS value
+        )) * 100.0 / NULLIF(COUNT(DISTINCT ol.operation_id), 0), 2) AS value
       FROM periodized
       JOIN operation_list ol ON ol.an = periodized.an
       WHERE TRUE
@@ -1740,7 +1740,7 @@ fact_events AS (
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(DISTINCT periodized.an) FILTER (WHERE COALESCE(operation_flags.elective_anes_death_24h, FALSE)) AS numerator,
         COUNT(DISTINCT periodized.an) FILTER (WHERE COALESCE(operation_flags.elective_anes, FALSE)) AS denominator,
-        ROUND(COUNT(DISTINCT periodized.an) FILTER (WHERE COALESCE(operation_flags.elective_anes_death_24h, FALSE)) * 100 / NULLIF(COUNT(DISTINCT periodized.an) FILTER (WHERE COALESCE(operation_flags.elective_anes, FALSE)), 0), 2) AS value
+        ROUND(COUNT(DISTINCT periodized.an) FILTER (WHERE COALESCE(operation_flags.elective_anes_death_24h, FALSE)) * 100.0 / NULLIF(COUNT(DISTINCT periodized.an) FILTER (WHERE COALESCE(operation_flags.elective_anes, FALSE)), 0), 2) AS value
       FROM periodized
       LEFT JOIN LATERAL (
           SELECT
@@ -1806,7 +1806,7 @@ fact_events AS (
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(DISTINCT ol.operation_id) FILTER (WHERE ol.re_operation = 'Y') AS numerator,
         COUNT(DISTINCT ol.operation_id) AS denominator,
-        ROUND(COUNT(DISTINCT ol.operation_id) FILTER (WHERE ol.re_operation = 'Y') * 100 / NULLIF(COUNT(DISTINCT ol.operation_id), 0), 2) AS value
+        ROUND(COUNT(DISTINCT ol.operation_id) FILTER (WHERE ol.re_operation = 'Y') * 100.0 / NULLIF(COUNT(DISTINCT ol.operation_id), 0), 2) AS value
       FROM periodized
       JOIN operation_list ol ON ol.an = periodized.an
       WHERE TRUE
@@ -2915,7 +2915,7 @@ fact_events AS (
           WHERE o.an = periodized.an
             AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('4513', '4514', '4515', '4516')
             AND (o.opdate::timestamp + COALESCE(o.optime, TIME '00:00:00')) >= (periodized.regdate::timestamp + COALESCE(periodized.regtime, TIME '00:00:00'))
-            AND (o.opdate::timestamp + COALESCE(o.optime, TIME '00:00:00')) <= (periodized.regdate::timestamp + COALESCE(periodized.regtime, TIME '00:00:00')) + INTERVAL '24 hours'))) * 100 / NULLIF((COUNT(*)), 0), 2) AS value
+            AND (o.opdate::timestamp + COALESCE(o.optime, TIME '00:00:00')) <= (periodized.regdate::timestamp + COALESCE(periodized.regtime, TIME '00:00:00')) + INTERVAL '24 hours'))) * 100.0 / NULLIF((COUNT(*)), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND pdx IN ('K250', 'K251', 'K252', 'K254', 'K255', 'K256', 'K260', 'K261', 'K262', 'K264', 'K265', 'K266', 'K270', 'K271', 'K272', 'K274', 'K275', 'K276', 'K280', 'K281', 'K282', 'K284', 'K285', 'K286', 'K290', 'K920', 'K921', 'K922')
       GROUP BY 2, 3, 4
@@ -2941,7 +2941,7 @@ fact_events AS (
           WHERE o.an = periodized.an
             AND REPLACE(UPPER(TRIM(o.icd9)), '.', '') IN ('4513', '4514', '4515', '4516')
             AND (o.opdate::timestamp + COALESCE(o.optime, TIME '00:00:00')) >= (periodized.regdate::timestamp + COALESCE(periodized.regtime, TIME '00:00:00'))
-            AND (o.opdate::timestamp + COALESCE(o.optime, TIME '00:00:00')) <= (periodized.regdate::timestamp + COALESCE(periodized.regtime, TIME '00:00:00')) + INTERVAL '24 hours'))) * 100 / NULLIF((COUNT(*)), 0), 2) AS value
+            AND (o.opdate::timestamp + COALESCE(o.optime, TIME '00:00:00')) <= (periodized.regdate::timestamp + COALESCE(periodized.regtime, TIME '00:00:00')) + INTERVAL '24 hours'))) * 100.0 / NULLIF((COUNT(*)), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND pdx IN ('K250', 'K251', 'K252', 'K254', 'K255', 'K256', 'K260', 'K261', 'K262', 'K264', 'K265', 'K266', 'K270', 'K271', 'K272', 'K274', 'K275', 'K276', 'K280', 'K281', 'K282', 'K284', 'K285', 'K286', 'K290', 'K920', 'K921', 'K922') AND (
           age_y >= 60
@@ -3115,7 +3115,7 @@ fact_events AS (
               AND oi.rxdate > periodized.regdate
               AND (di.name ILIKE '%packed red%' OR di.name ILIKE '%red cell%' OR di.name ILIKE '%prbc%')
           )
-        ))) * 100 / NULLIF((COUNT(*) FILTER (WHERE (
+        ))) * 100.0 / NULLIF((COUNT(*) FILTER (WHERE (
           EXISTS (
           SELECT 1
           FROM iptoprt o
@@ -3301,7 +3301,7 @@ fact_events AS (
               AND oi.rxdate > periodized.regdate
               AND (di.name ILIKE '%packed red%' OR di.name ILIKE '%red cell%' OR di.name ILIKE '%prbc%')
           )
-        ))) * 100 / NULLIF((COUNT(*) FILTER (WHERE (
+        ))) * 100.0 / NULLIF((COUNT(*) FILTER (WHERE (
           EXISTS (
           SELECT 1
           FROM iptoprt o
@@ -3372,7 +3372,7 @@ fact_events AS (
           FROM iptdiag sd
           WHERE sd.an = periodized.an
             AND REPLACE(UPPER(TRIM(sd.icd10)), '.', '') IN ('T810', 'T811', 'T812', 'T813', 'T814', 'T815', 'T816', 'T818', 'T819', 'K631', 'J690')
-        ))) * 100 / NULLIF((COUNT(*) FILTER (WHERE EXISTS (
+        ))) * 100.0 / NULLIF((COUNT(*) FILTER (WHERE EXISTS (
           SELECT 1
           FROM iptoprt o
           WHERE o.an = periodized.an
@@ -3555,7 +3555,7 @@ fact_events AS (
           JOIN drugitems di ON di.icode = oi.icode
           WHERE oi.an = periodized.an
             AND (di.name ILIKE '%aspirin%' OR di.name ILIKE '%acetylsalicylic%')
-            AND oi.rxdate >= periodized.dchdate - INTERVAL '1 day' AND oi.rxdate <= periodized.dchdate))) * 100 / NULLIF((COUNT(*)), 0), 2) AS value
+            AND oi.rxdate >= periodized.dchdate - INTERVAL '1 day' AND oi.rxdate <= periodized.dchdate))) * 100.0 / NULLIF((COUNT(*)), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') AND NOT died
       GROUP BY 2, 3, 4
@@ -3579,7 +3579,7 @@ fact_events AS (
           FROM opitemrece oi
           JOIN drugitems di ON di.icode = oi.icode
           WHERE oi.an = periodized.an
-            AND (di.name ILIKE '%enalapril%' OR di.name ILIKE '%captopril%' OR di.name ILIKE '%lisinopril%' OR di.name ILIKE '%ramipril%' OR di.name ILIKE '%perindopril%' OR di.name ILIKE '%fosinopril%' OR di.name ILIKE '%benazepril%' OR di.name ILIKE '%quinapril%' OR di.name ILIKE '%trandolapril%' OR di.name ILIKE '%losartan%' OR di.name ILIKE '%valsartan%' OR di.name ILIKE '%candesartan%' OR di.name ILIKE '%irbesartan%' OR di.name ILIKE '%telmisartan%' OR di.name ILIKE '%olmesartan%' OR di.name ILIKE '%azilsartan%')))) * 100 / NULLIF((COUNT(*)), 0), 2) AS value
+            AND (di.name ILIKE '%enalapril%' OR di.name ILIKE '%captopril%' OR di.name ILIKE '%lisinopril%' OR di.name ILIKE '%ramipril%' OR di.name ILIKE '%perindopril%' OR di.name ILIKE '%fosinopril%' OR di.name ILIKE '%benazepril%' OR di.name ILIKE '%quinapril%' OR di.name ILIKE '%trandolapril%' OR di.name ILIKE '%losartan%' OR di.name ILIKE '%valsartan%' OR di.name ILIKE '%candesartan%' OR di.name ILIKE '%irbesartan%' OR di.name ILIKE '%telmisartan%' OR di.name ILIKE '%olmesartan%' OR di.name ILIKE '%azilsartan%')))) * 100.0 / NULLIF((COUNT(*)), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') AND EXISTS (
           SELECT 1
@@ -3660,7 +3660,7 @@ fact_events AS (
                 OR itm.opdscreen_advice_item_name ILIKE '%บุหรี่%'
               )
           )
-        ))) * 100 / NULLIF((COUNT(*)), 0), 2) AS value
+        ))) * 100.0 / NULLIF((COUNT(*)), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') AND (
           EXISTS (
@@ -3701,7 +3701,7 @@ fact_events AS (
           FROM opitemrece oi
           JOIN drugitems di ON di.icode = oi.icode
           WHERE oi.an = periodized.an
-            AND (di.name ILIKE '%metoprolol%' OR di.name ILIKE '%atenolol%' OR di.name ILIKE '%bisoprolol%' OR di.name ILIKE '%carvedilol%' OR di.name ILIKE '%propranolol%' OR di.name ILIKE '%labetalol%' OR di.name ILIKE '%nebivolol%' OR di.name ILIKE '%sotalol%')))) * 100 / NULLIF((COUNT(*)), 0), 2) AS value
+            AND (di.name ILIKE '%metoprolol%' OR di.name ILIKE '%atenolol%' OR di.name ILIKE '%bisoprolol%' OR di.name ILIKE '%carvedilol%' OR di.name ILIKE '%propranolol%' OR di.name ILIKE '%labetalol%' OR di.name ILIKE '%nebivolol%' OR di.name ILIKE '%sotalol%')))) * 100.0 / NULLIF((COUNT(*)), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') AND NOT EXISTS (
           SELECT 1
@@ -3735,7 +3735,7 @@ fact_events AS (
           JOIN drugitems di ON di.icode = oi.icode
           WHERE oi.an = periodized.an
             AND (di.name ILIKE '%metoprolol%' OR di.name ILIKE '%atenolol%' OR di.name ILIKE '%bisoprolol%' OR di.name ILIKE '%carvedilol%' OR di.name ILIKE '%propranolol%' OR di.name ILIKE '%labetalol%' OR di.name ILIKE '%nebivolol%' OR di.name ILIKE '%sotalol%')
-            AND oi.rxdate >= periodized.dchdate - INTERVAL '1 day' AND oi.rxdate <= periodized.dchdate))) * 100 / NULLIF((COUNT(*)), 0), 2) AS value
+            AND oi.rxdate >= periodized.dchdate - INTERVAL '1 day' AND oi.rxdate <= periodized.dchdate))) * 100.0 / NULLIF((COUNT(*)), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') AND NOT EXISTS (
           SELECT 1
@@ -3789,7 +3789,7 @@ fact_events AS (
               OR REPLACE(UPPER(TRIM(eoc.icd9cm)), '.', '') = '8952'
             )
           ORDER BY ero.begin_time
-          LIMIT 1))) * 1 / NULLIF((COUNT(*)), 0), 2) AS value
+          LIMIT 1))) * 1.0 / NULLIF((COUNT(*)), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') AND ((
           SELECT EXTRACT(EPOCH FROM ((er.vstdate + ero.begin_time) - er.enter_er_time)) / NULLIF(60, 0)
@@ -3839,7 +3839,7 @@ fact_events AS (
             AND ro.refer_begin_time IS NOT NULL
             AND ro.refer_begin_time >= er.enter_er_time
           ORDER BY ro.refer_begin_time
-          LIMIT 1))) * 1 / NULLIF((COUNT(*)), 0), 2) AS value
+          LIMIT 1))) * 1.0 / NULLIF((COUNT(*)), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213', 'I214', 'I219') AND ((
           SELECT EXTRACT(EPOCH FROM (ro.refer_begin_time - er.enter_er_time)) / NULLIF(60, 0)
@@ -3909,7 +3909,7 @@ fact_events AS (
                 AND er.enter_er_time IS NOT NULL
                 AND (oi.rxdate::timestamp + COALESCE(oi.rxtime, TIME '00:00:00')) >= er.enter_er_time
                 AND (oi.rxdate::timestamp + COALESCE(oi.rxtime, TIME '00:00:00')) <= er.enter_er_time + INTERVAL '30 minutes'
-            )))) * 100 / NULLIF((COUNT(*)), 0), 2) AS value
+            )))) * 100.0 / NULLIF((COUNT(*)), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213')
       GROUP BY 2, 3, 4
@@ -3995,7 +3995,7 @@ fact_events AS (
                 AND er.enter_er_time IS NOT NULL
                 AND (oi.rxdate::timestamp + COALESCE(oi.rxtime, TIME '00:00:00')) >= er.enter_er_time
                 AND (oi.rxdate::timestamp + COALESCE(oi.rxtime, TIME '00:00:00')) <= er.enter_er_time + INTERVAL '30 minutes'
-            )))) * 100 / NULLIF((COUNT(*)), 0), 2) AS value
+            )))) * 100.0 / NULLIF((COUNT(*)), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND pdx IN ('I210', 'I211', 'I212', 'I213')
       GROUP BY 2, 3, 4
@@ -4261,7 +4261,7 @@ fact_events AS (
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM opdscreen sc WHERE sc.vn = opd_periodized.vn AND sc.inr IS NOT NULL AND sc.inr >= 2.0 AND sc.inr <= 3.0)) AS numerator,
         COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM opdscreen sc WHERE sc.vn = opd_periodized.vn AND sc.inr IS NOT NULL)) AS denominator,
-        ROUND((COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM opdscreen sc WHERE sc.vn = opd_periodized.vn AND sc.inr IS NOT NULL AND sc.inr >= 2.0 AND sc.inr <= 3.0))) * 100 / NULLIF((COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM opdscreen sc WHERE sc.vn = opd_periodized.vn AND sc.inr IS NOT NULL))), 0), 2) AS value
+        ROUND((COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM opdscreen sc WHERE sc.vn = opd_periodized.vn AND sc.inr IS NOT NULL AND sc.inr >= 2.0 AND sc.inr <= 3.0))) * 100.0 / NULLIF((COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM opdscreen sc WHERE sc.vn = opd_periodized.vn AND sc.inr IS NOT NULL))), 0), 2) AS value
       FROM opd_periodized
       WHERE age_y >= 18 AND (
           LEFT(pdx, 3) = 'I48'
@@ -4304,7 +4304,7 @@ fact_events AS (
             AND LEFT(REPLACE(UPPER(TRIM(s2.pdx)), '.', ''), 3) IN ('I60', 'I61', 'I62')
             AND i2.regdate <= opd_periodized.event_date
             AND i2.regdate >= opd_periodized.event_date - INTERVAL '90 days'
-        ))) * 100 / NULLIF((COUNT(*)), 0), 2) AS value
+        ))) * 100.0 / NULLIF((COUNT(*)), 0), 2) AS value
       FROM opd_periodized
       WHERE age_y >= 18 AND (
           LEFT(pdx, 3) = 'I48'
@@ -4702,7 +4702,7 @@ fact_events AS (
           JOIN drugitems di ON di.icode = oi.icode
           WHERE oi.an = periodized.an
             AND (di.name ILIKE '%aspirin%' OR di.name ILIKE '%acetylsalicylic%' OR di.name ILIKE '%clopidogrel%' OR di.name ILIKE '%ticagrelor%' OR di.name ILIKE '%prasugrel%' OR di.name ILIKE '%dipyridamole%' OR di.name ILIKE '%cilostazol%')
-            AND oi.rxdate >= periodized.regdate AND oi.rxdate <= periodized.regdate + INTERVAL '2 days'))) * 100 / NULLIF((COUNT(*)), 0), 2) AS value
+            AND oi.rxdate >= periodized.regdate AND oi.rxdate <= periodized.regdate + INTERVAL '2 days'))) * 100.0 / NULLIF((COUNT(*)), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND LEFT(pdx, 3) = 'I63'
       GROUP BY 2, 3, 4
@@ -4728,7 +4728,7 @@ fact_events AS (
           JOIN drugitems di ON di.icode = oi.icode
           WHERE oi.an = periodized.an
             AND (di.name ILIKE '%aspirin%' OR di.name ILIKE '%acetylsalicylic%' OR di.name ILIKE '%clopidogrel%' OR di.name ILIKE '%ticagrelor%' OR di.name ILIKE '%prasugrel%' OR di.name ILIKE '%dipyridamole%' OR di.name ILIKE '%cilostazol%' OR di.name ILIKE '%warfarin%' OR di.name ILIKE '%heparin%' OR di.name ILIKE '%enoxaparin%' OR di.name ILIKE '%dalteparin%' OR di.name ILIKE '%fondaparinux%' OR di.name ILIKE '%dabigatran%' OR di.name ILIKE '%rivaroxaban%' OR di.name ILIKE '%apixaban%' OR di.name ILIKE '%edoxaban%')
-            AND oi.rxdate >= periodized.dchdate - INTERVAL '1 day' AND oi.rxdate <= periodized.dchdate))) * 100 / NULLIF((COUNT(*)), 0), 2) AS value
+            AND oi.rxdate >= periodized.dchdate - INTERVAL '1 day' AND oi.rxdate <= periodized.dchdate))) * 100.0 / NULLIF((COUNT(*)), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND LEFT(pdx, 3) = 'I63' AND NOT died
       GROUP BY 2, 3, 4
@@ -4752,7 +4752,7 @@ fact_events AS (
           FROM opitemrece oi
           JOIN drugitems di ON di.icode = oi.icode
           WHERE oi.an = periodized.an
-            AND (di.name ILIKE '%warfarin%' OR di.name ILIKE '%heparin%' OR di.name ILIKE '%enoxaparin%' OR di.name ILIKE '%dalteparin%' OR di.name ILIKE '%fondaparinux%' OR di.name ILIKE '%dabigatran%' OR di.name ILIKE '%rivaroxaban%' OR di.name ILIKE '%apixaban%' OR di.name ILIKE '%edoxaban%')))) * 100 / NULLIF((COUNT(*)), 0), 2) AS value
+            AND (di.name ILIKE '%warfarin%' OR di.name ILIKE '%heparin%' OR di.name ILIKE '%enoxaparin%' OR di.name ILIKE '%dalteparin%' OR di.name ILIKE '%fondaparinux%' OR di.name ILIKE '%dabigatran%' OR di.name ILIKE '%rivaroxaban%' OR di.name ILIKE '%apixaban%' OR di.name ILIKE '%edoxaban%')))) * 100.0 / NULLIF((COUNT(*)), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND LEFT(pdx, 3) IN ('I60', 'I61', 'I62', 'I63', 'I64') AND EXISTS (
           SELECT 1
@@ -4819,7 +4819,7 @@ fact_events AS (
             JOIN ovst v ON v.vn = adv.vn
             WHERE v.an = periodized.an
           )
-        ))) * 100 / NULLIF((COUNT(*)), 0), 2) AS value
+        ))) * 100.0 / NULLIF((COUNT(*)), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND LEFT(pdx, 3) IN ('I60', 'I61', 'I62', 'I63', 'I64') AND NOT died
       GROUP BY 2, 3, 4
@@ -4845,7 +4845,7 @@ fact_events AS (
           WHERE rb.an = periodized.an
             AND rb.service_date >= periodized.regdate
             AND rb.service_date::timestamp <= (periodized.regdate::timestamp + COALESCE(periodized.regtime, TIME '00:00:00') + INTERVAL '72 hours')
-        ))) * 100 / NULLIF((COUNT(*)), 0), 2) AS value
+        ))) * 100.0 / NULLIF((COUNT(*)), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND LEFT(pdx, 3) IN ('I60', 'I61', 'I62', 'I63', 'I64') AND NOT died
       GROUP BY 2, 3, 4
@@ -4959,7 +4959,7 @@ fact_events AS (
                 AND er.enter_er_time IS NOT NULL
                 AND (oi.rxdate::timestamp + COALESCE(oi.rxtime, TIME '00:00:00')) >= er.enter_er_time
                 AND (oi.rxdate::timestamp + COALESCE(oi.rxtime, TIME '00:00:00')) <= er.enter_er_time + INTERVAL '60 minutes'
-            )))) * 100 / NULLIF((COUNT(*) FILTER (WHERE EXISTS (
+            )))) * 100.0 / NULLIF((COUNT(*) FILTER (WHERE EXISTS (
           SELECT 1
           FROM ovst v
           JOIN er_regist er ON er.vn = v.vn
@@ -4997,7 +4997,7 @@ fact_events AS (
             AND r.an <> periodized.an
             AND r.regdate > periodized.dchdate
             AND r.regdate <= periodized.dchdate + INTERVAL '28 days'
-        ))) * 100 / NULLIF((COUNT(*) FILTER (WHERE NOT died)), 0), 2) AS value
+        ))) * 100.0 / NULLIF((COUNT(*) FILTER (WHERE NOT died)), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND LEFT(pdx, 3) IN ('S02', 'S06') AND EXISTS (
           SELECT 1
@@ -5040,7 +5040,7 @@ fact_events AS (
           FROM iptoprt o
           WHERE o.an = periodized.an
             AND LEFT(REPLACE(UPPER(TRIM(o.icd9)), '.', ''), 3) IN ('012', '013', '014', '015', '016')
-        ))) * 100 / NULLIF((COUNT(*)), 0), 2) AS value
+        ))) * 100.0 / NULLIF((COUNT(*)), 0), 2) AS value
       FROM periodized
       WHERE age_y >= 18 AND LEFT(pdx, 3) = 'S06'
       GROUP BY 2, 3, 4
@@ -5472,7 +5472,7 @@ fact_events AS (
                 OR itm.opdscreen_advice_item_name ILIKE '%บุหรี่%'
               )
           )
-        ))) * 100 / NULLIF((COUNT(*)), 0), 2) AS value
+        ))) * 100.0 / NULLIF((COUNT(*)), 0), 2) AS value
       FROM periodized
       WHERE (LEFT(pdx, 4) IN ('J100', 'J110', 'J170', 'J171', 'J172', 'J173', 'J178', 'J850', 'J851') OR LEFT(pdx, 3) IN ('J12', 'J13', 'J14', 'J15', 'J16', 'J18')) AND (
           EXISTS (
@@ -6101,7 +6101,7 @@ fact_events AS (
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.had_checkup) AS numerator,
         COUNT(DISTINCT hr.staff_key) AS denominator,
-        ROUND((COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.had_checkup)) * 100 / NULLIF(COUNT(DISTINCT hr.staff_key), 0), 2) AS value
+        ROUND((COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.had_checkup)) * 100.0 / NULLIF(COUNT(DISTINCT hr.staff_key), 0), 2) AS value
       FROM (
         SELECT
           e.emp_id AS staff_key,
@@ -6136,7 +6136,7 @@ fact_events AS (
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.bmi_over) AS numerator,
         COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.bmi_measured) AS denominator,
-        ROUND((COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.bmi_over)) * 100 / NULLIF(COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.bmi_measured), 0), 2) AS value
+        ROUND((COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.bmi_over)) * 100.0 / NULLIF(COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.bmi_measured), 0), 2) AS value
       FROM (
         SELECT
           e.emp_id AS staff_key,
@@ -6180,7 +6180,7 @@ fact_events AS (
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.smoker) AS numerator,
         COUNT(DISTINCT hr.staff_key) AS denominator,
-        ROUND((COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.smoker)) * 100 / NULLIF(COUNT(DISTINCT hr.staff_key), 0), 2) AS value
+        ROUND((COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.smoker)) * 100.0 / NULLIF(COUNT(DISTINCT hr.staff_key), 0), 2) AS value
       FROM (
         SELECT
           e.emp_id AS staff_key,
@@ -6215,7 +6215,7 @@ fact_events AS (
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.waist_over_male) AS numerator,
         COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.waist_measured_male) AS denominator,
-        ROUND((COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.waist_over_male)) * 100 / NULLIF(COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.waist_measured_male), 0), 2) AS value
+        ROUND((COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.waist_over_male)) * 100.0 / NULLIF(COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.waist_measured_male), 0), 2) AS value
       FROM (
         SELECT
           e.emp_id AS staff_key,
@@ -6260,7 +6260,7 @@ fact_events AS (
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.waist_over_female) AS numerator,
         COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.waist_measured_female) AS denominator,
-        ROUND((COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.waist_over_female)) * 100 / NULLIF(COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.waist_measured_female), 0), 2) AS value
+        ROUND((COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.waist_over_female)) * 100.0 / NULLIF(COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.waist_measured_female), 0), 2) AS value
       FROM (
         SELECT
           e.emp_id AS staff_key,
@@ -6305,7 +6305,7 @@ fact_events AS (
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.got_influenza_vaccine) AS numerator,
         COUNT(DISTINCT hr.staff_key) AS denominator,
-        ROUND((COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.got_influenza_vaccine)) * 100 / NULLIF(COUNT(DISTINCT hr.staff_key), 0), 2) AS value
+        ROUND((COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.got_influenza_vaccine)) * 100.0 / NULLIF(COUNT(DISTINCT hr.staff_key), 0), 2) AS value
       FROM (
         SELECT
           e.emp_id AS staff_key,
@@ -8611,8 +8611,8 @@ fact_events AS (
         1 AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         SUM(hr.voluntary_resign_cnt) / NULLIF(12, 0) AS numerator,
-        (COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_start) + COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_end)) / NULLIF(2, 0) AS denominator,
-        ROUND((SUM(hr.voluntary_resign_cnt) / NULLIF(12, 0)) * 100 / NULLIF((COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_start) + COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_end)) / NULLIF(2, 0), 0), 2) AS value
+        (COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_start) + COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_end)) / NULLIF(2.0, 0) AS denominator,
+        ROUND((SUM(hr.voluntary_resign_cnt) / NULLIF(12, 0)) * 100.0 / NULLIF((COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_start) + COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_end)) / NULLIF(2.0, 0), 0), 2) AS value
       FROM (
         SELECT
           e.emp_id AS staff_key,
@@ -8646,8 +8646,8 @@ fact_events AS (
         1 AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         SUM(hr.work_injury_event_cnt) AS numerator,
-        (COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_start) + COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_end)) / NULLIF(2, 0) AS denominator,
-        ROUND((SUM(hr.work_injury_event_cnt)) * 100 / NULLIF((COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_start) + COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_end)) / NULLIF(2, 0), 0), 2) AS value
+        (COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_start) + COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_end)) / NULLIF(2.0, 0) AS denominator,
+        ROUND((SUM(hr.work_injury_event_cnt)) * 100.0 / NULLIF((COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_start) + COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_end)) / NULLIF(2.0, 0), 0), 2) AS value
       FROM (
         SELECT
           e.emp_id AS staff_key,
@@ -8681,8 +8681,8 @@ fact_events AS (
         1 AS fiscal_month,
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         SUM(hr.work_illness_event_cnt) AS numerator,
-        (COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_start) + COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_end)) / NULLIF(2, 0) AS denominator,
-        ROUND((SUM(hr.work_illness_event_cnt)) * 100 / NULLIF((COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_start) + COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_end)) / NULLIF(2, 0), 0), 2) AS value
+        (COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_start) + COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_end)) / NULLIF(2.0, 0) AS denominator,
+        ROUND((SUM(hr.work_illness_event_cnt)) * 100.0 / NULLIF((COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_start) + COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_fy_end)) / NULLIF(2.0, 0), 0), 2) AS value
       FROM (
         SELECT
           e.emp_id AS staff_key,
@@ -8717,7 +8717,7 @@ fact_events AS (
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         SUM(hr.voluntary_resign_cnt) AS numerator,
         COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_period_end) AS denominator,
-        ROUND((SUM(hr.voluntary_resign_cnt)) * 100 / NULLIF(COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_period_end), 0), 2) AS value
+        ROUND((SUM(hr.voluntary_resign_cnt)) * 100.0 / NULLIF(COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_period_end), 0), 2) AS value
       FROM (
         SELECT
           e.emp_id AS staff_key,
@@ -8752,7 +8752,7 @@ fact_events AS (
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         SUM(hr.voluntary_resign_cnt) AS numerator,
         COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_period_end) AS denominator,
-        ROUND((SUM(hr.voluntary_resign_cnt)) * 100 / NULLIF(COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_period_end), 0), 2) AS value
+        ROUND((SUM(hr.voluntary_resign_cnt)) * 100.0 / NULLIF(COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_period_end), 0), 2) AS value
       FROM (
         SELECT
           e.emp_id AS staff_key,
@@ -8787,7 +8787,7 @@ fact_events AS (
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         SUM(hr.voluntary_resign_cnt) AS numerator,
         COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_period_end) AS denominator,
-        ROUND((SUM(hr.voluntary_resign_cnt)) * 100 / NULLIF(COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_period_end), 0), 2) AS value
+        ROUND((SUM(hr.voluntary_resign_cnt)) * 100.0 / NULLIF(COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_period_end), 0), 2) AS value
       FROM (
         SELECT
           e.emp_id AS staff_key,
@@ -8822,7 +8822,7 @@ fact_events AS (
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         SUM(hr.voluntary_resign_cnt) AS numerator,
         COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_period_end) AS denominator,
-        ROUND((SUM(hr.voluntary_resign_cnt)) * 100 / NULLIF(COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_period_end), 0), 2) AS value
+        ROUND((SUM(hr.voluntary_resign_cnt)) * 100.0 / NULLIF(COUNT(DISTINCT hr.staff_key) FILTER (WHERE hr.active_at_period_end), 0), 2) AS value
       FROM (
         SELECT
           e.emp_id AS staff_key,
@@ -9065,7 +9065,7 @@ fact_events AS (
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         SUM(hr.work_injury_event_cnt) + SUM(hr.work_illness_event_cnt) AS numerator,
         SUM(hr.work_hours) AS denominator,
-        ROUND((SUM(hr.work_injury_event_cnt) + SUM(hr.work_illness_event_cnt)) * 1000000 / NULLIF(SUM(hr.work_hours), 0), 2) AS value
+        ROUND((SUM(hr.work_injury_event_cnt) + SUM(hr.work_illness_event_cnt)) * 1000000.0 / NULLIF(SUM(hr.work_hours), 0), 2) AS value
       FROM (
         SELECT
           e.emp_id AS staff_key,
@@ -9114,7 +9114,7 @@ fact_events AS (
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         SUM(hr.injury_lost_days) AS numerator,
         SUM(hr.work_hours) AS denominator,
-        ROUND((SUM(hr.injury_lost_days)) * 1000000 / NULLIF(SUM(hr.work_hours), 0), 2) AS value
+        ROUND((SUM(hr.injury_lost_days)) * 1000000.0 / NULLIF(SUM(hr.work_hours), 0), 2) AS value
       FROM (
         SELECT
           e.emp_id AS staff_key,
@@ -9157,7 +9157,7 @@ fact_events AS (
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         SUM(hr.injury_lost_days) AS numerator,
         SUM(hr.work_hours) AS denominator,
-        ROUND((SUM(hr.injury_lost_days)) * 1000000 / NULLIF(SUM(hr.work_hours), 0), 2) AS value
+        ROUND((SUM(hr.injury_lost_days)) * 1000000.0 / NULLIF(SUM(hr.work_hours), 0), 2) AS value
       FROM (
         SELECT
           e.emp_id AS staff_key,
@@ -9200,7 +9200,7 @@ fact_events AS (
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         SUM(hr.work_injury_event_cnt) + SUM(hr.work_illness_event_cnt) AS numerator,
         SUM(hr.work_hours) AS denominator,
-        ROUND((SUM(hr.work_injury_event_cnt) + SUM(hr.work_illness_event_cnt)) * 1000000 / NULLIF(SUM(hr.work_hours), 0), 2) AS value
+        ROUND((SUM(hr.work_injury_event_cnt) + SUM(hr.work_illness_event_cnt)) * 1000000.0 / NULLIF(SUM(hr.work_hours), 0), 2) AS value
       FROM (
         SELECT
           e.emp_id AS staff_key,
@@ -9250,7 +9250,7 @@ fact_events AS (
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         SUM(hr.work_injury_event_cnt) + SUM(hr.work_illness_event_cnt) AS numerator,
         SUM(hr.work_hours) AS denominator,
-        ROUND((SUM(hr.work_injury_event_cnt) + SUM(hr.work_illness_event_cnt)) * 1000000 / NULLIF(SUM(hr.work_hours), 0), 2) AS value
+        ROUND((SUM(hr.work_injury_event_cnt) + SUM(hr.work_illness_event_cnt)) * 1000000.0 / NULLIF(SUM(hr.work_hours), 0), 2) AS value
       FROM (
         SELECT
           e.emp_id AS staff_key,
@@ -9417,7 +9417,7 @@ fact_events AS (
         CASE WHEN calendar_month >= 10 THEN EXTRACT(YEAR FROM period_start)::integer + 1 ELSE EXTRACT(YEAR FROM period_start)::integer END AS fiscal_year,
         SUM(brd.request_qty) AS numerator,
         SUM(brd.response_qty) AS denominator,
-        ROUND(SUM(brd.request_qty) * 1 / NULLIF(SUM(brd.response_qty), 0), 2) AS value
+        ROUND(SUM(brd.request_qty) * 1.0 / NULLIF(SUM(brd.response_qty), 0), 2) AS value
       FROM (
       SELECT
         br.blood_request_id,
@@ -9603,7 +9603,7 @@ fact_events AS (
             WHERE sl.supply_sterile_id = sterile_batches.supply_sterile_id
               AND COALESCE(sl.supply_sterile_list_complete, 'N') <> 'Y'
           )
-      ) * 100 / NULLIF(COUNT(*), 0), 2) AS value
+      ) * 100.0 / NULLIF(COUNT(*), 0), 2) AS value
       FROM (
       SELECT
         st.supply_sterile_id,
@@ -9644,7 +9644,7 @@ fact_events AS (
             WHERE st.supply_sterile_id = sterile_receipts.supply_sterile_id
               AND st.supply_sterile_confirm = 'Y'
           )
-      ) * 100 / NULLIF(COUNT(*), 0), 2) AS value
+      ) * 100.0 / NULLIF(COUNT(*), 0), 2) AS value
       FROM (
       SELECT
         sr.supply_sterile_receive_id,
@@ -11232,7 +11232,7 @@ metadata(
     ('CA0103', 'C', 'percent', 'higher-is-better', 'monthly', 'Care process', 'Anesthesia: Percent of patients observed in recovery room', 'ร้อยละของผู้ป่วยที่รับการให้ยาระงับความรู้สึกที่ได้รับการดูแลในห้องพักฟื้น', '1. การให้ยาระงับความรู้สึก หมายถึง การให้ยาระงับความรู้สึกทุกวิธีการในผู้ป่วยผ่าตัด เพื่อให้ผู้ป่วยหมดความรู้สึก ก่อนทำการผ่าตัด 2. ผู้ป่วยที่รับการให้ยาระงับความรู้สึกที่ได้รับการดูแลในห้องพักฟื้น หมายถึง การที่ผู้ป่วย ผ่าตัดที่ได้รับยาระงับความรู้สึก ได้รับการดูแลช่วงหลังการให้ยาระงับความรู้สึกในห้องพัก ฟื้นในระยะเวลาที่เหมาะสมตามประเภทของการให้ยาระงับความรู้สึกและสภาพของผู้ป่วย เพื่อส่งต่อผู้ป่วยกลับหอผู้ป่วยได้อย่างปลอดภัย 3. การผ่าตัด หมายถึง การผ่าตัดทุกชนิดที่มีการให้ยาระงับความรู้สึกโดยวิสัญญี', '(a/b) x 100', 'a', 'b', ARRAY['operation_list', 'operation_detail', 'ipt', 'an_stat', 'er_regist']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 182', 'registered-2026.1', NULL, 'registered'),
     ('CA0104', 'C', 'percent', 'lower-is-better', 'monthly', 'Care process', 'Anesthesia: Percent of re-intubation within 2 hours after extubation', 'ร้อยละของผู้ป่วยได้รับการใส่ท่อหายใจซ้ำภายใน 2 ชั่วโมงหลังการถอดท่อหายใจ', '1. ผู้ป่วยได้รับการใส่ท่อหายใจซ้ำหลังการถอดท่อหายใจ หมายถึง ผู้ป่วยผ่าตัดที่ได้รับการ ให้ยาระงับความรู้สึกแบบทั้งตัว ที่ใส่ท่อหายใจและได้รับการถอดท่อหายใจแล้วต้องกลับมา ใส่ท่อหายใจซ้ำไม่ว่าจากสาเหตุใด ๆ 2. การผ่าตัด หมายถึง การผ่าตัดทุกชนิดที่มีการให้ยาระงับความรู้สึกโดยวิสัญญี', '(a/b) x 100', 'a', 'b', ARRAY['operation_list', 'operation_detail', 'ipt', 'an_stat', 'er_regist']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 183', 'registered-2026.1', NULL, 'registered'),
     ('CA0105', 'C', 'percent', 'higher-is-better', 'monthly', 'Care process', 'Anesthesia: Percent of using capnometry during general anesthesia', 'ร้อยละของผู้ป่วยที่ดมยาสลบได้รับการเฝ้าระวังระดับก๊าซคาร์บอนไดออกไซด์ ในลมหายใจออก', '1. การเฝ้าระวังระดับก๊าซคาร์บอนไดออกไซด์ในลมหายใจออก หมายถึง การเฝ้าระวังการ หายใจโดยการใช้เครื่องวัดระดับคาร์บอนไดออกไซด์ในลมหายใจออก ด้วยเครื่อง Capnometry ในผู้ป่วยผ่าตัดที่ได้รับยาระงับความรู้สึกแบบทั้งตัวและใส่ท่อช่วยหายใจ ระหว่างการได้รับยาระงับความรู้สึก 2. การผ่าตัด หมายถึง การผ่าตัดทุกชนิดที่มีการให้ยาระงับความรู้สึกโดยวิสัญญี', '(a/b) x 100', 'a', 'b', ARRAY['operation_list', 'operation_detail', 'ipt', 'an_stat', 'er_regist']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 184', 'registered-2026.1', NULL, 'registered'),
-    ('CE0101', 'C', 'percent', 'higher-is-better', 'monthly', 'Care process', 'Sepsis: Percent of broad-spectrum antibiotic receiving within 3 hours', 'ร้อยละผู้ป่วยห้องฉุกเฉินที่มีภาวะติดเชื้อในกระแสโลหิตได้รับยาต้านจุลชีพ ภายใน 3 ชั่วโมง', '1. ภาวะติดเชื้อในกระแสโลหิต หมายถึง ภาวะ Sepsis หรือ การที่ผู้ป่วยมีอาการแสดงของ การอักเสบทั่วตัว (systemic inflammation) ร่วมกับพบเชื้อจากการตรวจเพาะเชื้อจาก เลือด หรือ พบว่ามีการติดเชื้อที่ใดที่หนึ่งในร่างกาย (reference: surviving sepsis campaign 2012) ซึ่งมี Pdx หรือมีอาการแสดงตามรหัสโรค ICD-10 TM ที่กำหนด (ในที่นี้หมายรวมถึงเฉพาะผู้ป่วยผู้ใหญ่ ที่มารับบริการที่ห้องฉุกเฉิน (ER) เท่านั้น) 2. การได้รับยาปฏิชีวนะ หมายถึง การที่ผู้ป่วย Sepsis, Severe sepsis, Septic shock ได้รับยาปฏิชีวนะภายใน 3 ชั่วโมง นับตั้งแต่ระยะเวลาที่ผู้ป่วยมาถึง ER จนถึงเวลาที่ ได้รับยา', '(a/b) x100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 194', 'registered-2026.1', NULL, 'registered'),
+    ('CE0101', 'C', 'percent', 'higher-is-better', 'monthly', 'Care process', 'Sepsis: Percent of broad-spectrum antibiotic receiving within 3 hours', 'ร้อยละผู้ป่วยห้องฉุกเฉินที่มีภาวะติดเชื้อในกระแสโลหิตได้รับยาต้านจุลชีพ ภายใน 3 ชั่วโมง', '1. ภาวะติดเชื้อในกระแสโลหิต หมายถึง ภาวะ Sepsis หรือ การที่ผู้ป่วยมีอาการแสดงของ การอักเสบทั่วตัว (systemic inflammation) ร่วมกับพบเชื้อจากการตรวจเพาะเชื้อจาก เลือด หรือ พบว่ามีการติดเชื้อที่ใดที่หนึ่งในร่างกาย (reference: surviving sepsis campaign 2012) ซึ่งมี Pdx หรือมีอาการแสดงตามรหัสโรค ICD-10 TM ที่กำหนด (ในที่นี้หมายรวมถึงเฉพาะผู้ป่วยผู้ใหญ่ ที่มารับบริการที่ห้องฉุกเฉิน (ER) เท่านั้น) 2. การได้รับยาปฏิชีวนะ หมายถึง การที่ผู้ป่วย Sepsis, Severe sepsis, Septic shock ได้รับยาปฏิชีวนะภายใน 3 ชั่วโมง นับตั้งแต่ระยะเวลาที่ผู้ป่วยมาถึง ER จนถึงเวลาที่ ได้รับยา', '(a/b) x100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 194', 'foundation-2026.1', NULL, 'registered'),
     ('CE0102', 'C', 'ratio', 'lower-is-better', 'monthly', 'Care process', 'ER: Average Emergency Department (ED) TIME-IN, TIME-OUT', 'ค่าเฉลี่ยระยะเวลาการเข้ารับ-ออกจากบริการของผู้ป่วยที่มารับบริการที่ห้องฉุกเฉิน', '1. ผู้ป่วยฉุกเฉิน (triage as emergency patients) หมายถึง ผู้ป่วยฉุกเฉินตามประเภท ของ triage ระดับ 1 ฉุกเฉินมาก emergency condition ภาวะที่มีอันตราย 1A ความเสี่ยง สูงต่อชีวิต immediate life threatening ต้องการตรวจรักษาทันทีไม่เกิน 4 นาที ซึ่งเป็น ผู้ป่วยฉุกเฉินที่มารับบริการที่ห้องฉุกเฉิน (ไม่รวมกรณีเสียชีวิตผู้ป่วยคลินิกนอกเวลา ผู้ป่วยที่ จําเป็นต้องนอนรักษาที่ ED หรือรอ admit) 2. ระยะเวลา นับเริ่มตั้งแต่เข้ารับบริการ (time-in) จนถึงออกจากห้องฉุกเฉิน (time-out) ซึ่งอาจเป็นการออกโดยจําหน่าย, admit, หรือ refer 3. กำหนดช่วงเวลาของการเก็บข้อมูล ทุกวันที่ 5, 15, 25 ช่วงเวลา 00.00-23.59 น. (24 ชั่วโมง) โดยเก็บข้อมูลทุก 1 เดือนๆ ละ 3 ครั้ง', 'a/b', 'a', 'b', ARRAY['ovst', 'er_regist', 'ovstdiag']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 195', 'registered-2026.1', NULL, 'registered'),
     ('CE0103', 'C', 'percent', 'higher-is-better', 'monthly', 'Care process', 'ER: Percent of Emergency patients recieveing emergency service (ED TIME-IN, TIME-OUT) within 60 minutes', 'ร้อยละของผู้ป่วยฉุกเฉินมากที่ได้รับบริการที่ห้องฉุกเฉินระยะเวลาภายใน 60 นาที', '1. ผู้ป่วยฉุกเฉิน (triage as emergency patients) หมายถึง ผู้ป่วยฉุกเฉินตามประเภท ของ Triage ระดับ 1 ฉุกเฉินมาก emergency condition ภาวะที่มีอันตราย 1A ความ เสี่ยงสูงต่อชีวิต immediate life threatening ต้องการตรวจรักษาทันทีไม่เกิน 4 นาที ซึ่ง เป็นผู้ป่วยฉุกเฉินที่มารับบริการที่ห้องฉุกเฉิน(ไม่รวมกรณีเสียชีวิตผู้ป่วยคลินิกนอกเวลา ผู้ป่วยที่จําเป็นต้องนอนรักษาที่ ED หรือรอ admit) 2. ระยะเวลา นับเริ่มตั้งแต่เข้ารับบริการ (time-in) จนถึงออกจากห้องฉุกเฉิน (time-out) ซึ่งอาจเป็นการออกโดยจําหน่าย, admit, หรือ refer 3. กำหนดช่วงเวลาของการเก็บข้อมูล ทุกวันที่ 5, 15, 25 ช่วงเวลา 00.00-23.59 น. (24 ชั่วโมง) โดยเก็บข้อมูลทุก 1 เดือนๆ ละ 3 ครั้ง', '(a/b) x 100', 'a', 'b', ARRAY['ovst', 'er_regist', 'ovstdiag']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 197', 'registered-2026.1', NULL, 'registered'),
     ('CE0104', 'C', 'percent', 'higher-is-better', 'monthly', 'Care process', 'Sepsis: Percent of broad-spectrum antibiotic received within 1 hour in emergency room', 'ร้อยละผู้ป่วยห้องฉุกเฉิน ที่มีภาวะติดเชื้อในกระแสโลหิตได้รับยาต้านจุลชีพภายใน 1 ชั่วโมง', '1. ผู้ป่วยห้องฉุกเฉิน ที่มีภาวะติดเชื้อในกระแสโลหิต หมายถึง ผู้ป่วยผู้ใหญ่ที่มีการวินิจฉัย ภาวะ Severe Sepsis /Septic shock เมื่อมารับบริการห้องฉุกเฉินของโรงพยาบาล โดยมี เกณฑ์การวินิจฉัยภาวะ Sepsis/Septic shock (reference Crit Care Med 2007; 35 (4): 1105 – 12) The criteria for Servere sepsis/Septic shock 1. Two or more of the following four Items a. Temperature >38.3oC or <36.0oC b. Heat rate > 90 beats/min c. Respiration > 20 b/min d. Wbc > 12,000 or < 4,000/mm3, or >10% bandemia 2. A suspected infection 3. SBP <90 mmHg. after 20 mL/kg fluid bolus or lactate >4 mmol/L 2. การได้รับยาปฏิชีวนะภายใน1 ชั่วโมงหมายถึงการที่ผู้ป่วยSevere sepsis/ Septic shock ได้รับ ยาปฏิชีวนะภายใน1ชั่วโมง (นับจากเวลาที่ผู้ป่วยได้รับการวินิจฉัยจนถึงเวลาที่ได้รับยา)', '(a/b) x100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 198', 'registered-2026.1', NULL, 'registered'),
@@ -11240,7 +11240,7 @@ metadata(
     ('CG0102', 'C', 'rate', 'lower-is-better', 'monthly', 'Care process', 'Pressure Ulcer/Injury: Rate of Pressure ulcer in risk patients', 'อัตราการเกิดแผลกดทับในโรงพยาบาลในผู้ป่วยกลุ่มเสี่ยง', '1. อัตราการเกิดแผลกดทับในโรงพยาบาล หมายถึง จำนวนตัวเลขที่แสดงถึงจำนวนครั้งของ การเกิดแผลกดทับ ซึ่งเกิดขึ้นในผู้ป่วยที่รับนอนในโรงพยาบาล นาน ≥4 ชั่วโมง ที่ได้รับการ ประเมินว่ามีความเสี่ยงต่อการเกิดแผลกดทับ ภายใน 1 เดือน และมีความรุนแรงตั้งแต่ระดับ 1 ขึ้นไป เปรียบเทียบกับจำนวน 1000 วันนอนในเดือนนั้น ๆ 2. ความหมายและการแบ่งระดับของแผลกดทับ อ้างอิงตามนิยามที่กำหนดโดยคณะทำงาน ตัวชี้วัดแผลกดทับ ชมรมพยาบาลแผล ออสโตมี และควบคุมการขับถ่าย และชมรม เครือข่ายพัฒนาคุณภาพการพยาบาล (University Hospital Nursing Director Consortium; UHNDC) ตามเอกสารภาคผนวก 3. จำนวนวันนอนรวมของผู้ป่วยกลุ่มเสี่ยง หมายถึง ผลรวมของจำนวนวันนอนของผู้ป่วยที่ ได้รับการประเมินว่ามีความเสี่ยงต่อการเกิดแผลกดทับ ในหอผู้ป่วยในทั้งหมด', '(a/b) x 1,000', 'a', 'b', ARRAY['ipt', 'an_stat', 'ipd_nurse_note', 'iptbedmove', 'ward']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 190', 'registered-2026.1', NULL, 'registered'),
     ('CG0103', 'C', 'percent', 'lower-is-better', 'monthly', 'Care process', 'Pressure Ulcer/Injury: Hospital-acquired pressure ulcer/Injury', 'อัตราความชุกของแผลกดทับ', '1. อัตราความชุกของแผลกดทับ หมายถึง ตัวเลขที่แสดงจำนวนผู้ป่วยที่มีแผลกดทับทั้งหมด ในโรงพยาบาล ในช่วงเวลาที่สำรวจ 2. การนับจำนวนผู้ป่วยที่มีแผลกดทับในประชากรที่สำรวจ ณ เวลาใดเวลาหนึ่งเท่านั้น เป็น การวัดจำนวนผู้ป่วยที่เกิดแผลกดทับในโรงพยาบาล ณ วันที่มีการสำรวจ การนับจำนวนให้ รวมผู้ป่วยที่เกิดแผลกดทับก่อนรับเข้าโรงพยาบาล และผู้ป่วยที่เกิดแผลกดทับภายหลัง รับเข้ารักษาในโรงพยาบาล 3. แผลกดทับ แบ่งตามระดับความรุนแรงเป็น 4 ระดับและ 2 ลักษณะ (ระดับความรุนแรง 1-4, ไม่สามารถระบุระดับความลึกของเนื้อเยื่อที่โดนทำลายได้และการบาดเจ็บเนื้อเยื่อชั้น ลึก) คณะทำงานตัวชี้วัดแผลกดทับ ชมรมพยาบาลแผล ออสโตมี และควบคุมการขับถ่าย และชมรมเครือข่ายพัฒนาคุณภาพการพยาบาล (University Hospital Nursing Director Consortium; UHNDC) ตามเอกสารภาคผนวก 4. การคำนวณตัวชี้วัดนี้ ต้องการเอกสารผู้ป่วยทุกคนในหน่วยการรายงานในวันที่สำรวจ', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'ipd_nurse_note', 'iptbedmove', 'ward']::text[], 'ทุก 3 เดือน (รายไตรมาส)', 'THIP KPI Dictionary 2025 · หน้า 191', 'registered-2026.1', NULL, 'registered'),
     ('CG0104', 'C', 'percent', 'lower-is-better', 'monthly', 'Care process', 'Pressure Ulcer/Injury: Hospital-acquired pressure ulcer/Injury (HAPI) rate', 'อัตราความชุกของแผลกดทับที่เกิดในโรงพยาบาล', '1. อัตราความชุกของแผลกดทับที่เกิดในโรงพยาบาล หมายถึง ตัวเลขที่แสดงจำนวน ผู้ป่วยที่มีแผลกดทับที่เกิดขึ้นในโรงพยาบาล ในช่วงเวลาที่สำรวจ 2. การนับจำนวนผู้ป่วยที่มีแผลกดทับที่เกิดภายหลัง admit ในประชากรที่สำรวจ ณ เวลาใดเวลาหนึ่งที่สำรวจ เป็นการวัดจำนวนผู้ป่วยที่เกิดแผลกดทับในโรงพยาบาล ณ วันที่มีการสำรวจ การนับจำนวนให้นับเฉพาะผู้ป่วยที่เกิดแผลกดทับใหม่หลังรับเข้า โรงพยาบาล 3. การคำนวณ HAPI rate จำเป็นต้องมีการทบทวนบันทีกผู้ป่วยที่มีแผลกดทับ ณ วันที่ admit ถ้าพบว่าบันทึกตอน admit ผู้ป่วยไม่มีแผลกดทับ แสดงว่าแผลที่พบเป็นแผลกด ทับที่เกิดในโรงพยาบาล 4. แผลกดทับ แบ่งตามระดับความรุนแรงเป็น 4 ระดับและ 2 ลักษณะ (ระดับความ รุนแรง 1-4, ไม่สามารถระบุระดับความลึกของเนื้อเยื่อที่โดนทำลายได้และการบาดเจ็บ เนื้อเยื่อชั้นลึก) คณะทำงานตัวชี้วัดแผลกดทับ ชมรมพยาบาลแผล ออสโตมี และควบคุม การขับถ่าย และชมรมเครือข่ายพัฒนาคุณภาพการพยาบาล (University Hospital Nursing Director Consortium; UHNDC) ตามเอกสารภาคผนวก 5. การคำนวณตัวชี้วัดนี้ ต้องการเอกสารผู้ป่วยทุกคนในหน่วยการรายงานในวันที่สำรวจ', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'ipd_nurse_note', 'iptbedmove', 'ward']::text[], 'ทุก 3 เดือน (รายไตรมาส)', 'THIP KPI Dictionary 2025 · หน้า 193', 'registered-2026.1', NULL, 'registered'),
-    ('CI0101', 'C', 'percent', 'lower-is-better', 'monthly', 'Care process', 'Sepsis: Percent of mortality', 'ร้อยละการเสียชีวิตของผู้ป่วยในจากภาวะติดเชื้อในกระแสโลหิต', '1. การเสียชีวิตของผู้ป่วยใน หมายถึง การเสียชีวิตของผู้ป่วยขณะที่เข้ารับการรักษาเป็น ผู้ป่วยใน โดยมีระยะเวลาการนอนพักรักษานานตั้งแต่ 4 ชั่วโมงขึ้นไป 2. ภาวะติดเชื้อในกระแสโลหิต หมายถึง ภาวะ Sepsis หรือการที่ผู้ป่วยมีอาการแสดงของ การอักเสบทั่วตัว (systemic inflammation) ร่วมกับพบเชื้อจากการตรวจเพาะเชื้อจาก เลือด หรือพบว่ามีการติดเชื้อที่ใดที่หนึ่งในร่างกาย (reference : surviving sepsis campaign 2012) ซึ่งมี Pdx หรือ Sdx หรือมีอาการแสดงตามรหัสโรค ICD-10 TM ที่ กำหนด', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 199', 'registered-2026.1', NULL, 'registered'),
+    ('CI0101', 'C', 'percent', 'lower-is-better', 'monthly', 'Care process', 'Sepsis: Percent of mortality', 'ร้อยละการเสียชีวิตของผู้ป่วยในจากภาวะติดเชื้อในกระแสโลหิต', '1. การเสียชีวิตของผู้ป่วยใน หมายถึง การเสียชีวิตของผู้ป่วยขณะที่เข้ารับการรักษาเป็น ผู้ป่วยใน โดยมีระยะเวลาการนอนพักรักษานานตั้งแต่ 4 ชั่วโมงขึ้นไป 2. ภาวะติดเชื้อในกระแสโลหิต หมายถึง ภาวะ Sepsis หรือการที่ผู้ป่วยมีอาการแสดงของ การอักเสบทั่วตัว (systemic inflammation) ร่วมกับพบเชื้อจากการตรวจเพาะเชื้อจาก เลือด หรือพบว่ามีการติดเชื้อที่ใดที่หนึ่งในร่างกาย (reference : surviving sepsis campaign 2012) ซึ่งมี Pdx หรือ Sdx หรือมีอาการแสดงตามรหัสโรค ICD-10 TM ที่ กำหนด', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 199', 'foundation-2026.1', NULL, 'registered'),
     ('CM0101', 'C', 'rate', 'lower-is-better', 'annual', 'Care process', 'Maternal: Mortality rate of mother from pregnancy and/or labour', 'สัดส่วนการตายของมารดาจากการตั้งครรภ์ และ/หรือการคลอด (ต่อแสนทารกเกิดมีชีพ)', '1. มารดา หมายถึง หญิงตั้งครรภ์ ซึ่งคลอดทารกมีชีพในโรงพยาบาล ที่มี Principal diagnosis (Pdx) or Secondary diagnosis (sdx) เป็นโรคที่มีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. ผู้ป่วยใน หมายถึง ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาล นานตั้งแต่ 4 ชั่วโมงขึ้นไป 3. การตายมารดา หมายถึง การตายของมารดาตั้งแต่ขณะตั้งครรภ์ การคลอด และหลัง คลอด (ไม่เกิน 6 สัปดาห์หลังคลอด) ไม่ว่าอายุครรภ์จะเป็นเท่าใด หรือการตั้งครรภ์ที่ ตำแหน่งใด จากสาเหตุที่เกี่ยวข้องหรือก่อให้เกิดความรุนแรงขึ้นจากการตั้งครรภ์ และ/ หรือ การดูแลรักษาขณะตั้งครรภ์ และคลอด แต่ไม่ใช่จากอุบัติเหตุหรือสาเหตุที่ไม่เกี่ยวข้อง', '(a/b) x 100,000', 'a', 'b', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 161', 'registered-2026.1', NULL, 'registered'),
     ('CM0104', 'C', 'percent', 'lower-is-better', 'monthly', 'Care process', 'Maternal: Percent of unplanned re-admission of caesarean section within 28 days', 'ร้อยละการรับกลับเข้าโรงพยาบาลของผู้คลอด Caesarean section ภายใน 28 วัน โดย ไม่ได้วางแผน', '1. ผู้คลอด Caesarean section หมายถึง หญิงตั้งครรภ์ที่มี Principal diagnosis (Pdx) or Secondary diagnosis (Sdx) ของการคลอดที่มีเหตุจำเป็นต้องผ่าตัดคลอดทางหน้าท้อง โดยมีรหัสโรคตาม ICD-10 TM, ICD-10และ/หรือ ICD-9 ดังที่ระบุไว้นี้ 2. การรับกลับเข้าโรงพยาบาลของผู้คลอด Caesarean section ภายใน 28 วัน โดยไม่ได้ วางแผนหลังจำหน่ายจากโรงพยาบาล ด้วยสถานะการอนุญาตให้กลับบ้าน (status=improve) (ยกเว้นผู้คลอด C/S ที่ไปรักษาที่โรงพยาบาลอื่น หรือไม่ยินยอมรับการ รักษาตามแผน)', '(a/b) x 100', 'a', 'b', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 162', 'registered-2026.1', NULL, 'registered'),
     ('CM0105', 'C', 'ratio', 'lower-is-better', 'monthly', 'Care process', 'Maternal: Average length of stay of caesarean section', 'ระยะเวลาวันนอนเฉลี่ยของผู้คลอดโดยการผ่าตัดคลอดทางหน้าท้อง', '1. ผู้ป่วยที่ทำ Caesarean section หมายถึง ผู้ป่วยที่มี Principal diagnosis (Pdx) or Secondary diagnosis (Sdx) ของการทำ Caesarean section โดยมีรหัสโรคตาม ICD-10 TM, ICD-10 และ/ หรือ ICD-9 ดังที่ระบุไว้นี้ 2. จำนวนวันนอนรวมหมายถึง ผลรวมของจำนวนวัน ที่ผู้ป่วยที่ทำ Caesarean section นอนพักรักษาตัวในโรงพยาบาล นับตั้งแต่วันที่รับไว้ในโรงพยาบาล จนถึงวันที่จำหน่ายออก จากโรงพยาบาล ทุกสถานะการจำหน่าย', 'a/b', 'a', 'b', ARRAY['person_anc', 'person_wbc', 'labor', 'ipt_pregnancy', 'ipt_newborn', 'ipt_labour_infant', 'ipt_labour_child']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 163', 'registered-2026.1', NULL, 'registered'),
@@ -11303,13 +11303,13 @@ metadata(
     ('DE1405', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Upper Gastrointestinal Hemorrhage (UGIH): Complication rates of upper endoscopic treatment', 'อัตราการเกิดภาวะแทรกซ้อนจากการส่องกล้องทางเดินอาหารส่วนต้นเพื่อรักษา UGIH', '1. ผู้ป่วย UGIH หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาล นาน ≥ 4 ชั่วโมง) ที่มี Principal diagnosis (Pdx) เป็นโรคที่มีเลือดออกในระบบทางเดินอาหารส่วน ต้น โดยมีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การส่องกล้องทางเดินอาหารส่วนต้น (esophagogastroduodenoscopy) หมายถึง การส่องกล้องตรวจหลอดอาหาร กระเพาะอาหาร และลำไส้เล็กส่วนต้น 3. ภาวะแทรกซ้อนจากการส่องกล้อง หมายถึง ทะลุ การติดเชื้อหลังการส่องกล้อง และ ภาวะระบบหายใจและระบบไหลเวียนโลหิตล้มเหลว', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'operation_list', 'operation_detail', 'operation_item', 'lab_head', 'lab_order', 'lab_items']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 149', 'registered-2026.1', NULL, 'registered'),
     ('DE1601', 'D', 'percent', 'higher-is-better', 'annual', 'Disease', 'New born: Percent of hearing screening within 30 days', 'ร้อยละของทารกแรกเกิดที่ได้รับการตรวจคัดกรองการได้ยิน ภายใน 30 วัน', '1.ทารกแรกเกิด หมายถึง ทารกแรกเกิดมีชีพทุกรายที่คลอดในโรงพยาบาลจากหญิง ตั้งครรภ์โดยมีอายุครรภ์ตั้งแต่ 28 สัปดาห์ขึ้นไป ยกเว้นย้ายไปโรงพยาบาลอื่นก่อน 2. การตรวจคัดกรองการได้ยิน หมายถึง การตรวจเพื่อประเมินความผิดปกติของการได้ยิน โดยวัดเสียงสะท้อนจากหูชั้นใน (Otoacoustic emissions: OAE) หรือ การตรวจความ ผิดปกติการได้ยินระดับก้านสมอง (Automated Auditory Brainstem Response: AABR)', '(a/b) ข 100', 'a', 'b', ARRAY['ipt_newborn', 'ipt_pregnancy', 'ipt_pregnancy_vital_sign', 'ipt_labour_infant', 'ipt_labour_child', 'labor', 'person_wbc', 'person_anc']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 150', 'registered-2026.1', NULL, 'registered'),
     ('DG0101', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Upper Gastrointestinal Hemorrhage (UGIH): Percent of unplanned re-admission into the hospital within 28 days after last discharge', 'ร้อยละการรับกลับเข้าโรงพยาบาลของผู้ป่วย Upper GI Hemorrhage ภายใน 28 วัน โดย ไม่ได้วางแผน', '1. ผู้ป่วย UGIH หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาล นาน ≥ 4 ชั่วโมง) ที่มี Principal diagnosis (Pdx) เป็นโรคที่มีเลือดออกในระบบทางเดินอาหาร ส่วนบนโดยมีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. เป็นการรับกลับเข้าโรงพยาบาลของผู้ป่วยโรค Upper GI hemorrhage ภายใน 28วัน โดยไม่ได้วางแผนหลังจำหน่ายออกจาก รพ. ด้วยสถานะการอนุญาตให้กลับบ้าน (status = improve) (ยกเว้นผู้ป่วยที่ไปรักษาที่โรงพยาบาลอื่น หรือไม่ยินยอมรับการรักษาตามแผน)', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'operation_list', 'operation_detail', 'operation_item', 'lab_head', 'lab_order', 'lab_items']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 120', 'registered-2026.1', NULL, 'registered'),
-    ('DG0102', 'D', 'ratio', 'lower-is-better', 'monthly', 'Disease', 'Upper Gastrointestinal Hemorrhage (UGIH): Average length of stay', 'ระยะเวลาวันนอนเฉลี่ยผู้ป่วย Upper GI hemorrhage (UGIH)', '1. ผู้ป่วย UGIH หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาล (admit) นาน ≥ 4 ชั่วโมง) ที่มี Principal diagnosis (Pdx) เป็นโรคที่มีเลือดออกในระบบทางเดินอาหาร ส่วนบนโดยมีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. จำนวนวันนอนรวมของผู้ป่วย UGIH หมายถึง ผลรวมจำนวนวัน ที่ผู้ป่วย UGIH นอนพัก รักษาตัวในโรงพยาบาล นับตั้งแต่วันที่รับไว้ในโรงพยาบาล จนถึงวันที่จำหน่าย (ทุก สถานะการจำหน่าย) ออกจากโรงพยาบาล', 'a/b', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'operation_list', 'operation_detail', 'operation_item', 'lab_head', 'lab_order', 'lab_items']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 121', 'registered-2026.1', NULL, 'registered'),
+    ('DG0102', 'D', 'ratio', 'lower-is-better', 'monthly', 'Disease', 'Upper Gastrointestinal Hemorrhage (UGIH): Average length of stay', 'ระยะเวลาวันนอนเฉลี่ยผู้ป่วย Upper GI hemorrhage (UGIH)', '1. ผู้ป่วย UGIH หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาล (admit) นาน ≥ 4 ชั่วโมง) ที่มี Principal diagnosis (Pdx) เป็นโรคที่มีเลือดออกในระบบทางเดินอาหาร ส่วนบนโดยมีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. จำนวนวันนอนรวมของผู้ป่วย UGIH หมายถึง ผลรวมจำนวนวัน ที่ผู้ป่วย UGIH นอนพัก รักษาตัวในโรงพยาบาล นับตั้งแต่วันที่รับไว้ในโรงพยาบาล จนถึงวันที่จำหน่าย (ทุก สถานะการจำหน่าย) ออกจากโรงพยาบาล', 'a/b', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'operation_list', 'operation_detail', 'operation_item', 'lab_head', 'lab_order', 'lab_items']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 121', 'foundation-2026.1', NULL, 'registered'),
     ('DG0201', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Acute Appendicitis: Percent of abruption', 'ร้อยละการเกิดไส้ติ่งทะลุในผู้ป่วยโรคไส้ติ่งอักเสบ', 'ผู้ป่วยไส้ติ่งทะลุ หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาล นาน ≥ 4 ชั่วโมง) ที่มี Principal diagnosis (Pdx) เป็นโรคไส้ติ่งอักเสบเฉียบพลันและเกิด ภาวะแทรกซ้อนมีแผลทะลุ โดยมีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'operation_list', 'operation_detail', 'operation_item']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 122', 'registered-2026.1', NULL, 'registered'),
-    ('DG0202', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Acute Appendicitis: Percent of mortality', 'ร้อยละการเสียชีวิตจากไส้ติ่งอักเสบ', '1. ผู้ป่วยไส้ติ่งอักเสบเฉียบพลัน หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาใน โรงพยาบาล นาน ≥ 4 ชั่วโมง) ที่มี Principal กiagnosis (Pdx) เป็นโรคไส้ติ่งอักเสบ เฉียบพลัน โดยมีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การเสียชีวิตของผู้ป่วยไส้ติ่งอักเสบเฉียบพลัน หมายถึง การเสียชีวิตจากทุกสาเหตุของ ผู้ป่วยไส้ติ่งอักเสบเฉียบพลัน 3. การจำหน่ายทุกสถานะ หมายถึง การที่ผู้ป่วยใน ออกจากโรงพยาบาลในทุกสถานะ ทุกกรณี', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'operation_list', 'operation_detail', 'operation_item']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 123', 'registered-2026.1', NULL, 'registered'),
-    ('DH0101', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of mortality', 'ร้อยละการเสียชีวิตของผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน', '1. ผู้ป่วย Acute coronary syndrome (ACS) หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพัก รักษาในโรงพยาบาลนานตั้งแต่ 4 ชั่วโมงขึ้นไป) อายุ ≥ 18 ปี ที่มี Principal diagnosis (Pdx) เป็นภาวะหัวใจขาดเลือดเฉียบพลัน ได้แก่ 1.1) ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ยกขึ้น (STEMI) 1.2) ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ไม่ ยกขึ้น (NSTE-ACS) หรือผู้ป่วยที่อยู่ในกลุ่มรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ ระบุไว้นี้ 2. การเสียชีวิตของผู้ป่วย Acute coronary syndrome (ACS) หมายถึง การเสียชีวิตจาก ทุกสาเหตุของผู้ป่วย ACS ที่มี Pdx ตามที่ระบุไว้ หรือผู้ป่วยที่มีโรคร่วมหรือโรคแทรกเป็น ACS และ มีสาเหตุการตายจากภาวะหัวใจขาดเลือดเฉียบพลัน 3. การจำหน่ายทุกสถานะ หมายถึง การที่ผู้ป่วยในออกจากโรงพยาบาล ในทุกสถานะ', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 39', 'registered-2026.1', NULL, 'registered'),
-    ('DH0101.1', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Acute coronary syndrome (STEMI): Percent of mortality', 'ร้อยละการเสียชีวิตของผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ยกขึ้น (STEMI)', '1. ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ยกขึ้น (STEMI) หมายถึง ผู้ป่วย ใน (ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาล นานตั้งแต่ 4 ชั่วโมงขึ้นไป) อายุ ≥ 18 ปี ที่มี Principal diagnosis (Pdx) เป็นภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ยกขึ้น (STEMI) หรือผู้ป่วยที่อยู่ในกลุ่มรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การเสียชีวิตของผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ยกขึ้น (STEMI) หมายถึง การเสียชีวิตจากทุกสาเหตุของผู้ป่วย STEMI ที่มี Pdx ตามที่ระบุไว้ หรือผู้ป่วยที่มี โรคร่วมหรือโรคแทรกเป็น STEMI และ มีสาเหตุการตายจากภาวะหัวใจขาดเลือดเฉียบพลัน ชนิด ST segment ยกขึ้น 3. การจำหน่ายทุกสถานะ หมายถึง การที่ผู้ป่วยในออกจากโรงพยาบาล ในทุกสถานะ', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 40', 'registered-2026.1', NULL, 'registered'),
-    ('DH0101.2', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Acute coronary syndrome (NSTE-ACS): Percent of mortality', 'ร้อยละการเสียชีวิตของผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ไม่ยกขึ้น (NSTE-ACS)', '1. ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ไม่ยกขึ้น (NSTE-ACS) หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาลนานตั้งแต่ 4 ชั่วโมงขึ้นไป) อายุ ≥ 18 ปี ที่มี Principal diagnosis (Pdx) เป็น ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ไม่ ยกขึ้น (NSTE-ACS) หรือผู้ป่วยที่อยู่ในกลุ่มรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ ระบุไว้นี้ 2. การเสียชีวิตของผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ไม่ยกขึ้น (NSTE-ACS) หมายถึง การเสียชีวิตจากทุกสาเหตุของผู้ป่วย NSTE-ACS ที่มี Pdx ตามที่ ระบุไว้ หรือผู้ป่วยที่มีโรคร่วมหรือโรคแทรกเป็น NSTE-ACS และ มีสาเหตุการตายจาก ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ไม่ยกขึ้น 3. การจำหน่ายทุกสถานะ หมายถึง การที่ผู้ป่วยในออกจากโรงพยาบาล ในทุกสถานะ', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 41', 'registered-2026.1', NULL, 'registered'),
-    ('DH0102', 'D', 'percent', 'higher-is-better', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of patient receiving Aspirin within', 'ร้อยละผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันที่ได้รับยา Aspirin ภายใน 24 ชั่วโมงเมื่อมาถึง โรงพยาบาล', '1. ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาใน โรงพยาบาล นานตั้งแต่ 4 ชั่วโมงขึ้นไป) อายุ ≥ 18 ปี ที่มี Principal diagnosis (Pdx) เป็น ภาวะหัวใจขาดเลือดเฉียบพลัน ได้แก่ 1.1) ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ยกขึ้น (STEMI) 1.2) ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ไม่ยกขึ้น (NSTE-ACS) หรือผู้ป่วยที่อยู่ในกลุ่มรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันที่ได้รับ Aspirin ภายใน 24 ชั่วโมงเมื่อมาถึง โรงพยาบาล หมายถึง ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันที่ไม่มีข้อห้ามของการให้ยานี้ และได้รับ Aspirin ในการรักษา โดยนับระยะเวลาตั้งแต่มีอาการและมาตรวจรักษาที่ ER/OPD และรับไว้ในโรงพยาบาล จนถึงระยะเวลาที่ผู้ป่วยได้รับยา', '(a/b) x100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 42', 'registered-2026.1', NULL, 'registered'),
+    ('DG0202', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Acute Appendicitis: Percent of mortality', 'ร้อยละการเสียชีวิตจากไส้ติ่งอักเสบ', '1. ผู้ป่วยไส้ติ่งอักเสบเฉียบพลัน หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาใน โรงพยาบาล นาน ≥ 4 ชั่วโมง) ที่มี Principal กiagnosis (Pdx) เป็นโรคไส้ติ่งอักเสบ เฉียบพลัน โดยมีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การเสียชีวิตของผู้ป่วยไส้ติ่งอักเสบเฉียบพลัน หมายถึง การเสียชีวิตจากทุกสาเหตุของ ผู้ป่วยไส้ติ่งอักเสบเฉียบพลัน 3. การจำหน่ายทุกสถานะ หมายถึง การที่ผู้ป่วยใน ออกจากโรงพยาบาลในทุกสถานะ ทุกกรณี', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'operation_list', 'operation_detail', 'operation_item']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 123', 'foundation-2026.1', NULL, 'registered'),
+    ('DH0101', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of mortality', 'ร้อยละการเสียชีวิตของผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน', '1. ผู้ป่วย Acute coronary syndrome (ACS) หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพัก รักษาในโรงพยาบาลนานตั้งแต่ 4 ชั่วโมงขึ้นไป) อายุ ≥ 18 ปี ที่มี Principal diagnosis (Pdx) เป็นภาวะหัวใจขาดเลือดเฉียบพลัน ได้แก่ 1.1) ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ยกขึ้น (STEMI) 1.2) ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ไม่ ยกขึ้น (NSTE-ACS) หรือผู้ป่วยที่อยู่ในกลุ่มรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ ระบุไว้นี้ 2. การเสียชีวิตของผู้ป่วย Acute coronary syndrome (ACS) หมายถึง การเสียชีวิตจาก ทุกสาเหตุของผู้ป่วย ACS ที่มี Pdx ตามที่ระบุไว้ หรือผู้ป่วยที่มีโรคร่วมหรือโรคแทรกเป็น ACS และ มีสาเหตุการตายจากภาวะหัวใจขาดเลือดเฉียบพลัน 3. การจำหน่ายทุกสถานะ หมายถึง การที่ผู้ป่วยในออกจากโรงพยาบาล ในทุกสถานะ', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 39', 'foundation-2026.1', NULL, 'registered'),
+    ('DH0101.1', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Acute coronary syndrome (STEMI): Percent of mortality', 'ร้อยละการเสียชีวิตของผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ยกขึ้น (STEMI)', '1. ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ยกขึ้น (STEMI) หมายถึง ผู้ป่วย ใน (ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาล นานตั้งแต่ 4 ชั่วโมงขึ้นไป) อายุ ≥ 18 ปี ที่มี Principal diagnosis (Pdx) เป็นภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ยกขึ้น (STEMI) หรือผู้ป่วยที่อยู่ในกลุ่มรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การเสียชีวิตของผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ยกขึ้น (STEMI) หมายถึง การเสียชีวิตจากทุกสาเหตุของผู้ป่วย STEMI ที่มี Pdx ตามที่ระบุไว้ หรือผู้ป่วยที่มี โรคร่วมหรือโรคแทรกเป็น STEMI และ มีสาเหตุการตายจากภาวะหัวใจขาดเลือดเฉียบพลัน ชนิด ST segment ยกขึ้น 3. การจำหน่ายทุกสถานะ หมายถึง การที่ผู้ป่วยในออกจากโรงพยาบาล ในทุกสถานะ', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 40', 'foundation-2026.1', NULL, 'registered'),
+    ('DH0101.2', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Acute coronary syndrome (NSTE-ACS): Percent of mortality', 'ร้อยละการเสียชีวิตของผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ไม่ยกขึ้น (NSTE-ACS)', '1. ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ไม่ยกขึ้น (NSTE-ACS) หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาลนานตั้งแต่ 4 ชั่วโมงขึ้นไป) อายุ ≥ 18 ปี ที่มี Principal diagnosis (Pdx) เป็น ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ไม่ ยกขึ้น (NSTE-ACS) หรือผู้ป่วยที่อยู่ในกลุ่มรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ ระบุไว้นี้ 2. การเสียชีวิตของผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ไม่ยกขึ้น (NSTE-ACS) หมายถึง การเสียชีวิตจากทุกสาเหตุของผู้ป่วย NSTE-ACS ที่มี Pdx ตามที่ ระบุไว้ หรือผู้ป่วยที่มีโรคร่วมหรือโรคแทรกเป็น NSTE-ACS และ มีสาเหตุการตายจาก ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ไม่ยกขึ้น 3. การจำหน่ายทุกสถานะ หมายถึง การที่ผู้ป่วยในออกจากโรงพยาบาล ในทุกสถานะ', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 41', 'foundation-2026.1', NULL, 'registered'),
+    ('DH0102', 'D', 'percent', 'higher-is-better', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of patient receiving Aspirin within', 'ร้อยละผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันที่ได้รับยา Aspirin ภายใน 24 ชั่วโมงเมื่อมาถึง โรงพยาบาล', '1. ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาใน โรงพยาบาล นานตั้งแต่ 4 ชั่วโมงขึ้นไป) อายุ ≥ 18 ปี ที่มี Principal diagnosis (Pdx) เป็น ภาวะหัวใจขาดเลือดเฉียบพลัน ได้แก่ 1.1) ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ยกขึ้น (STEMI) 1.2) ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ไม่ยกขึ้น (NSTE-ACS) หรือผู้ป่วยที่อยู่ในกลุ่มรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันที่ได้รับ Aspirin ภายใน 24 ชั่วโมงเมื่อมาถึง โรงพยาบาล หมายถึง ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันที่ไม่มีข้อห้ามของการให้ยานี้ และได้รับ Aspirin ในการรักษา โดยนับระยะเวลาตั้งแต่มีอาการและมาตรวจรักษาที่ ER/OPD และรับไว้ในโรงพยาบาล จนถึงระยะเวลาที่ผู้ป่วยได้รับยา', '(a/b) x100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 42', 'foundation-2026.1', NULL, 'registered'),
     ('DH0103', 'D', 'percent', 'higher-is-better', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of Aspirin prescribed at discharge', 'ร้อยละผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน ที่ได้รับการสั่งยา Aspirin เมื่อจำหน่ายออก จากโรงพยาบาล', '1. ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาใน โรงพยาบาล นานตั้งแต่ 4 ชั่วโมงขึ้นไป) อายุ ≥ 18 ปี ที่มี Principal diagnosis (Pdx) เป็น ภาวะหัวใจขาดเลือดเฉียบพลัน ได้แก่ 1.1) ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ยกขึ้น (STEMI) 1.2) ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ไม่ยกขึ้น (NSTE-ACS) หรือผู้ป่วยที่อยู่ในกลุ่มรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน ที่ได้รับการสั่งยา Aspirin เมื่อจำหน่ายออกจาก โรงพยาบาล หมายถึง ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน (ACS) ที่ไม่มีข้อห้ามของการให้ ยานี้ และมีการสั่งให้ยา Aspirin เมื่อจำหน่ายผู้ป่วยออกจากโรงพยาบาล โดยนับเฉพาะการ จำหน่ายมีชีวิตด้วยสถานะการอนุญาตให้กลับบ้าน', '(a/b) x100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 43', 'registered-2026.1', NULL, 'registered'),
     ('DH0104', 'D', 'percent', 'higher-is-better', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of ACE inhibitors or ARB received for patient who have LVSD', 'ร้อยละผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน ที่มี LVSD และได้รับยา ACE inhibitors หรือ ARBs', '1. ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาใน โรงพยาบาล นานตั้งแต่ 4 ชั่วโมงขึ้นไป) อายุ ≥ 18 ปี ที่มี Principal diagnosis (Pdx) เป็น ภาวะหัวใจขาดเลือดเฉียบพลัน ได้แก่ 1.1) ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ยกขึ้น (STEMI) 1.2) ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ไม่ยกขึ้น (NSTE-ACS) หรือผู้ป่วยที่อยู่ในกลุ่มรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน (ACS) ที่มี LVSD หมายถึง ผู้ป่วย ACS ที่ได้รับการ ตรวจด้วยคลื่นเสียง ultrasound แล้วพบว่ามี LVSD 3. ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน (ACS) ที่ได้รับยา ACE inhibitors หรือ ARBs หมายถึง ผู้ป่วย ACS ที่ไม่มีข้อห้าม หรือข้อจำกัด (ผู้ป่วยแพ้ยา, ความดันโลหิตต่ำกว่า 100/60 mmHg) ของการให้ยานี้ และได้รับยา ACE inhibitors หรือ ARBs ในการรักษา', '(a/b) x100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 44', 'registered-2026.1', NULL, 'registered'),
     ('DH0105', 'D', 'percent', 'higher-is-better', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of smoking cessation advice given', 'ร้อยละผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน ที่สูบบุหรี่และได้รับการแนะนำให้งดบุหรี่ ระหว่างการอยู่โรงพยาบาล', '1. ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาใน โรงพยาบาล นานตั้งแต่ 4 ชั่วโมงขึ้นไป) อายุ ≥ 18 ปี ที่มี Principal diagnosis (Pdx) เป็น ภาวะหัวใจขาดเลือดเฉียบพลัน ได้แก่ 1.1) ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ยกขึ้น (STEMI) 1.2) ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ไม่ยกขึ้น (NSTE-ACS) หรือผู้ป่วยที่อยู่ในกลุ่มรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน (ACS) ที่สูบบุหรี่และได้รับการแนะนำให้งดบุหรี่ ระหว่างการอยู่โรงพยาบาล หมายถึง ผู้ป่วย ACS ที่มีประวัติสูบบุหรี่ภายใน 1 ปีก่อนได้รับ การตรวจรักษาและรับไว้ในโรงพยาบาล ได้รับคำแนะนำ/Counseling ให้ความรู้ความ เข้าใจเกี่ยวกับผลกระทบของบุหรี่ต่อภาวะของโรคที่เป็น เพื่อให้ผู้ป่วยงดบุหรี่ระหว่างการ อยู่โรงพยาบาล และแนะนำให้อดหรือเลิกบุหรี่ต่อไป', '(a/b) x100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 46', 'registered-2026.1', NULL, 'registered'),
@@ -11319,7 +11319,7 @@ metadata(
     ('DH0109', 'D', 'ratio', 'lower-is-better', 'monthly', 'Disease', 'Acute coronary syndrome: Average door to refer time', 'ระยะเวลาเฉลี่ยที่ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน มาถึงโรงพยาบาลจนได้รับการส่งต่อ', '1. ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาใน โรงพยาบาล นานตั้งแต่ 4 ชั่วโมงขึ้นไป) อายุ ≥ 18 ปี ที่มี Principal diagnosis (Pdx) เป็น ภาวะหัวใจขาดเลือดเฉียบพลัน ได้แก่ 1.1) ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ยกขึ้น (STEMI) 1.2) ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ไม่ยกขึ้น (NSTE-ACS) หรือผู้ป่วยที่อยู่ในกลุ่มรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. ระยะเวลาที่ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน (ACS) มาถึงโรงพยาบาลจนได้รับการ ส่งต่อ หมายถึง ช่วงเวลานับตั้งแต่ผู้ป่วย ACS มาถึงโรงพยาบาล (ในทุก OPD, ER) จนถึง ได้รับการส่งต่อ โดยมีหน่วยนับเป็นนาที 3. กระบวนการส่งต่อผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน (ACS) ต้องไม่อยู่ภายใต้ข้อจำกัด เรื่อง โรงพยาบาลปลายทาง/โรงพยาบาลผู้รับส่งต่อ (refer) กำหนดให้มีการตรวจทาง ห้องปฏิบัติการให้ครบก่อนส่งต่อ', 'a/b', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 50', 'registered-2026.1', NULL, 'registered'),
     ('DH0110', 'D', 'percent', 'higher-is-better', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of Primary Percutaneous Coronary Intervention (PCI) given within 120 minutes or received Fibrinolytic agent within 30 minutes of arrival', 'ร้อยละผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน ชนิด ST segment ยกขึ้น (STEMI) ที่ได้รับ Primary Percutaneous Coronary Intervention (PPCI) ภายใน 120 นาที หรือ Fibrinolytic Agent ภายใน 30 นาทีเมื่อแรกรับ', '1. ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ยกขึ้น (STEMI) หมายถึง ผู้ป่วย ใน (ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาล นานตั้งแต่ 4 ชั่วโมงขึ้นไป) อายุ ≥ 18 ปี ที่มี principal diagnosis (Pdx) เป็นภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ยกขึ้น (STEMI) ซึ่งต้องให้ยาละลายลิ่มเลือด (Fibrinolytic Agent) และ/หรือ การขยายหลอด เลือดหัวใจ (PCI: Percutaneous Coronary Intervention) โดยเป็นโรคที่มีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. เป็นผู้ป่วย STEMI ที่ไม่มีข้อจำกัดของการทำ PPCI หรือไม่มีข้อห้ามของการให้ Thrombolytic agent ในการรักษา 3. การได้รับ PPCI ภายใน 120 นาที หรือ Fibrinolytic agent ภายใน 30 นาที นับตั้งแต่ ระยะเวลาที่ผู้ป่วยได้รับการตรวจรักษาที่ ER/OPD และรับไว้ในโรงพยาบาล จนถึงเวลาที่ ผู้ป่วยได้ทำ PPCI หรือได้รับยา Fibrinolytic agent', '(a/b) x100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุก 3 เดือน (รายไตรมาส)', 'THIP KPI Dictionary 2025 · หน้า 51', 'registered-2026.1', NULL, 'registered'),
     ('DH0111', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of unplanned re-admission within', 'ร้อยละการรับกลับเข้าโรงพยาบาลของผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน ภายใน 28 วัน โดยไม่ได้วางแผน', '1. ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาใน โรงพยาบาล นานตั้งแต่ 4 ชั่วโมงขึ้นไป) อายุ ≥ 18 ปี ที่มี Principal diagnosis (Pdx) เป็น ภาวะหัวใจขาดเลือดเฉียบพลัน ได้แก่ 1.1) ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ยกขึ้น (STEMI) 1.2) ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ไม่ยกขึ้น (NSTE-ACS) หรือผู้ป่วยที่อยู่ในกลุ่มรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การรับกลับเข้าโรงพยาบาลของผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน ภายใน 28 วัน โดย ไม่ได้วางแผน หมายถึง ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันที่รับกลับเข้าโรงพยาบาลหลัง จำหน่ายจากโรงพยาบาลภายใน 28 วัน ด้วยสถานะการอนุญาตให้กลับบ้าน (status=improve) ยกเว้น ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันที่ไปรักษาที่โรงพยาบาล อื่น หรือไม่ยินยอมรับการรักษาตามแผน', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 53', 'registered-2026.1', NULL, 'registered'),
-    ('DH0112', 'D', 'ratio', 'lower-is-better', 'monthly', 'Disease', 'Acute coronary syndrome: Average length of stay', 'ระยะเวลาวันนอนเฉลี่ยผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน', '1. ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาใน โรงพยาบาล นานตั้งแต่ 4 ชั่วโมงขึ้นไป) อายุ ≥ 18 ปี ที่มี Principal diagnosis (Pdx) เป็น ภาวะหัวใจขาดเลือดเฉียบพลัน ได้แก่ 1.1) ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ยกขึ้น (STEMI) 1.2) ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ไม่ยกขึ้น (NSTE-ACS) หรือผู้ป่วยที่อยู่ในกลุ่มรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. ระยะเวลาวันนอนเฉลี่ยผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน หมายถึง ผลรวมของ จำนวนวันนอนที่ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันนอนพักรักษาตัวในโรงพยาบาลโดย นับตั้งแต่วันที่รับไว้จนถึงวันที่จำหน่ายออกจากโรงพยาบาลทุกรายที่จำหน่ายในเดือนนั้น หารด้วยจำนวนผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันที่จำหน่ายในเดือนนั้น 3. ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันที่จำหน่ายออกจากโรงพยาบาล หมายถึง ผู้ป่วย ภาวะหัวใจขาดเลือดเฉียบพลัน ที่จำหน่ายออกจาก โรงพยาบาล ทุกสถานะการจำหน่าย', '(a/b)', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 54', 'registered-2026.1', NULL, 'registered'),
+    ('DH0112', 'D', 'ratio', 'lower-is-better', 'monthly', 'Disease', 'Acute coronary syndrome: Average length of stay', 'ระยะเวลาวันนอนเฉลี่ยผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน', '1. ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาใน โรงพยาบาล นานตั้งแต่ 4 ชั่วโมงขึ้นไป) อายุ ≥ 18 ปี ที่มี Principal diagnosis (Pdx) เป็น ภาวะหัวใจขาดเลือดเฉียบพลัน ได้แก่ 1.1) ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ยกขึ้น (STEMI) 1.2) ภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ไม่ยกขึ้น (NSTE-ACS) หรือผู้ป่วยที่อยู่ในกลุ่มรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. ระยะเวลาวันนอนเฉลี่ยผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน หมายถึง ผลรวมของ จำนวนวันนอนที่ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันนอนพักรักษาตัวในโรงพยาบาลโดย นับตั้งแต่วันที่รับไว้จนถึงวันที่จำหน่ายออกจากโรงพยาบาลทุกรายที่จำหน่ายในเดือนนั้น หารด้วยจำนวนผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันที่จำหน่ายในเดือนนั้น 3. ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันที่จำหน่ายออกจากโรงพยาบาล หมายถึง ผู้ป่วย ภาวะหัวใจขาดเลือดเฉียบพลัน ที่จำหน่ายออกจาก โรงพยาบาล ทุกสถานะการจำหน่าย', '(a/b)', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 54', 'foundation-2026.1', NULL, 'registered'),
     ('DH0113', 'D', 'percent', 'higher-is-better', 'monthly', 'Disease', 'Acute coronary syndrome: Percent of time to Fibrinolytic administration agents within 30 minutes of arrival', 'ร้อยละผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลัน ชนิด ST segment ยกขึ้น (STEMI) ที่ได้รับ Fibrinolytic agent ภายใน 30 นาทีเมื่อมาถึงโรงพยาบาล', '1. ผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ยกขึ้น (STEMI) หมายถึง ผู้ป่วย อายุ ≥ 18 ปี ที่มี principal diagnosis (Pdx) เป็นภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ยกขึ้น (STEMI) ซึ่งต้องให้ยาละลายลิ่มเลือด (Fibrinolytic agent) โดยมีรหัส โรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. เป็นผู้ป่วยภาวะหัวใจขาดเลือดเฉียบพลันชนิด ST segment ยกขึ้น (STEMI) ที่ไม่มีข้อ ห้ามของการให้ Thrombolytic agent ในการรักษา 3. การได้รับ Fibrinolytic agent ภายใน 30 นาที นับตั้งแต่ระยะเวลาที่ผู้ป่วยได้รับการ ตรวจรักษาที่ ER/OPD และรับไว้ในโรงพยาบาล จนถึงเวลาที่ผู้ป่วยได้รับยา Fibrinolytic agent', '(a/b) x100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'opitemrece', 'drugitems', 'operation_list', 'operation_detail']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 55', 'registered-2026.1', NULL, 'registered'),
     ('DH0201', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Coronary Artery Bypass Graft (CABG): Percent of mortality', 'ร้อยละการเสียชีวิตของผู้ป่วยที่ทำ Coronary Artery Bypass Graft (CABG)', '1. ผู้ป่วยที่ทำ CABG หมายถึง ผู้ป่วยที่มี Principal diagnosis (Pdx) เป็นโรคหลอดเลือด หัวใจซึ่งจำเป็นต้องได้รับการตรวจรักษาด้วยการทำ CABG จากทุกหอผู้ป่วยใน โดยมีรหัส โรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การเสียชีวิตของผู้ป่วยที่ทำ CABG หมายถึง การเสียชีวิตจากทุกสาเหตุของผู้ป่วยที่ได้รับ การผ่าตัดทำทางเบี่ยงหลอดเลือดหัวใจ (Coronary Artery Bypass Graft: CABG) 3. การจำหน่ายทุกสถานะ หมายถึง การที่ผู้ป่วยใน ออกจากโรงพยาบาล ในทุกสถานะ', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 57', 'registered-2026.1', NULL, 'registered'),
     ('DH0202', 'D', 'percent', 'higher-is-better', 'monthly', 'Disease', 'Coronary Artery Bypass Graft (CABG): Percent of patient who received antibiotic prophylaxis', 'ร้อยละการได้รับยาปฏิชีวนะแบบป้องกันในการผ่าตัด Coronary Artery Bypass Graft (CABG)', '1. ผู้ป่วยที่ทำ CABG หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาล (admit) นานตั้งแต่ 4 ชั่วโมงขึ้นไป) ที่มี Principal diagnosis (Pdx) เป็นโรคหลอดเลือดหัวใจซึ่ง จำเป็นต้องได้รับการตรวจรักษาด้วยการทำ CABG โดยมีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การได้รับยาปฏิชีวนะแบบป้องกันในการผ่าตัด CABG หมายถึง การที่ผู้ป่วยได้รับยา ปฏิชีวนะในช่วงระยะเวลาภายใน 1 ชั่วโมงก่อนลงมีดผ่าตัด (กรณีเป็นการให้ยาแบบ IV drip ให้เริ่มนับเวลาเมื่อ drip ยาหมด)', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 58', 'registered-2026.1', NULL, 'registered'),
@@ -11339,17 +11339,17 @@ metadata(
     ('DM0302', 'D', 'percent', 'higher-is-better', 'monthly', 'Disease', 'Cerebral Palsy: Percent of children with cerebral palsy that improved after intervented', 'ร้อยละผู้ป่วยเด็กสมองพิการ (Cerebral palsy) มีพัฒนาการดีขึ้น จากการประเมินโดยใช้ เครื่องมือ TEDA4I', '1. เด็กสมองพิการ หมายถึง เด็กที่ได้รับการวินิจฉัยจากแพทย์เป็น Cerebral palsy อาจมี หรือไม่มีโรคร่วม 2. พัฒนาการดีขึ้น หมายถึง พัฒนาการด้านที่ล่าช้าด้านใดด้านหนึ่งใน 5 ด้านดีขึ้นโดยไม่มี ด้านใดลดลง ภายใน 6 เดือน หลังการรักษา โดย ประเมินโดยใช้เครื่องมือ TEDA4I 3. พัฒนาการ 5 ด้าน หมายถึง 1) ด้านการเคลื่อนไหว (gross motor) 2) ด้านการใช้ กล้ามเนื้อมัดเล็กและสติปัญญา (fine motor) 3) ด้านการเข้าใจภาษา (receptive language) 4) ด้านการใช้ภาษา (expressive language) 5) ด้านการช่วยเหลือตนเองและ สังคม (personal and social)', '(a/b) ข 100', 'a', 'b', ARRAY['psych_assess_child', 'psych_plan', 'psych_therapy', 'depression_screen', 'person_wbc', 'ovst', 'ovstdiag', 'clinicmember']::text[], 'ทุก 6 เดือน (รายครึ่งปี)', 'THIP KPI Dictionary 2025 · หน้า 158', 'registered-2026.1', NULL, 'registered'),
     ('DM0401', 'D', 'percent', 'higher-is-better', 'monthly', 'Disease', 'Child and adolescent psychiatry: Percent of children with Attention- Deficit Hyperactivity Disorder (ADHD) improved after intervented for 6', 'ร้อยละผู้ป่วยเด็กสมาธิสั้นรายใหม่อาการดีขึ้นภายใน 6 เดือน', 'ผู้ป่วยสมาธิสั้น หมายถึง ผู้ป่วยที่ได้รับการวินิจฉัยเป็นโรคสมาธิสั้น (F90) อาการดีขึ้น หมายถึง คะแนนจากแบบวัด SNAP-IV ฉบับผู้ปกครองลดลงด้านใดด้านหนึ่ง หลังรับการรักษา 6 เดือน', '(a/b) ข 100', 'a', 'b', ARRAY['psych_assess_child', 'psych_plan', 'psych_therapy', 'depression_screen', 'person_wbc', 'ovst', 'ovstdiag', 'clinicmember']::text[], 'ทุก 6 เดือน (รายครึ่งปี)', 'THIP KPI Dictionary 2025 · หน้า 159', 'registered-2026.1', NULL, 'registered'),
     ('DM0402', 'D', 'percent', 'higher-is-better', 'monthly', 'Disease', 'Child and adolescent psychiatry: Percent of children and adolescents with Major Depressive Disorder (MDD) improved after intervented for', 'ร้อยละผู้ป่วยเด็กซึมเศร้าอาการดีขึ้นภายใน 6 เดือน', 'ผู้ป่วยซึมเศร้า หมายถึง เด็กและวัยรุ่นอายุระหว่าง 6-17 ปี 11 เดือน 29 วัน ที่ได้รับการ วินิจฉัยโรคซึมเศร้า (F32.0-F32.9, F33.0-F33.9, F34.1) อาการดีขึ้น หมายถึง อาการสงบ (clinical remission) หลังรักษาครบ 6 เดือน หรือ คะแนนจากแบบประเมิน Childhood depressive inventory (CDI) น้อยกว่าหรือเท่ากับ 15 คะแนน', '(a/b) ข 100', 'a', 'b', ARRAY['psych_assess_child', 'psych_plan', 'psych_therapy', 'depression_screen', 'person_wbc', 'ovst', 'ovstdiag', 'clinicmember']::text[], 'ทุก 6 เดือน (รายครึ่งปี)', 'THIP KPI Dictionary 2025 · หน้า 160', 'registered-2026.1', NULL, 'registered'),
-    ('DN0101', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Stroke: Percent of mortality', 'ร้อยละการเสียชีวิตของผู้ป่วย Stroke', '1. ผู้ป่วย Stroke หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาล นานตั้งแต่ 4 ชั่วโมงขึ้นไป) ที่มี Principal diagnosis (Pdx) เป็นโรคหลอดเลือดสมอง โดยมีรหัสโรคอยู่ ในกลุ่มรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การเสียชีวิตของผู้ป่วย Stroke หมายถึง การเสียชีวิตจากทุกสาเหตุของผู้ป่วย Stroke 3. การจำหน่ายทุกสถานะ หมายถึง การที่ผู้ป่วยใน ออกจากโรงพยาบาล ในทุกสถานะ', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 67', 'registered-2026.1', NULL, 'registered'),
+    ('DN0101', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Stroke: Percent of mortality', 'ร้อยละการเสียชีวิตของผู้ป่วย Stroke', '1. ผู้ป่วย Stroke หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาล นานตั้งแต่ 4 ชั่วโมงขึ้นไป) ที่มี Principal diagnosis (Pdx) เป็นโรคหลอดเลือดสมอง โดยมีรหัสโรคอยู่ ในกลุ่มรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การเสียชีวิตของผู้ป่วย Stroke หมายถึง การเสียชีวิตจากทุกสาเหตุของผู้ป่วย Stroke 3. การจำหน่ายทุกสถานะ หมายถึง การที่ผู้ป่วยใน ออกจากโรงพยาบาล ในทุกสถานะ', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 67', 'foundation-2026.1', NULL, 'registered'),
     ('DN0102', 'D', 'percent', 'higher-is-better', 'monthly', 'Disease', 'Ischemic stroke: Percent of patient receiving Antiplatelet within 2 days of hospital admission', 'ร้อยละผู้ป่วยโรคสมองขาดเลือดที่ได้รับยาต้านเกล็ดเลือด (Antiplatelet) ภายใน 2 วัน หลังเข้ารับการรักษาในโรงพยาบาล', '1. ผู้ป่วยโรคสมองขาดเลือดจากภาวะหลอดเลือดสมองตีบหรืออุดตัน (Ischemic stroke) หมายถึง ผู้ป่วยใน อายุ ≥18 ปี ที่มี Principal diagnosis (Pdx) เป็นโรคสมองขาดเลือด ที่มีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การได้รับยาต้านเกล็ดเลือด หมายถึง การที่ผู้ป่วยได้รับการรักษาด้วยการให้ Antiplatelet drugs ภายใน 48 ชั่วโมงหลังเกิดอาการ (นับระยะเวลาตั้งแต่เริ่มมีอาการ และเข้ารับการรักษาในโรงพยาบาล จนถึงเวลาที่ได้รับยา) 3. ผู้ป่วยในที่เข้าเกณฑ์ คือ ผู้ป่วยอายุตั้งแต่ 18 ปีขึ้นไป ที่รับไว้นอนพักรักษาในโรงพยาบาล นานตั้งแต่ 2-120 วัน ซึ่งไม่อยู่ในสถานะประคับประคองระยะสุดท้าย หรือถูกคัดเลือกเข้า โครงการวิจัยทางคลินิก หรือ Admit เพื่อทำการผ่าตัดหลอดเลือดแดงคาโรติดแบบไม่ เร่งด่วน หรือไม่ใช่ผู้ป่วยที่ได้รับยาต้านภาวะแข็งตัวของเลือดทางหลอดเลือดภายใน 24 ชั่วโมงก่อนมาถึง โรงพยาบาล หรือไม่ใช่ผู้ป่วยที่มีหลักฐานว่ามีเหตุผลอันสมควรที่ไม่ได้รับ ยาต้านเกล็ดเลือดภายใน 2 วัน หลังเข้ารับการรักษาในโรงพยาบาล', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 68', 'registered-2026.1', NULL, 'registered'),
     ('DN0103', 'D', 'percent', 'higher-is-better', 'monthly', 'Disease', 'Ischemic stroke: Percent of Antiplatelet or Anticoagulant therapy prescribed at discharge', 'ร้อยละผู้ป่วยโรคหลอดเลือดสมองขาดเลือดที่ได้รับการสั่งยาต้านเกล็ดเลือด (Antiplatelet) หรือยาต้านภาวะแข็งตัวของเลือด (Anticoagulant) ขณะจำหน่ายออกจากโรงพยาบาล', '1. ผู้ป่วยโรคหลอดเลือดสมองขาดเลือด (Ischemic stroke) หมายถึง ผู้ป่วยใน อายุ ≥18 ปี ที่มี Principal diagnosis (Pdx) เป็นโรคหลอดเลือดสมองขาดเลือด ที่มีรหัสโรคตาม ICD- 10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การได้รับยาต้านเกล็ดเลือดหรือยาต้านภาวะแข็งตัวของเลือด ขณะจำหน่ายออกจาก โรงพยาบาล หมายถึง การที่ผู้ป่วยได้รับ Antiplatelet or Anticoagulant Drugs ขณะ จำหน่ายออกจากโรงพยาบาล โดยนับเฉพาะการจำหน่ายมีชีวิตด้วยสถานะการอนุญาตให้ กลับบ้าน (improve) 3. ผู้ป่วยในที่เข้าเกณฑ์ คือ ผู้ป่วยใน อายุ ≥ 18 ปีที่รับไว้นอนในโรงพยาบาล นานไม่เกิน 120 วัน ซึ่งไม่อยู่ในการประคับประคองระยะสุดท้ายหรือถูกคัดเลือกเข้าโครงการวิจัย หรือ admit เพื่อทำการผ่าตัดหลอดเลือดแดงคาโรติดแบบไม่เร่งด่วน หรือไม่ใช่ผู้ป่วยที่มีหลักฐาน ว่ามีเหตุผลอันสมควรที่ไม่ให้ยาต้านเกล็ดเลือดหรือยากันเลือดเป็นลิ่มขณะจำหน่ายออกจาก โรงพยาบาล', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 69', 'registered-2026.1', NULL, 'registered'),
     ('DN0104', 'D', 'percent', 'higher-is-better', 'monthly', 'Disease', 'Ischemic stroke: Percent of patient with Atrial fibrillation/Flutter receiving Anticoagulation therapy', 'ร้อยละผู้ป่วยโรคหลอดเลือดสมองขาดเลือดที่มีภาวะหัวใจห้องบนเต้นระริกหรือหัวใจห้อง บนเต้นระรัวได้รับยาต้านภาวะแข็งตัวของเลือด (Anticoagulant)', '1. ผู้ป่วยโรคหลอดเลือดสมอง (Stroke) หมายถึง ผู้ป่วยใน อายุ ≥18 ปี ที่มี Principal diagnosis (Pdx) เป็นโรคหลอดเลือดสมอง ที่มีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การได้รับยาต้านภาวะแข็งตัวของเลือด หมายถึง การให้ Anticoagulant ในการรักษาแก่ ผู้ป่วยโรคหลอดเลือดสมองขาดเลือดที่มีภาวะหัวใจห้องบนเต้นระริกหรือหัวใจห้องบนเต้น ระรัว ที่รับไว้นอนในโรงพยาบาล นานไม่เกิน 120 วัน ไม่อยู่ในการประคับประคองระยะ สุดท้าย หรือถูกคัดเลือกเข้าโครงการวิจัยหรือ admit เพื่อทำการผ่าตัดหลอดเลือดแดงคาโร ติดแบบไม่เร่งด่วน หรือไม่ใช่ผู้ป่วยที่มีหลักฐานว่ามีเหตุผลอันสมควรที่ไม่ให้ยากันเลือดเป็น ลิ่ม และให้ยาในขณะจำหน่ายออกจากโรงพยาบาล โดยนับเฉพาะการจำหน่ายมีชีวิตด้วย สถานะการอนุญาตให้กลับบ้าน (improve)', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 70', 'registered-2026.1', NULL, 'registered'),
     ('DN0105', 'D', 'percent', 'higher-is-better', 'monthly', 'Disease', 'Stroke: Percent of patients who were given stroke education during their hospital stay', 'ร้อยละผู้ป่วยโรคหลอดเลือดสมองได้รับความรู้ในขณะอยู่ที่โรงพยาบาล', '1. ผู้ป่วยโรคหลอดเลือดสมอง (Stroke) หมายถึง ผู้ป่วยใน อายุ ≥18 ปี ที่มี Principal diagnosis (Pdx) เป็นโรคหลอดเลือดสมอง ที่มีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การได้รับความรู้ หมายถึง การที่ผู้ป่วยโรคหลอดเลือดสมองขาดเลือดหรือโรคหลอดเลือด สมองแตก หรือผู้ดูแล ได้รับคำแนะนำ/ความรู้ ระหว่างอยู่โรงพยาบาล ได้แก่ การแจ้งระบบ การแพทย์ฉุกเฉิน การมาตรวจติดตามหลังจำหน่ายออกจากโรงพยาบาล ยาที่ได้รับขณะ จำหน่ายออกจากโรงพยาบาล ปัจจัยเสี่ยงของโรคหลอดเลือดสมอง รวมทั้งอาการเตือน และอาการของโรคหลอดเลือดสมอง', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 71', 'registered-2026.1', NULL, 'registered'),
     ('DN0106', 'D', 'percent', 'higher-is-better', 'monthly', 'Disease', 'Stroke: Percent of treatment, physiotherapy or rehabilitation in stroke or paralytic syndrome within 72 hours', 'ร้อยละผู้ป่วยโรคหลอดเลือดสมองได้รับการประเมินและได้รับการรักษาด้านเวชศาสตร์ ฟื้นฟูเพื่อฟื้นฟูสมรรถภาพภายใน 72 ชั่วโมง', '1. ผู้ป่วยโรคหลอดเลือดสมอง (Stroke) หมายถึง ผู้ป่วยใน อายุ ≥18 ปี ที่มี Principal diagnosis (Pdx) เป็นโรคหลอดเลือดสมอง ที่มีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การประเมินด้านเวชศาสตร์ฟื้นฟูเพื่อฟื้นฟูสมรรถภาพและได้รับการรักษาทางเวชศาสตร์ ฟื้นฟู ภายใน 72 ชั่วโมงหลังรับไว้ในโรงพยาบาล หมายถึง การที่ผู้ป่วย Stroke ซึ่งไม่มีภาวะ ที่คุกคามชีวิตแล้ว ได้รับการประเมินด้านเวชศาสตร์ฟื้นฟูและได้รับการรักษาทางเวชศาสตร์ ฟื้นฟูเพื่อป้องกันภาวะแทรกซ้อน ลดความพิการ และให้กลับมาช่วยตัวเองได้มากที่สุด ภายใน 72 ชั่วโมง หลังรับไว้ในโรงพยาบาล', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 72', 'registered-2026.1', NULL, 'registered'),
-    ('DN0107', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Stroke: Percent of unplanned re-admission of stroke within 28 days', 'ร้อยละการรับกลับเข้าโรงพยาบาลของผู้ป่วย Stroke ด้วยโรคหลอดเลือดสมองเดิม ภายใน 28 วัน โดยไม่ได้วางแผน', '1. ผู้ป่วย Stroke หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาล (admit) นานตั้งแต่ 4 ชั่วโมงขึ้นไป) อายุ ≥18 ปี ที่มี Principal diagnosis (Pdx) เป็นโรคหลอด เลือดสมอง โดยมีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การรับกลับเข้าโรงพยาบาลของผู้ป่วย Stroke ภายใน 28 วัน โดยไม่ได้วางแผน หมายถึง ผู้ป่วย Stroke ที่รับกลับเข้าโรงพยาบาลหลังจำหน่ายจากโรงพยาบาลภายใน 28 วัน โดย ไม่ได้วางแผน 3. การจำหน่ายออกจากโรงพยาบาล หมายถึง ผู้ป่วย Stroke ที่จำหน่ายมีชีวิตออกจาก โรงพยาบาล ด้วยสถานะการอนุญาตให้กลับบ้าน (status=improve) ยกเว้นผู้ป่วยที่ไป รักษาที่โรงพยาบาลอื่น หรือไม่ยินยอมรับการรักษาตามแผน', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 73', 'registered-2026.1', NULL, 'registered'),
-    ('DN0109', 'D', 'ratio', 'lower-is-better', 'monthly', 'Disease', 'Stroke: Average length of stay', 'ระยะเวลาวันนอนเฉลี่ยของผู้ป่วย Stroke', '1. ผู้ป่วย Stroke หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาล (admit) นานตั้งแต่ 4 ชั่วโมงขึ้นไป) อายุ ≥18 ปี ที่มี Principal diagnosis (Pdx) เป็นโรคหลอด เลือดสมอง โดยมีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. ระยะเวลาวันนอนเฉลี่ยผู้ป่วย Stroke หมายถึง ผลรวมของจำนวนวันนอนที่ผู้ป่วย Stroke นอนพักรักษาตัวในโรงพยาบาลโดยนับตั้งแต่วันที่รับไว้จนถึงวันที่จำหน่ายออกจาก โรงพยาบาลทุกรายที่จำหน่ายในเดือนนั้น หารด้วยจำนวนผู้ป่วย Stroke ที่จำหน่ายออก จากโรงพยาบาลในเดือนนั้น 3. ผู้ป่วย Stroke ที่จำหน่ายออกจากโรงพยาบาล หมายถึง ผู้ป่วย Stroke ที่จำหน่ายออก จากโรงพยาบาลทุกสถานะการจำหน่าย', 'a/b', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 74', 'registered-2026.1', NULL, 'registered'),
+    ('DN0107', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Stroke: Percent of unplanned re-admission of stroke within 28 days', 'ร้อยละการรับกลับเข้าโรงพยาบาลของผู้ป่วย Stroke ด้วยโรคหลอดเลือดสมองเดิม ภายใน 28 วัน โดยไม่ได้วางแผน', '1. ผู้ป่วย Stroke หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาล (admit) นานตั้งแต่ 4 ชั่วโมงขึ้นไป) อายุ ≥18 ปี ที่มี Principal diagnosis (Pdx) เป็นโรคหลอด เลือดสมอง โดยมีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การรับกลับเข้าโรงพยาบาลของผู้ป่วย Stroke ภายใน 28 วัน โดยไม่ได้วางแผน หมายถึง ผู้ป่วย Stroke ที่รับกลับเข้าโรงพยาบาลหลังจำหน่ายจากโรงพยาบาลภายใน 28 วัน โดย ไม่ได้วางแผน 3. การจำหน่ายออกจากโรงพยาบาล หมายถึง ผู้ป่วย Stroke ที่จำหน่ายมีชีวิตออกจาก โรงพยาบาล ด้วยสถานะการอนุญาตให้กลับบ้าน (status=improve) ยกเว้นผู้ป่วยที่ไป รักษาที่โรงพยาบาลอื่น หรือไม่ยินยอมรับการรักษาตามแผน', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 73', 'foundation-2026.1', NULL, 'registered'),
+    ('DN0109', 'D', 'ratio', 'lower-is-better', 'monthly', 'Disease', 'Stroke: Average length of stay', 'ระยะเวลาวันนอนเฉลี่ยของผู้ป่วย Stroke', '1. ผู้ป่วย Stroke หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาล (admit) นานตั้งแต่ 4 ชั่วโมงขึ้นไป) อายุ ≥18 ปี ที่มี Principal diagnosis (Pdx) เป็นโรคหลอด เลือดสมอง โดยมีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. ระยะเวลาวันนอนเฉลี่ยผู้ป่วย Stroke หมายถึง ผลรวมของจำนวนวันนอนที่ผู้ป่วย Stroke นอนพักรักษาตัวในโรงพยาบาลโดยนับตั้งแต่วันที่รับไว้จนถึงวันที่จำหน่ายออกจาก โรงพยาบาลทุกรายที่จำหน่ายในเดือนนั้น หารด้วยจำนวนผู้ป่วย Stroke ที่จำหน่ายออก จากโรงพยาบาลในเดือนนั้น 3. ผู้ป่วย Stroke ที่จำหน่ายออกจากโรงพยาบาล หมายถึง ผู้ป่วย Stroke ที่จำหน่ายออก จากโรงพยาบาลทุกสถานะการจำหน่าย', 'a/b', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 74', 'foundation-2026.1', NULL, 'registered'),
     ('DN0110', 'D', 'percent', 'higher-is-better', 'monthly', 'Disease', 'Ischemic Stroke: Percent of time to Thrombolytic administration agents within 60 minutes of arrival', 'ร้อยละผู้ป่วย Ischemic stroke ที่ได้รับ Thrombolytic agents ภายใน 60 นาที เมื่อ มาถึงโรงพยาบาล', '1. ผู้ป่วย Ischemic stroke หมายถึง ผู้ป่วยที่มี Principal diagnosis (Pdx) เป็นโรคเส้น เลือดในสมองตีบหรืออุดตัน โดยเป็นโรคที่มีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ ระบุไว้นี้ 2. ผู้ป่วย Ischemic stroke ที่ได้รับ Thrombolytic agents ภายใน 60 นาทีเมื่อแรกรับ หมายถึง ผู้ป่วยที่ไม่มีข้อห้ามของการให้ยานี้ และ ได้รับ Thrombolytic agents ในการ รักษาภายใน 60 นาที นับตั้งแต่ระยะเวลาที่ผู้ป่วยได้รับการตรวจรักษาที่ ER/OPD และรับ ไว้ในโรงพยาบาล จนถึงระยะเวลาที่ผู้ป่วยได้รับยา (door to needle time)', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'er_regist', 'operation_list', 'operation_detail', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 75', 'registered-2026.1', NULL, 'registered'),
     ('DN0301', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Head Injury: Percent of unplanned re-admission of Craniotomy within', 'ร้อยละการรับกลับเข้าโรงพยาบาลของผู้ป่วยที่ทำ Craniotomy โดยมีสาเหตุจากการ บาดเจ็บที่ศีรษะ ภายใน 28 วัน โดยไม่ได้วางแผน', '1. ผู้ป่วยที่ทำ Craniotomy หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาล (admit) ≥4 ชั่วโมง) ที่มี Principal diagnosis (Pdx) เป็นโรคบาดเจ็บที่ศีรษะซึ่งจำเป็นต้อง ได้รับการทำ Craniotomy โดยมีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การรับกลับเข้าโรงพยาบาลของผู้ป่วยที่ทำ Craniotomy ภายใน 28 วัน หมายถึง ผู้ป่วย ที่ทำ Craniotomy ที่รับกลับเข้าโรงพยาบาลหลังจำหน่ายจากโรงพยาบาลภายใน 28 วัน โดยไม่ได้วางแผน 3. การจำหน่ายออกจากโรงพยาบาล หมายถึง ผู้ป่วยที่ทำ Craniotomy ที่จำหน่ายมีชีวิต ออกจากโรงพยาบาล ด้วยสถานะการอนุญาตให้กลับบ้าน (status = improve) ยกเว้น ผู้ป่วยที่ไปรักษาที่โรงพยาบาลอื่น หรือไม่ยินยอมรับการรักษาตามแผน', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'operation_list', 'operation_detail', 'operation_item']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 76', 'registered-2026.1', NULL, 'registered'),
-    ('DN0302', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Head Injury: Percent of mortality within 48 hours', 'ร้อยละของผู้ป่วยบาดเจ็บที่ศีรษะที่เสียชีวิตภายใน 48 ชั่วโมง ภายหลังการบาดเจ็บ (เฉพาะผู้ป่วยบาดเจ็บต่อสมอง)', '1. ผู้ป่วย Head Injury หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาใน รพ. (admit) นาน ตั้งแต่ 4 ชั่วโมงขึ้นไป) ที่มี Principal diagnosis (Pdx) เป็นโรคของการบาดเจ็บที่ศีรษะซึ่ง เกิดจากแรงที่เข้ามากระทบต่อศีรษะและร่างกายแล้วก่อให้เกิดความบาดเจ็บต่อหนังศีรษะ กะโหลกศีรษะ และ สมอง กับเส้นประสาทสมอง (อ้างอิงนิยามจากแนวทางการ รักษาพยาบาลผู้ป่วยทางศัลยกรรม โดยราชวิทยาลัยศัลยแพทย์แห่งประเทศไทย ร่วมกับ สมาคมประสาทศัลยศาสตร์แห่งประเทศไทย) โดยมีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การป่วยตายจากการบาดเจ็บที่ศีรษะ (เฉพาะผู้ป่วยบาดเจ็บต่อสมอง) หมายถึง การตาย จากทุกสาเหตุภายใน 48 ชั่วโมง หลังจากเกิดการบาดเจ็บที่ศีรษะ', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'operation_list', 'operation_detail', 'operation_item']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 77', 'registered-2026.1', NULL, 'registered'),
+    ('DN0302', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Head Injury: Percent of mortality within 48 hours', 'ร้อยละของผู้ป่วยบาดเจ็บที่ศีรษะที่เสียชีวิตภายใน 48 ชั่วโมง ภายหลังการบาดเจ็บ (เฉพาะผู้ป่วยบาดเจ็บต่อสมอง)', '1. ผู้ป่วย Head Injury หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาใน รพ. (admit) นาน ตั้งแต่ 4 ชั่วโมงขึ้นไป) ที่มี Principal diagnosis (Pdx) เป็นโรคของการบาดเจ็บที่ศีรษะซึ่ง เกิดจากแรงที่เข้ามากระทบต่อศีรษะและร่างกายแล้วก่อให้เกิดความบาดเจ็บต่อหนังศีรษะ กะโหลกศีรษะ และ สมอง กับเส้นประสาทสมอง (อ้างอิงนิยามจากแนวทางการ รักษาพยาบาลผู้ป่วยทางศัลยกรรม โดยราชวิทยาลัยศัลยแพทย์แห่งประเทศไทย ร่วมกับ สมาคมประสาทศัลยศาสตร์แห่งประเทศไทย) โดยมีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การป่วยตายจากการบาดเจ็บที่ศีรษะ (เฉพาะผู้ป่วยบาดเจ็บต่อสมอง) หมายถึง การตาย จากทุกสาเหตุภายใน 48 ชั่วโมง หลังจากเกิดการบาดเจ็บที่ศีรษะ', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'operation_list', 'operation_detail', 'operation_item']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 77', 'foundation-2026.1', NULL, 'registered'),
     ('DN0303', 'D', 'percent', 'higher-is-better', 'monthly', 'Disease', 'Head Injury: Percent of patient underwent craniotomy for Intracranial', 'ร้อยละการผ่าตัดสมองในผู้ป่วยบาดเจ็บที่ศีรษะที่มี Intracranial injury', '1. ผู้ป่วย Intracranial Injury หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาล (admit) นานตั้งแต่ 4 ชั่วโมงขึ้นไป) ที่มี Principal diagnosis (Pdx) เป็นโรคของการ บาดเจ็บที่ศีรษะชนิดที่มีการตกเลือดหรือมีความผิดปกติภายในกะโหลกศีรษะ โดยมีรหัสโรค ตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. Intracranial injury craniotomy หมายถึง การผ่าตัดสมองในผู้ป่วยบาดเจ็บที่ศีรษะที่ มีการตกเลือดหรือมีความผิดปกติภายในกะโหลกศีรษะซึ่งต้องให้การรักษาโดยการผ่าตัด', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'operation_list', 'operation_detail', 'operation_item']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 78', 'registered-2026.1', NULL, 'registered'),
     ('DO0202', 'D', 'percent', 'higher-is-better', 'monthly', 'Disease', 'Hip arthroplasty: Percent of patients who received antibiotic prophylaxis in Hip arthroplasty', 'ร้อยละของผู้ป่วยผ่าตัดเปลี่ยนข้อสะโพก ได้รับ prophylactic antibiotic', '1. ผู้ป่วยผ่าตัดเปลี่ยนข้อสะโพก หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาใน โรงพยาบาลนานตั้งแต่ 4 ชั่วโมงขึ้นไป) ที่มี Principal diagnosis (Pdx) เป็นโรคเกี่ยวกับข้อ สะโพกซึ่งจำเป็นต้องให้การรักษาโดยการผ่าตัดเปลี่ยนข้อสะโพกโดยมีรหัสโรคอยู่ในกลุ่ม รหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การได้รับยาปฏิชีวนะแบบป้องกันในการผ่าตัดเปลี่ยนข้อสะโพก หมายถึง การที่ผู้ป่วย ได้รับยาปฏิชีวนะในช่วงระยะเวลาภายใน 1 ชั่วโมงก่อนลงมีดผ่าตัด (กรณีเป็นการให้ยา แบบ Intravenous drip ให้เริ่มนับเวลาเมื่อ drip ยาหมด)', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 114', 'registered-2026.1', NULL, 'registered'),
     ('DO0204', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Hip arthroplasty: Percent of hip arthroplasty associated infection within 1 Year', 'ร้อยละการติดเชื้อแผลผ่าตัดเปลี่ยนข้อสะโพกภายใน 1 ปี', '1. ผู้ป่วยผ่าตัดเปลี่ยนข้อสะโพก หมายถึง ผู้ป่วยทั้งในสถานะผู้ป่วยนอกและผู้ป่วยใน ที่มี Principal diagnosis (Pdx) เป็นโรคเกี่ยวกับข้อสะโพก ซึ่งจำเป็นต้องให้การรักษาโดยการ ผ่าตัดเปลี่ยนข้อสะโพก โดยมีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. เป็นการติดเชื้อในข้อสะโพกหลังการผ่าตัดเปลี่ยนข้อสะโพก ภายในช่วงระยะเวลา 1 ปี หลังการผ่าตัด นับเฉพาะการติดเชื้อครั้งแรก', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 115', 'registered-2026.1', NULL, 'registered'),
@@ -11358,8 +11358,8 @@ metadata(
     ('DO0303', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Knee Arthroplasty: Percent of surgical infection within 1 year', 'ร้อยละการติดเชื้อในข้อเข่าหลังการผ่าตัดเปลี่ยนข้อเข่าภายใน 1 ปี', '1. ผู้ป่วยผ่าตัดเปลี่ยนข้อเข่าหมายถึงผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาล นานตั้งแต่ 4 ชั่วโมงขึ้นไป) ที่มี Principal diagnosis (Pdx) เป็นโรคเกี่ยวกับข้อเข่าซึ่ง จำเป็นต้องให้การรักษาโดยการผ่าตัดเปลี่ยนข้อเข่าโดยมีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. เป็นการติดเชื้อในข้อเข่าหลังการผ่าตัดเปลี่ยนข้อเข่า ภายในระยะเวลา 1 ปี หลังการ ผ่าตัดนับเฉพาะการติดเชื้อครั้งแรก', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 118', 'registered-2026.1', NULL, 'registered'),
     ('DO0304', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Knee Arthroplasty: Percent of surgical infection within 90 days', 'ร้อยละการติดเชื้อในข้อเข่าหลังการผ่าตัดเปลี่ยนข้อเข่าภายใน 90 วัน', '1. ผู้ป่วยผ่าตัดเปลี่ยนข้อเข่าหมายถึงผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาล นานตั้งแต่ 4 ชั่วโมงขึ้นไป) ที่มี Principal diagnosis (Pdx) เป็นโรคเกี่ยวกับข้อเข่าซึ่ง จำเป็นต้องให้การรักษาโดยการผ่าตัดเปลี่ยนข้อเข่าโดยมีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. เป็นการติดเชื้อในข้อเข่าหลังการผ่าตัดเปลี่ยนข้อเข่า ภายในระยะเวลา 90 วัน หลังการ ผ่าตัดนับเฉพาะการติดเชื้อครั้งแรก', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'operation_list', 'operation_detail', 'operation_item', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 119', 'registered-2026.1', NULL, 'registered'),
     ('DP0101', 'D', 'percent', 'higher-is-better', 'annual', 'Disease', 'Diabetes in child and adolescent: Percent of good controlled of blood sugar (age < 18 years)', 'ร้อยละของผู้ป่วยเบาหวานชนิดที่ 1 ในเด็กและวัยรุ่นอายุน้อยกว่า 18 ปีที่ควบคุมระดับ น้ำตาลได้ดี', '1. ผู้ป่วยเบาหวานชนิดที่ 1 ในเด็กและวัยรุ่นที่อายุน้อยกว่า 18 ปี หมายถึง ผู้ป่วยที่ได้รับ การวินิจฉัยว่าเป็นเบาหวานชนิดที่ 1 ที่อายุน้อยกว่า 18 ปี เป็นผู้ป่วยที่ขึ้นทะเบียนรับการ รักษากับโรงพยาบาล ซึ่งมารับการตรวจติดตามต่อเนื่องในโรงพยาบาลหรือเครือข่าย สถานพยาบาล > 1 ครั้ง ในช่วงเวลา 6 เดือน หรือ > 3 ครั้งในรอบ 1 ปีที่ผ่านมา โดยเป็น โรคที่มีรหัสโรคตาม ICD -10 TM, ICD-10,ICD-9 ที่ระบุไว้นี้ 2. ผู้ป่วยเบาหวานชนิดที่ 1 ในเด็กและวัยรุ่นอายุน้อยกว่า 18 ปี ที่ควบคุมระดับน้ำตาลได้ดี หมายถึงผู้ป่วยที่มีระดับผลการตรวจ HbA1Cเฉลี่ยใน 1 ปี < 7.5 % 3. ตัวชี้วัดนี้มีวัตถุประสงค์เพื่อส่งเสริมคุณภาพการติดตามระดับน้ำตาลในเลือดตาม มาตรฐานโดยใช้ HbA1C ผ่านกลไกการเทียบคียงตัวชี้วัด โดยแนะนำให้ตรวจอย่างน้อย ปี ละ 2 ครั้ง หากไม่มีผลการตรวจ HbA1c ครั้งล่าสุดในช่วงเวลา 6 เดือนที่ประเมินติดตาม ให้ ยังคงนับผู้ป่วยรายที่ไม่ปรากฏผลการตรวจ HbA1c รวมอยู่ในตัวหาร และแปลผลตัวตั้งที่ไม่ ปรากฎผลตรวจเป็นผู้ป่วยเบาหวานชนิดที่ 1 ในเด็กและวัยรุ่นที่อายุน้อยกว่า 18 ปี ที่ ควบคุมระดับน้ำตาลได้ไม่ดี', '(a/b) x 100', 'a', 'b', ARRAY['person', 'clinicmember', 'ovst', 'ovstdiag', 'opdscreen', 'lab_head', 'lab_order', 'lab_items']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 124', 'registered-2026.1', NULL, 'registered'),
-    ('DR0101', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Pneumonia: Percent of mortality after hospital admission', 'ร้อยละการเสียชีวิตหลังจากเข้ารับการรักษาของผู้ป่วยโรคปอดบวม', '1. ผู้ป่วย Pneumonia หมายถึง ผู้ป่วยทุกกลุ่มอายุซึ่งอยู่ในสถานะผู้ป่วยใน (ผู้ป่วยที่รับไว้ นอนพักรักษาในโรงพยาบาล (admit) นานตั้งแต่ 4 ชั่วโมงขึ้นไป) ที่มี Principal diagnosis (Pdx) เป็นโรคปอดอักเสบหรือปอดบวม หรือผู้ป่วยที่อยู่ในกลุ่มรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การเสียชีวิตหลังจากเข้ารับการรักษาของผู้ป่วยโรคปอดบวม หมายถึง การเสียชีวิตจาก ทุกสาเหตุของผู้ป่วยโรคปอดบวมที่มี Principal Diagnosis (Pdx) ตามที่ระบุไว้ หรือผู้ป่วย ที่มีโรคร่วมหรือโรคแทรกเป็นโรคปอดบวม และ มีสาเหตุการตายจากโรคโรคปอดบวม ซึ่ง อยู่ในสถานะผู้ป่วยใน', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 79', 'registered-2026.1', NULL, 'registered'),
-    ('DR0102', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Pneumonia: Percent of unplanned re-admission within 28 days after last discharge', 'ร้อยละการรับกลับเข้าโรงพยาบาลของผู้ป่วยโรคปอดบวมภายใน 28 วัน โดยไม่ได้วางแผน', '1. ผู้ป่วย Pneumonia หมายถึง ผู้ป่วยใน อายุ ≥ 18 ปี (ผู้ป่วยที่รับไว้นอนพักรักษาใน โรงพยาบาล นานตั้งแต่ 4 ชั่วโมงขึ้นไป) ที่มี Principal diagnosis (Pdx) เป็นโรคปอด อักเสบหรือปอดบวม โดยมีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การรับกลับเข้าโรงพยาบาลของผู้ป่วยโรคปอดบวมภายใน 28 วัน โดยไม่ได้วางแผน หมายถึง การที่ผู้ป่วยโรคปอดบวมที่รับกลับเข้าโรงพยาบาลหลังจำหน่ายจากโรงพยาบาล ภายใน 28 วัน ด้วยสถานะการอนุญาตให้กลับบ้าน (status=improve) ยกเว้น ผู้ป่วยที่ไป รักษาที่โรงพยาบาลอื่น หรือไม่ยินยอมรับการรักษาตามแผน', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 80', 'registered-2026.1', NULL, 'registered'),
+    ('DR0101', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Pneumonia: Percent of mortality after hospital admission', 'ร้อยละการเสียชีวิตหลังจากเข้ารับการรักษาของผู้ป่วยโรคปอดบวม', '1. ผู้ป่วย Pneumonia หมายถึง ผู้ป่วยทุกกลุ่มอายุซึ่งอยู่ในสถานะผู้ป่วยใน (ผู้ป่วยที่รับไว้ นอนพักรักษาในโรงพยาบาล (admit) นานตั้งแต่ 4 ชั่วโมงขึ้นไป) ที่มี Principal diagnosis (Pdx) เป็นโรคปอดอักเสบหรือปอดบวม หรือผู้ป่วยที่อยู่ในกลุ่มรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การเสียชีวิตหลังจากเข้ารับการรักษาของผู้ป่วยโรคปอดบวม หมายถึง การเสียชีวิตจาก ทุกสาเหตุของผู้ป่วยโรคปอดบวมที่มี Principal Diagnosis (Pdx) ตามที่ระบุไว้ หรือผู้ป่วย ที่มีโรคร่วมหรือโรคแทรกเป็นโรคปอดบวม และ มีสาเหตุการตายจากโรคโรคปอดบวม ซึ่ง อยู่ในสถานะผู้ป่วยใน', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 79', 'foundation-2026.1', NULL, 'registered'),
+    ('DR0102', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Pneumonia: Percent of unplanned re-admission within 28 days after last discharge', 'ร้อยละการรับกลับเข้าโรงพยาบาลของผู้ป่วยโรคปอดบวมภายใน 28 วัน โดยไม่ได้วางแผน', '1. ผู้ป่วย Pneumonia หมายถึง ผู้ป่วยใน อายุ ≥ 18 ปี (ผู้ป่วยที่รับไว้นอนพักรักษาใน โรงพยาบาล นานตั้งแต่ 4 ชั่วโมงขึ้นไป) ที่มี Principal diagnosis (Pdx) เป็นโรคปอด อักเสบหรือปอดบวม โดยมีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การรับกลับเข้าโรงพยาบาลของผู้ป่วยโรคปอดบวมภายใน 28 วัน โดยไม่ได้วางแผน หมายถึง การที่ผู้ป่วยโรคปอดบวมที่รับกลับเข้าโรงพยาบาลหลังจำหน่ายจากโรงพยาบาล ภายใน 28 วัน ด้วยสถานะการอนุญาตให้กลับบ้าน (status=improve) ยกเว้น ผู้ป่วยที่ไป รักษาที่โรงพยาบาลอื่น หรือไม่ยินยอมรับการรักษาตามแผน', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 80', 'foundation-2026.1', NULL, 'registered'),
     ('DR0103', 'D', 'percent', 'higher-is-better', 'monthly', 'Disease', 'Pneumonia: Percent of smoking cessation advice given', 'ร้อยละผู้ป่วยโรคปอดบวมได้รับคำแนะนำให้อดหรือเลิกบุหรี่ ระหว่างอยู่ในโรงพยาบาล', '1. ผู้ป่วย Pneumonia หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาล (admit) นานตั้งแต่ 4 ชั่วโมงขึ้นไป) ที่มี Principal diagnosis (Pdx) เป็นโรคปอดอักเสบ หรือปอดบวม โดยมีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การแนะนำให้อดหรือเลิกบุหรี่ หมายถึง การให้คำแนะนำ/การปรึกษา ให้ความรู้ ความ เข้าใจเกี่ยวกับผลกระทบของบุหรี่ต่อภาวะของโรคที่เป็น แก่ผู้ป่วยโรคปอดบวมที่มีประวัติ สูบบุหรี่ภายใน 1 ปีก่อนได้รับการตรวจรักษาในขณะอยู่ในโรงพยาบาล เพื่อให้ผู้ป่วยอดหรือ เลิกบุหรี่', '(a/b) x 100', 'a', 'b', ARRAY['ipt', 'an_stat', 'iptdiag', 'death', 'opitemrece', 'drugitems']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 81', 'registered-2026.1', NULL, 'registered'),
     ('DR0201', 'D', 'percent', 'lower-is-better', 'annual', 'Disease', 'TB: Percent of mortality during 12 months', 'ร้อยละการเสียชีวิตของผู้ป่วยวัณโรคปอดในช่วง 12 เดือน', '1. ผู้ป่วยวัณโรคปอด หมายถึง ผู้ป่วยทั้งในสถานะผู้ป่วยนอกและผู้ป่วยใน ที่มี Principal diagnosis (Pdx) เป็นโรควัณโรคปอด โดยเป็นโรคที่มีรหัสโรคอยู่ในกลุ่มรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การเสียชีวิตของผู้ป่วยวัณโรคปอดในช่วง 12 เดือน หมายถึง การเสียชีวิตจากทุกสาเหตุ ของผู้ป่วยวัณโรคปอดเสมหะพบเชื้อรายใหม่ ที่อยู่ระหว่างการรักษาวัณโรค ภายในช่วงเวลา 12 เดือนของการรักษา 3. ผู้ป่วยวัณโรคปอดเสมหะพบเชื้อรายใหม่ หมายถึง ผู้ป่วยที่มีการตรวจเสมหะและพบเชื้อ วัณโรคซึ่งเป็นผู้ป่วยวัณโรคปอดระยะแพร่เชื้อรายใหม่ที่ขึ้นทะเบียนรับการรักษา', '(a/b) x 100', 'a', 'b', ARRAY['clinicmember', 'clinic_visit', 'clinicmember_tb', 'tb_register', 'tb_register_visit', 'tb_lab_examination_sputum', 'arv_tx', 'arv_lab', 'ovstdiag']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 82', 'registered-2026.1', NULL, 'registered'),
     ('DR0202', 'D', 'percent', 'higher-is-better', 'annual', 'Disease', 'TB: Percentage of people living with HIV having a TB screening', 'ร้อยละของผู้ติดเชื้อเอชไอวี ได้รับการคัดกรองวัณโรคปอด', '1. ผู้ป่วย/ ผู้ติดเชื้อเอชไอวี หมายถึง ผู้ป่วยทั้งในสถานะผู้ป่วยนอกและผู้ป่วยใน ที่มี Principal diagnosis (Pdx) เป็นผู้ป่วย/ ผู้ที่มีผลการตรวจวินิจฉัยโดยมีผลการตรวจเลือด ยืนยันแล้วว่า HIV Positive โดยมีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การคัดกรองวัณโรคปอด (Pulmonary TB) หมายถึง การกระทำในข้อใดข้อหนึ่ง และ/ หรือทุกข้อ ดังนี้ (1) การซักประวัติอาการทางคลินิก หรือความเสี่ยงต่อการติดเชื้อวัณโรค เช่น มีอาการไข้ ไอ เบื่ออาหาร น้ำหนักลดเหงื่อออกในเวลากลางคืน ติดต่อกันเกิน 2 สัปดาห์ มีประวัติรักษาวัณโรคมาก่อน เคยอาศัยใกล้ชิดกับผู้ป่วยวัณโรคมาก่อน เคยมี ประวัติต้องขังมาก่อน เป็นต้น (2) ตรวจ CXR (3) ตรวจเสมหะ', '(a/b) x 100', 'a', 'b', ARRAY['clinicmember', 'clinic_visit', 'clinicmember_tb', 'tb_register', 'tb_register_visit', 'tb_lab_examination_sputum', 'arv_tx', 'arv_lab', 'ovstdiag']::text[], 'ทุกปี (รายปี)', 'THIP KPI Dictionary 2025 · หน้า 83', 'registered-2026.1', NULL, 'registered'),
@@ -11369,7 +11369,7 @@ metadata(
     ('DR0301', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'Asthma: Percent of unplanned re-admission within 28 days after last discharge', 'ร้อยละการรับกลับเข้าโรงพยาบาลของผู้ป่วย Asthma ภายใน 28 วัน โดยไม่ได้วางแผน', '1. ผู้ป่วย Asthma หมายถึง ผู้ป่วยใน ที่มี Principal diagnosis (Pdx) เป็นโรคหืด โดยมี รหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การรับผู้ป่วย Asthma กลับเข้าโรงพยาบาล ภายใน 28 วัน โดยไม่ได้วางแผน หมายถึง การที่ผู้ป่วย Asthma กลับมารับการตรวจรักษาโดยไม่ได้วางแผน ภายหลังจากที่จำหน่าย ออกจากโรงพยาบาล ด้วยสถานะการอนุญาตให้กลับบ้าน (status=improve) (ยกเว้น ผู้ป่วยที่ไปรักษาที่โรงพยาบาลอื่น หรือไม่ยินยอมรับการรักษาตามแผน) ภายใน 28 วัน และ ต้องรับกลับเข้านอนพักรักษาในโรงพยาบาล', '(a/b) x 100', 'a', 'b', ARRAY['patient_asthma_screen', 'patient_copd_screen', 'clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 87', 'registered-2026.1', NULL, 'registered'),
     ('DR0302', 'D', 'percent', 'higher-is-better', 'monthly', 'Disease', 'Asthma: Percent of smoking cessation advice given', 'ร้อยละผู้ป่วย Asthma ได้รับคำแนะนำให้อดหรือเลิกบุหรี่ ระหว่างอยู่ในโรงพยาบาล', '1. ผู้ป่วย Asthma หมายถึง ผู้ป่วยใน ที่มี Principal diagnosis (Pdx) เป็นโรคหืด โดยมี รหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การแนะนำให้อดหรือเลิกบุหรี่ หมายถึง การให้คำแนะนำ/การปรึกษา ให้ความรู้ ความ เข้าใจเกี่ยวกับผลกระทบของบุหรี่ต่อภาวะของโรคที่เป็น แก่ผู้ป่วย Asthma ที่มีประวัติสูบ บุหรี่ภายใน 1 ปีก่อนการได้รับการตรวจรักษาในขณะอยู่ในโรงพยาบาล เพื่อให้ผู้ป่วยอด หรือเลิกบุหรี่', '(a/b) x 100', 'a', 'b', ARRAY['patient_asthma_screen', 'patient_copd_screen', 'clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 88', 'registered-2026.1', NULL, 'registered'),
     ('DR0401', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'COPD: Percent of unplanned re-admission into the hospital within 28 days after last discharge', 'ร้อยละการรับกลับเข้าโรงพยาบาลของผู้ป่วย COPD ภายใน 28 วัน โดยไม่ได้วางแผน', '1. ผู้ป่วย COPD หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาลนานตั้งแต่ 4 ชั่วโมงขึ้นไป) ที่มี Principal Diagnosis (Pdx) เป็นโรคปอดอุดกั้นเรื้อรัง โดยมีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การรับผู้ป่วย COPD กลับเข้าโรงพยาบาล ภายใน 28 วัน โดยไม่ได้วางแผน หมายถึง การที่ผู้ป่วย COPD กลับมารับการตรวจรักษาโดยไม่ได้วางแผน ภายหลังจากที่จำหน่ายออก จาก โรงพยาบาล ด้วยสถานะการอนุญาตให้กลับบ้าน (status = improve) (ยกเว้นผู้ป่วย ที่ไปรักษาที่โรงพยาบาลอื่น หรือไม่ยินยอมรับการรักษาตามแผน) ภายใน 28 วัน และต้อง รับกลับเข้านอนพักรักษาในโรงพยาบาล', '(a/b) x 100', 'a', 'b', ARRAY['patient_asthma_screen', 'patient_copd_screen', 'clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 89', 'registered-2026.1', NULL, 'registered'),
-    ('DR0403', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'COPD: Percent of mortality', 'ร้อยละการเสียชีวิตจากโรคปอดอุดกั้นเรื้อรัง', '1. ผู้ป่วย COPD หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาล นานตั้งแต่ 4 ชั่วโมงขึ้นไป) อายุ ≥18 ปี ที่มี Principal diagnosis (Pdx) เป็นโรคปอด อุดกั้นเรื้อรัง โดยมีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การเสียชีวิตของผู้ป่วย COPD หมายถึง การเสียชีวิตจากทุกสาเหตุของผู้ป่วย COPD ที่มี Pdx ตามที่ระบุไว้ หรือผู้ป่วยที่มีโรคร่วมหรือโรคแทรกเป็น COPD และมีสาเหตุการตาย จากโรค COPD 3. การจำหน่ายทุกสถานะ หมายถึง การที่ผู้ป่วยใน ออกจากโรงพยาบาล ในทุกสถานะ ทุกกรณี', '(a/b) x 100', 'a', 'b', ARRAY['patient_asthma_screen', 'patient_copd_screen', 'clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 90', 'registered-2026.1', NULL, 'registered'),
+    ('DR0403', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'COPD: Percent of mortality', 'ร้อยละการเสียชีวิตจากโรคปอดอุดกั้นเรื้อรัง', '1. ผู้ป่วย COPD หมายถึง ผู้ป่วยใน (ผู้ป่วยที่รับไว้นอนพักรักษาในโรงพยาบาล นานตั้งแต่ 4 ชั่วโมงขึ้นไป) อายุ ≥18 ปี ที่มี Principal diagnosis (Pdx) เป็นโรคปอด อุดกั้นเรื้อรัง โดยมีรหัสโรคตาม ICD-10 TM, ICD-10, ICD-9 ดังที่ระบุไว้นี้ 2. การเสียชีวิตของผู้ป่วย COPD หมายถึง การเสียชีวิตจากทุกสาเหตุของผู้ป่วย COPD ที่มี Pdx ตามที่ระบุไว้ หรือผู้ป่วยที่มีโรคร่วมหรือโรคแทรกเป็น COPD และมีสาเหตุการตาย จากโรค COPD 3. การจำหน่ายทุกสถานะ หมายถึง การที่ผู้ป่วยใน ออกจากโรงพยาบาล ในทุกสถานะ ทุกกรณี', '(a/b) x 100', 'a', 'b', ARRAY['patient_asthma_screen', 'patient_copd_screen', 'clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen']::text[], 'ทุกเดือน (รายเดือน)', 'THIP KPI Dictionary 2025 · หน้า 90', 'foundation-2026.1', NULL, 'registered'),
     ('DR0404', 'D', 'percent', 'lower-is-better', 'monthly', 'Disease', 'COPD: Percent of patient with ongoing smoking', 'ร้อยละของผู้ป่วยโรคปอดอุดกั้นเรื้อรังที่ยังสูบบุหรี่', '1) ผู้ป่วยโรคปอดอุดกั้นเรื้อรังที่ยังสูบบุหรี่ หมายถึง ผู้ป่วยที่ได้รับการวินิจฉัยโรคปอดอุดกั้น เรื้อรังที่ยังสูบบุหรี่อยู่ หรือ เลิกบุหรี่ต่อเนื่องมาเป็นระยะเวลาไม่เกิน 12 เดือน 2) ผู้ป่วยโรคปอดอุดกั้นเรื้อรัง หมายถึงผู้ป่วยที่ได้รับการวินิจฉัยโรคปอดอุดกั้นเรื้อรังที่มารับ การรักษาแบบผู้ป่วยนอกของโรงพยาบาล', '(a/b) x 100', 'a', 'b', ARRAY['patient_asthma_screen', 'patient_copd_screen', 'clinicmember', 'clinic_visit', 'ovst', 'ovstdiag', 'opdscreen']::text[], 'ทุก 3 เดือน (รายไตรมาส)', 'THIP KPI Dictionary 2025 · หน้า 91', 'registered-2026.1', NULL, 'registered'),
     ('DS0101', 'D', 'percent', 'higher-is-better', 'monthly', 'Disease', 'Methamphetamine Group: 3 months total remission rate', 'ร้อยละของผู้ติดยาเสพติดกลุ่ม Methamphetamine โดยรวมที่หยุดเสพต่อเนื่อง 3 เดือน', 'ผู้ติดยาเสพติดกลุ่ม Methamphetamine หมายถึง ผู้ติดยาเสพติดกลุ่ม Methamphetamine เช่น ยาบ้า ยาไอซ์ ยาอี และยาเลิฟ เป็นต้น หยุดเสพต่อเนื่อง 3 เดือน หมายถึง ผู้ติดยาเสพติดกลุ่ม Methamphetamine ที่เข้ารับการ บำบัดรักษาในระบบสมัครใจ แบบผู้ป่วยนอกและไม่ครบเกณฑ์ในการวินิจฉัย ผู้ติด (dependence) ต่อเนื่อง 3 เดือนหลังจำหน่ายจากการบำบัดรักษา ทั้งนี้ไม่รวมผู้ป่วยถูก จับเสียชีวิต หรือส่งต่อ หลังจำหน่ายจากการบำบัดรักษา', '(a/b) x 100', 'a', 'b', ARRAY['psych_assess_child', 'psych_plan', 'psych_therapy', 'depression_screen', 'person_wbc', 'ovst', 'ovstdiag', 'clinicmember']::text[], 'ทุก 3 เดือน (รายไตรมาส)', 'THIP KPI Dictionary 2025 · หน้า 126', 'registered-2026.1', NULL, 'registered'),
     ('DS0201', 'D', 'percent', 'higher-is-better', 'monthly', 'Disease', 'Alcohol Group: 3 months total remission rate', 'ร้อยละของผู้ติดสุราโดยรวม ที่หยุดเสพต่อเนื่อง 3 เดือน', 'ผู้ติดสุรา หมายถึง ผู้ป่วยติดสารเสพติดกลุ่มแอลกอฮอล์ เช่น สุรา เบียร์ เหล้าขาว ฯลฯ หยุดเสพต่อเนื่อง 3 เดือน หมายถึง ผู้ติดสารเสพติดกลุ่มแอลกอฮอล์ ที่เข้ารับการ บำบัดรักษาแบบผู้ป่วยนอกและไม่ครบเกณฑ์ในการวินิจฉัย ผู้ติด (dependence) ต่อเนื่อง 3 เดือนหลังจำหน่ายจากการบำบัดรักษา ทั้งนี้ไม่รวมผู้ป่วยถูกจับ เสียชีวิต หรือส่งต่อ หลัง จำหน่ายจากการบำบัดรักษา', '(a/b) x 100', 'a', 'b', ARRAY['psych_assess_child', 'psych_plan', 'psych_therapy', 'depression_screen', 'person_wbc', 'ovst', 'ovstdiag', 'clinicmember']::text[], 'ทุก 3 เดือน (รายไตรมาส)', 'THIP KPI Dictionary 2025 · หน้า 127', 'registered-2026.1', NULL, 'registered'),
@@ -11469,7 +11469,7 @@ fiscal_periods AS (
 -- Registered HOSxP codes get a complete fact grid: a period whose registered
 -- query ran and found an empty cohort is a measured zero cohort (0 facts, NULL
 -- value), never a fabricated rate. External-fact codes (hospital-loaded
--- staging) and pending tiers stay out of the grid, so a missing source row
+-- staging) preserve NULL facts, so a missing source row
 -- remains an explicit unavailable row in the outer SELECT instead of a zero.
 facts AS (
   SELECT
@@ -11477,14 +11477,13 @@ facts AS (
     fp.period_start,
     fp.fiscal_year,
     fp.fiscal_month,
-    COALESCE(fe.numerator, 0) AS numerator,
-    CASE WHEN m.unit = 'count' THEN fe.denominator ELSE COALESCE(fe.denominator, 0) END AS denominator,
+    CASE WHEN m.indicator_code = ANY(ARRAY['CG0103', 'CG0104', 'DE1301', 'DE1302', 'DE1303', 'DE1304', 'DE1305', 'DE1306', 'DE1601', 'DM0103', 'DM0203', 'DM0401', 'DM0402', 'DS0101', 'DS0201', 'DS0301', 'SC0101', 'SC0102', 'SC0103', 'SC0104', 'SC0105', 'SC0106', 'SF0101', 'SF0102', 'SF0103', 'SF0104', 'SF0105', 'SF0106', 'SG0104', 'SH0201', 'SH0202', 'SH0203', 'SH0204', 'SH0205', 'SH0206', 'SH0207', 'SH0208', 'SH0209', 'SH0210', 'SH0211', 'SH0212', 'SH0213', 'SH0214', 'SH0215', 'SH0216', 'SI0101', 'SI0102', 'SI0103', 'SI0201', 'SI0202', 'SI0203', 'SI0301', 'SI0302', 'SI0303', 'SS0101']::text[]) THEN fe.numerator ELSE COALESCE(fe.numerator, 0) END AS numerator,
+    CASE WHEN m.unit = 'count' OR m.indicator_code = ANY(ARRAY['CG0103', 'CG0104', 'DE1301', 'DE1302', 'DE1303', 'DE1304', 'DE1305', 'DE1306', 'DE1601', 'DM0103', 'DM0203', 'DM0401', 'DM0402', 'DS0101', 'DS0201', 'DS0301', 'SC0101', 'SC0102', 'SC0103', 'SC0104', 'SC0105', 'SC0106', 'SF0101', 'SF0102', 'SF0103', 'SF0104', 'SF0105', 'SF0106', 'SG0104', 'SH0201', 'SH0202', 'SH0203', 'SH0204', 'SH0205', 'SH0206', 'SH0207', 'SH0208', 'SH0209', 'SH0210', 'SH0211', 'SH0212', 'SH0213', 'SH0214', 'SH0215', 'SH0216', 'SI0101', 'SI0102', 'SI0103', 'SI0201', 'SI0202', 'SI0203', 'SI0301', 'SI0302', 'SI0303', 'SS0101']::text[]) THEN fe.denominator ELSE COALESCE(fe.denominator, 0) END AS denominator,
     fe.value
   FROM expected e
   JOIN metadata m
     ON m.indicator_code = e.indicator_code
    AND m.tier = 'registered'
-   AND NOT (m.indicator_code = ANY(ARRAY['CG0103', 'CG0104', 'DE1301', 'DE1302', 'DE1303', 'DE1304', 'DE1305', 'DE1306', 'DE1601', 'DM0103', 'DM0203', 'DM0401', 'DM0402', 'DS0101', 'DS0201', 'DS0301', 'SC0101', 'SC0102', 'SC0103', 'SC0104', 'SC0105', 'SC0106', 'SF0101', 'SF0102', 'SF0103', 'SF0104', 'SF0105', 'SF0106', 'SG0104', 'SH0201', 'SH0202', 'SH0203', 'SH0204', 'SH0205', 'SH0206', 'SH0207', 'SH0208', 'SH0209', 'SH0210', 'SH0211', 'SH0212', 'SH0213', 'SH0214', 'SH0215', 'SH0216', 'SI0101', 'SI0102', 'SI0103', 'SI0201', 'SI0202', 'SI0203', 'SI0301', 'SI0302', 'SI0303', 'SS0101']::text[]))
   JOIN fiscal_periods fp
     ON fp.fiscal_month = e.fiscal_month
   LEFT JOIN fact_events fe
@@ -11518,7 +11517,8 @@ SELECT
   m.frequency,
   m.reference,
   m.rule_version,
-  m.pending_reason,
+  CASE WHEN f.numerator IS NULL AND f.denominator IS NULL AND f.value IS NULL
+    THEN COALESCE(m.pending_reason, 'missing-source: aggregate not loaded') ELSE m.pending_reason END AS pending_reason,
   m.tier,
   NOW() AS refreshed_at
 FROM metadata m

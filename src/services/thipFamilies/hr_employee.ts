@@ -265,11 +265,12 @@ function empMonthSource(extraColumns: string, extraJoin = ''): string {
 // ---------------------------------------------------------------------------
 
 const ALL_STAFF = 'COUNT(DISTINCT hr.staff_key)';
-const AVG_HEADCOUNT = `(${ALL_STAFF} FILTER (WHERE hr.active_at_fy_start) + ${ALL_STAFF} FILTER (WHERE hr.active_at_fy_end)) / NULLIF(2, 0)`;
+const AVG_HEADCOUNT = `(${ALL_STAFF} FILTER (WHERE hr.active_at_fy_start) + ${ALL_STAFF} FILTER (WHERE hr.active_at_fy_end)) / NULLIF(2.0, 0)`;
 const QUARTER_END_HEADCOUNT = `${ALL_STAFF} FILTER (WHERE hr.active_at_period_end)`;
 
 function ratioValue(numerator: string, denominator: string, multiplier: number): string {
-  return `ROUND((${numerator}) * ${multiplier} / NULLIF(${denominator}, 0), 2)`;
+  const scale = Number.isInteger(multiplier) ? `${multiplier}.0` : `${multiplier}`;
+  return `ROUND((${numerator}) * ${scale} / NULLIF(${denominator}, 0), 2)`;
 }
 
 // ---------------------------------------------------------------------------

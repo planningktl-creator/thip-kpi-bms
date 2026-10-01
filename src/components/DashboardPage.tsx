@@ -85,8 +85,6 @@ export function DashboardPage({
     period.numerator !== null
     || period.denominator !== null
     || period.value !== null
-    || period.target !== null
-    || period.percentile !== null
   ));
   const healthScores = indicators
     .map((indicator) => {
@@ -117,7 +115,7 @@ export function DashboardPage({
         <div className="page-actions">
           <label className="fiscal-year-control"><span>ปีงบประมาณ</span><select aria-label="เลือกปีงบประมาณ" value={fiscalYear} onChange={(event) => onFiscalYearChange(Number(event.target.value))}>{selectableFiscalYears(fiscalYear).map((year) => <option key={year} value={year}>{formatFiscalYear(year)}</option>)}</select><ChevronDown size={14} aria-hidden="true" /></label>
           <div className={`connection-chip connection-chip-${connection.status}`}><span className="connection-led" />{dataSource === 'live' ? 'BMS live data' : dataSource === 'partial' ? 'BMS live data บางส่วน' : dataSource === 'loading' ? 'กำลังอ่านข้อมูลจริง' : 'ยังไม่มีข้อมูลจริง'}</div>
-          <button className="secondary-button" type="button" onClick={() => exportAggregateCsv(allIndicators, fiscalYear)} disabled={!allIndicators.some((indicator) => indicator.dataSource === 'bms')}><Download size={15} /> ส่งออก aggregate CSV</button>
+          <button className="secondary-button" type="button" onClick={() => exportAggregateCsv(allIndicators, fiscalYear)} disabled={dataSource === 'loading' || allIndicators.some((indicator) => indicator.fiscalYear !== fiscalYear) || !allIndicators.some((indicator) => indicator.dataSource === 'bms')}><Download size={15} /> ส่งออก aggregate CSV</button>
           <span className="secondary-button dashboard-refresh-note" role="status"><Clock3 size={16} /> {refreshedAt ? `อัปเดตล่าสุด ${formatRefreshTime(refreshedAt)}` : 'ยังไม่มีการอ่านข้อมูลจริง'} · {selectedMonth.label}</span>
         </div>
       </div>

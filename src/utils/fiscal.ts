@@ -1,6 +1,7 @@
 import type { FiscalYear } from '@/types/thip';
 
 export const BUDDHIST_ERA_OFFSET = 543;
+const bangkokFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' });
 
 const thaiMonthNames = [
   'ม.ค.',
@@ -48,8 +49,19 @@ export function formatFiscalYearShort(fiscalYear: FiscalYear): string {
 }
 
 export function getCurrentFiscalYear(date = new Date()): FiscalYear {
-  const calendarYear = date.getFullYear();
-  return date.getMonth() + 1 >= 10 ? calendarYear + 1 : calendarYear;
+  const iso = bangkokDate(date);
+  const calendarYear = Number(iso.slice(0, 4));
+  return Number(iso.slice(5, 7)) >= 10 ? calendarYear + 1 : calendarYear;
+}
+
+export function bangkokDate(date = new Date()): string {
+  const parts = bangkokFormatter.formatToParts(date);
+  const part = (type: string) => parts.find((item) => item.type === type)!.value;
+  return `${part('year')}-${part('month')}-${part('day')}`;
+}
+
+export function fiscalPeriodEnd(fiscalYear: number, fiscalMonth: number): string {
+  return fiscalMonth === 12 ? `${fiscalYear}-10-01` : getFiscalMonthPeriods(fiscalYear)[fiscalMonth].periodStart;
 }
 
 export function formatThaiMonth(isoDate: string): string {

@@ -22,9 +22,15 @@
 
 import { branchExternal, branchFact, branchIpd } from '@/services/thipFamilyBase';
 
-/** ROUND(<num> * <multiplier> / NULLIF(<den>, 0), 2) per the formulaScale contract. */
+/**
+ * ROUND(<num> * <scale> / NULLIF(<den>, 0), 2) per the formulaScale contract.
+ * The scale is emitted as a NUMERIC literal (`100.0`, never `100`): a whole-number
+ * literal makes PostgreSQL use INTEGER division on bigint numerators and silently
+ * truncates the ratio (29.17 -> 29.00). Proven live in tmp/audit_intdiv_report.json.
+ */
 function ratioValue(numerator: string, denominator: string, multiplier: number): string {
-  return `ROUND(${numerator} * ${multiplier} / NULLIF(${denominator}, 0), 2)`;
+  const scale = Number.isInteger(multiplier) ? `${multiplier}.0` : `${multiplier}`;
+  return `ROUND(${numerator} * ${scale} / NULLIF(${denominator}, 0), 2)`;
 }
 
 /**

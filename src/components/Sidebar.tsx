@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import {
   Activity,
   BarChart3,
@@ -13,7 +14,7 @@ import type { LucideIcon } from 'lucide-react';
 import type { BmsConnection, IndicatorGroup } from '@/types/thip';
 import { groupMeta } from '@/data/thipMeta';
 
-export type View = 'dashboard' | 'catalog' | 'detail';
+export type View = 'monitoring' | 'dashboard' | 'catalog' | 'detail';
 
 type Props = {
   view: View;
@@ -33,6 +34,7 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
+  { label: 'ติดตามรายเดือน', hint: 'Monthly monitoring', icon: BarChart3, view: 'monitoring' },
   { label: 'ภาพรวมคุณภาพ', hint: 'Quality overview', icon: LayoutDashboard, view: 'dashboard' },
   { label: 'คลังตัวชี้วัด', hint: 'Indicator library', icon: CalendarDays, view: 'catalog' },
 ];
@@ -46,10 +48,34 @@ export function Sidebar({
   isOpen,
   onClose,
 }: Props) {
+  const [mobile, setMobile] = useState(() => window.matchMedia('(max-width: 680px)').matches);
+  const aside = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 680px)');
+    const changed = () => setMobile(media.matches); media.addEventListener('change', changed);
+    return () => media.removeEventListener('change', changed);
+  }, []);
+  useEffect(() => {
+    if (!mobile || !isOpen) return;
+    const previous = document.activeElement as HTMLElement;
+    aside.current?.querySelector<HTMLButtonElement>('button')?.focus();
+    const key = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+      if (event.key === 'Tab') {
+        const buttons = aside.current?.querySelectorAll<HTMLButtonElement>('button');
+        if (!buttons?.length) return;
+        const first = buttons[0], last = buttons[buttons.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      }
+    };
+    window.addEventListener('keydown', key);
+    return () => { window.removeEventListener('keydown', key); previous?.focus(); };
+  }, [mobile, isOpen]);
   return (
     <>
       <div className={`sidebar-backdrop ${isOpen ? 'is-visible' : ''}`} onClick={onClose} aria-hidden="true" />
-      <aside className={`app-sidebar ${isOpen ? 'is-open' : ''}`} aria-label="เมนูหลัก">
+      <aside ref={aside} inert={mobile && !isOpen} className={`app-sidebar ${isOpen ? 'is-open' : ''}`} aria-label="เมนูหลัก">
         <div className="brand-lockup">
           <div className="brand-mark" aria-hidden="true">
             <HeartPulse size={21} strokeWidth={2.4} />
@@ -98,7 +124,7 @@ export function Sidebar({
           <button
             type="button"
             className={`group-nav-item ${activeGroup === 'all' ? 'is-active' : ''}`}
-            onClick={() => { onGroupChange('all'); onNavigate('dashboard'); onClose(); }}
+            onClick={() => { onGroupChange('all'); onNavigate(view === 'dashboard' ? 'dashboard' : 'monitoring'); onClose(); }}
           >
             <span className="group-letter all-letter">Σ</span>
             <span>ทุกกลุ่ม</span>
@@ -109,7 +135,7 @@ export function Sidebar({
               key={group}
               type="button"
               className={`group-nav-item ${activeGroup === group ? 'is-active' : ''}`}
-              onClick={() => { onGroupChange(group); onNavigate('dashboard'); onClose(); }}
+              onClick={() => { onGroupChange(group); onNavigate(view === 'dashboard' ? 'dashboard' : 'monitoring'); onClose(); }}
             >
               <span className="group-letter" style={{ backgroundColor: groupMeta[group].color }}>{group}</span>
               <span>{groupMeta[group].shortLabel}</span>

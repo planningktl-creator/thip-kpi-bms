@@ -10,6 +10,8 @@ ARG VITE_BMS_APP_IDENTIFIER="THIP.KPI.BMS"
 ENV VITE_BMS_APP_IDENTIFIER="${VITE_BMS_APP_IDENTIFIER}"
 ARG VITE_BMS_KPI_SOURCE_VIEW=""
 ENV VITE_BMS_KPI_SOURCE_VIEW="${VITE_BMS_KPI_SOURCE_VIEW}"
+ARG VITE_BMS_MONITORING_SOURCE_VIEW=""
+ENV VITE_BMS_MONITORING_SOURCE_VIEW="${VITE_BMS_MONITORING_SOURCE_VIEW}"
 # Alternative data path: serve the dashboard from the registered HOSxP foundation
 # queries (slower and many sequential requests, but needs no source-view provisioning).
 ARG VITE_BMS_KPI_LIVE_FOUNDATION=""

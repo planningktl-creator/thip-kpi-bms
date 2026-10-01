@@ -1,377 +1,162 @@
-# THIP KPI BMS — แผนพัฒนาต่อสู่ระบบข้อมูลจริง
+# THIP KPI BMS — Roadmap หลัง project audit
 
-สถานะเอกสาร: Development roadmap  
-วันที่จัดทำ: 11 กันยายน 2026
+**ปรับปรุง:** 1 ตุลาคม 2569 · **Audit evidence:** 30 กันยายน 2569
+**หลักฐานราย code:** [THIP KPI development matrix (อ่านง่าย)](THIP-KPI-DEVELOPMENT-MATRIX-2026-09-30.md) และ [JSON](THIP-KPI-DEVELOPMENT-MATRIX-2026-09-30.json)
+**ข้อค้นพบ/รายละเอียด:** [Project audit](PROJECT-AUDIT-2026-09-30.md) · [remediation และ acceptance criteria](PROJECT-AUDIT-REMEDIATION-2026-09-30.md)
 
-เอกสารนี้เป็นแผนทำงานต่อจากฐานโค้ดปัจจุบัน เพื่อพาระบบ THIP KPI BMS จากหน้าตลาด/แดชบอร์ดที่มี data contract และ query foundation แล้ว ไปสู่ระบบที่อ่านข้อมูลจริงจาก HOSxP ผ่าน BMS ได้ครบ 232 ตัวชี้วัด โดยรักษาหลักการสำคัญคือ HOSxP เป็น read-only, SQL ต้องผ่าน registered query layer และห้ามส่งออก credentials, token, PHI หรือ raw patient rows
+## เป้าหมาย
 
-## 1. เป้าหมายปลายทาง
+พัฒนา dashboard ให้ติดตามผลงานรายเดือน **232 KPI × 12 เดือน** ควบคู่กับผลรายงาน THIP ตามรอบเดิม โดยแยก series และ rule version:
 
-ระบบ release production ต้องสามารถทำงานตามลำดับนี้ได้:
+1. `thip-report`: ยังคงนิยามรายเดือน/ไตรมาส/ครึ่งปี/ปี และ completeness 1,552 cells ต่อปีงบประมาณ.
+2. `monthly-monitoring`: นิยามติดตามเดือน ต.ค.–ก.ย. ใหม่แยก code เมื่อ grain, cohort, target, unit และวิธีสะสมได้รับการอนุมัติ.
 
-    HOSxP (read-only)
-      -> registered SQL / reporting view ใน BMS
-      -> normalized KPI rows
-      -> source-view validation
-      -> THIP KPI BMS dashboard / catalogue / detail / trend
+ห้ามคัดลอกผลไตรมาสหรือผลปีลงเป็นผลของทุกเดือน. ผลสะสม YTD แสดงแยกจากค่ารายเดือน และคำนวณเฉพาะเมื่อ rule ระบุ. ระบบอ่าน HOSxP แบบ read-only ผ่าน registered query/source view; ส่งเฉพาะ aggregate; ห้ามเก็บ session credential, PHI หรือ raw patient rows ใน repository/log/browser/export.
 
-### Definition of success
+## สถานะฐานที่ตรวจแล้ว
 
-ถือว่าพร้อมเปิดใช้งานข้อมูลจริงเมื่อครบทุกข้อ:
+| รายการ | สถานะ | ขอบเขตความหมาย |
+|---|---:|---|
+| THIP KPI catalog / registered SQL branch | 232 / 232 | มี SQL candidate ไม่ได้หมายถึงสูตรตรงนิยามหรือ production approved |
+| Rule manifest | foundation 16; needs-local-mapping 216; ready 0 | ไม่มี code ที่ได้ owner/evidence/version sign-off ครบเพื่อเปิดข้อมูลจริง |
+| THIP cadence | 112 monthly / 19 quarterly / 31 semiannual / 70 annual | สร้าง 1,552 reporting cells; คง contract นี้ |
+| HOSxP inventory | 6,109 tables / 56,891 columns / 5,862 tables with PK / 0 declared FK columns | ไม่มีข้อมูลจริง; column match ไม่ยืนยัน join cardinality |
+| SQL parser/schema-name audit | 232 branches ผ่าน; 696 files parse ผ่าน; qualified-column gaps 0 | syntax/name check เท่านั้น; ไม่ใช่ clinical validation หรือ run บน HOSxP |
+| Automated baseline | 1,212 tests ผ่าน / build ผ่าน | เกณฑ์โค้ด; ไม่รับรอง KPI ณ โรงพยาบาล |
+| Monthly-monitoring readiness | 0/232 measurable/approved; ออกแบบ 2,784 ช่อง | ประเมินราย code ใน matrix พร้อมเหตุผลและ design path |
+| Pending working-tree files | query bundles และ source modules มี local edits ก่อน audit | เก็บไว้ ไม่ reset; generator/canonical source ต้องตรวจให้เสร็จก่อน overwrite |
 
-1. มีข้อมูลจาก source view ครบ 232 รหัส และครบตามรอบรายงาน 1,552 cells ต่อปีงบประมาณ
-   - รายเดือน 112 ตัว × 12 เดือน
-   - รายไตรมาส 19 ตัว × 4 ไตรมาส
-   - ราย 6 เดือน 31 ตัว × 2 รอบ
-   - รายปี 70 ตัว × 1 รอบ
-2. ทุก KPI มี approved rule พร้อมหลักฐานอ้างอิงจากนิยาม THIP, code set ของโรงพยาบาล และการ sign-off ของเจ้าของงาน
-3. ไม่มี unknown code, duplicate row, period ผิด cadence, metadata ไม่ตรง, ค่าที่คำนวณซ้ำแล้วไม่ตรงกับ numerator/denominator หรือ percentile นอกช่วง 0–100
-4. ค่า value, numerator, denominator, target, percentile และ status ของแต่ละแถวมีความหมายเดียวกันทั้ง BMS, audit script และ frontend
-5. ระบบไม่ใช้ demo/mock fallback และเมื่อ BMS หรือ session ใช้งานไม่ได้ต้อง fail closed พร้อมข้อความที่เจ้าหน้าที่เข้าใจได้
-6. ผ่าน automated tests, build, visual smoke, source audit และ BMS connectivity smoke โดยใช้ session จริงที่หมดอายุ/ต่อใหม่ได้
-7. ไม่มี credentials, access token, raw patient row หรือข้อมูลระบุตัวบุคคลใน repository, browser payload, log และ artifact ที่ส่งมอบ
+ตรวจ PDF 317 หน้าและ HOSxP JSON โดยใช้ hash/source reference ใน matrix. ไม่ได้เปิด BMS/HOSxP จริง, เขียน GitHub issues หรือ deploy.
 
-## 2. สถานะฐานปัจจุบัน
+## Release gates และ priority
 
-| ส่วนงาน | สถานะปัจจุบัน | ความหมายต่อแผนถัดไป |
-|---|---|---|
-| KPI catalogue | 232/232 รหัส | มีรายการกลางสำหรับ navigation, metadata และ rule mapping แล้ว |
-| Reporting cadence | 112 monthly, 19 quarterly, 31 semiannual, 70 annual | ใช้เป็น contract กลางของ source view และ completeness audit |
-| Rule manifest | 232/232 รหัส; 16 foundation, 216 needs-local-mapping | โครงสร้างครบ แต่ 216 รหัสยังต้องทำ local definition และ SQL ให้ได้รับอนุมัติ |
-| Registered foundation queries | 16/232 รหัส | ใช้เป็นฐานสำหรับทดสอบ end-to-end และเป็น pattern ให้ family อื่น |
-| Normalized source-view reader | รองรับ contract ของทั้ง 232 รหัส | พร้อมรับข้อมูลจริง แต่ยังต้อง provision view และเติมข้อมูลจาก BMS |
-| Data quality audit | ตรวจ code, cadence, duplicate, metadata, formula, refresh และ percentile | ใช้เป็น quality gate ก่อน deploy ทุก environment |
-| Frontend | อ่าน live rows จาก BMS และแสดง no-data แบบชัดเจน | ต้องทดสอบกับ source view จริงและตรวจ UX ของ missing/zero/error ให้ครบ |
-| Hospital mapping | ยังต้องยืนยัน schema, code set, business rule และ aggregate กับโรงพยาบาล | เป็น critical path ของ 216 รหัสที่เหลือ |
+### P1 — ห้าม publish KPI/ข้อมูลจริงจนกว่าจะผ่าน
 
-### สิ่งที่ยังไม่ควรถือว่าเสร็จ
+- แก้ Nginx access-log credential/Referer leak และยืนยัน role อ่านอย่างเดียวจาก BMS/DB server.
+- แยก registered SQL ออกจาก publish approval; เริ่มที่ 0 ready และเปิดทีละ code เมื่อหลักฐานครบ.
+- แก้ external facts ที่ query ทิ้ง, bisection ที่เสียข้อมูล และ state ปีงบ/CSV ที่แสดงข้อมูลเก่าเป็นปีใหม่.
+- ระงับการใช้ monthly/yearly query packs และ target crosswalk ที่ยังเดา field/year/cohort.
+- เพิ่มการเทียบ numerator/denominator/value กับรายงานที่ผู้รับผิดชอบโรงพยาบาลรับรอง.
 
-- การมี catalogue หรือ SQL candidate ยังไม่เท่ากับ KPI ที่ได้รับการรับรอง
-- ตารางจาก HOSxP Structure.xlsx เป็น schema inventory ไม่ใช่คำสั่งให้สร้าง query โดยอัตโนมัติ
-- นิยามใน THIP KPI.pdf เป็น dictionary/เกณฑ์ของตัวชี้วัด แต่หลายตัวต้อง map กับ workflow และ code set ของโรงพยาบาลก่อน
-- SQL ที่พบจากเอกสารหรือ Navicat เป็นหลักฐานประกอบการวิเคราะห์เท่านั้น ต้องตรวจ dialect, version, local code และช่วงเวลาจริงก่อนเปิดใช้
+### P2 — ต้องผ่านก่อนยอมรับ matrix เป็นเครื่องมือคุณภาพ
 
-## 3. หลักการพัฒนาและการควบคุมขอบเขต
+- แยก measured, zero cohort, missing source, unapproved rule และ future; completeness ไม่นับ target เป็นข้อมูลวัด.
+- กำหนดหน่วย, target source/effective interval, direction, range, accumulation และ SPC measurement model.
+- แก้ route refresh, request cancellation/timeout/body, hidden-sidebar focus, CSV spreadsheet escaping, generated artifact checks และ Node/dependency/build alignment.
+- เติม report visual/browser tests และ contract invariants.
 
-1. **Read-only เป็นค่าเริ่มต้น** — query ต้องเป็น SELECT หรือ reporting view ที่อ่านข้อมูลเท่านั้น ห้าม INSERT, UPDATE, DELETE, DDL หรือเขียนกลับ HOSxP
-2. **SQL อยู่หลัง registered query layer** — browser เรียก query key/endpoint ที่ลงทะเบียนไว้เท่านั้น ห้ามรับ SQL อิสระจาก client
-3. **Aggregate ก่อนส่งออก** — ส่งเฉพาะ normalized KPI aggregate; ห้ามส่ง patient-level row ถ้าไม่จำเป็นต่อผลลัพธ์
-4. **แยก fact ออกจาก benchmark** — target ต้องมาจาก BMS/source row หรือ benchmark registry ที่ได้รับอนุมัติ ไม่ fallback ไปใช้ metadata ใน frontend
-5. **บันทึก period semantics** — เก็บปีงบประมาณ, เดือน/ไตรมาส/รอบ 6 เดือน/ปี และ timezone ให้ชัดเจน ไม่ตีความวันที่เองใน UI
-6. **ไม่เดาเมื่อหลักฐานไม่พอ** — ถ้ายังไม่ยืนยัน numerator, denominator, inclusion/exclusion หรือ code set ให้คงสถานะ needs-local-mapping และไม่ publish เป็น production-ready
-7. **ทุกการแก้ rule ต้องมี version** — เปลี่ยนสูตรหรือ code set ต้องเพิ่ม rule version, effective date, reason และผลกระทบย้อนหลัง
+### P3 — หลัง correctness gate
 
-## 4. แผนพัฒนาตามระยะ
+วัดและลด initial bundle (~1.75 MB JS raw) ด้วย route-level lazy loading; ตั้ง budget จากการทดสอบอุปกรณ์/network ที่ตกลงกัน. ยังไม่มีผล latency จากผู้ใช้จริง.
 
-ระยะเวลาเป็น engineering estimate ไม่รวมเวลารอข้อมูลและ sign-off จากโรงพยาบาล ระยะต่าง ๆ สามารถทำคู่ขนานได้หลัง dependency ผ่าน แต่ห้ามข้าม release gate
+## แผนงานตามลำดับ dependency
 
-### Phase 0 — Freeze contract และเตรียมหลักฐาน
-
-ระยะโดยประมาณ: 1–2 วัน
-
-| งาน | ผลลัพธ์ที่ต้องส่งมอบ | ผู้รับผิดชอบหลัก | เกณฑ์ผ่าน |
+| Phase | Dependency | งาน / deliverable | Acceptance criteria |
 |---|---|---|---|
-| ยืนยัน data contract | field, type, nullability, period และ status ที่ใช้จริง | Tech lead + BMS | contract ถูกอ้างอิงตรงกันใน frontend, audit และ BMS |
-| Freeze KPI inventory | catalogue และ cadence manifest 232 รหัส | Product/domain owner | ไม่มีรหัสตกหล่นหรือซ้ำ |
-| จัด evidence register | PDF page, workbook sheet/cell, local SQL reference, rule version | KPI analyst | ทุก code มี source reference และสถานะ mapping |
-| ระบุ owner ต่อ KPI family | รายชื่อผู้ตรวจ clinical/quality/IT | Hospital domain owner | ทุก family มีผู้อนุมัติ ไม่ปล่อย owner ว่าง |
-| ยืนยัน environment | HOSxP version, database dialect, BMS URL, auth, timezone, FY boundary | Hospital IT + BMS | มี test environment และวิธีต่อ session ที่ไม่ฝัง secret |
+| 0. ปิด release blockers | เริ่มได้; ห้ามอาศัยข้อมูลคนไข้จริงในการทดสอบ | R0.1–R0.8 ใน [remediation](PROJECT-AUDIT-REMEDIATION-2026-09-30.md): log redaction, server read-only gate, publication manifest, external-source behavior, time bisection, quarantine monthly packs, target crosswalk และ FY consistency | Synthetic canary ไม่อยู่ใน logs; DB ปฏิเสธ write/side effects; external 95/100 คงค่า; full-vs-split window ตรงกัน; no guessed target; CSV ไม่ผูก snapshot ผิด FY. ทุกข้อ P1 มีหลักฐาน run เก็บโดยไม่มี secret/PHI. |
+| 1. รับรอง evidence และนิยามรหัส | Phase 0; domain owner และ HOSxP/BMS representative | ใช้ mapping 232 รายการตรวจ parser fields กับ PDF ด้วยคน; ยืนยัน printed page, numerator/denominator, inclusion/exclusion, event grain/date, local code-set version, table key/cardinality, owner และ benchmark/target scope | ไม่มี code ตกหล่น; corrections ลง matrix พร้อม source; unresolved FK/one-to-many มี evidence; owner sign-off ต่อ rule/effective date; คง 0 ready จนเอกสารครบ. |
+| 2. แก้ data accuracy และ release gate | Phase 1 สำหรับแต่ละ family; R0.3–R0.7 | แยก SQL presence / schema mapping / THIP definition / local confirmation / publication approval; แก้ numerator-denominator grain, join fan-out, period semantics, source refresh, external 55 codes, AA0101–5 catchment denominator และ target crosswalk | ฐานสังเคราะห์ adversarial ผ่าน; query full period เท่ากับ partitioned; exact monthly/THIP official benchmark reconciliation พร้อมลายเซ็นเจ้าของ; system block ถ้า evidence ยังขาด. |
+| 3. Monthly-monitoring contract | Phase 1 metadata; R0.9–R0.12 | สร้าง model/query key แยก `monthly-monitoring`; field ช่วงเริ่ม/สิ้นสุด, data-through, numerator, denominator, value, unit, target provenance/effective dates, criterion, data status, accumulation, cumulative fields, reason, rule version, refresh time | แยก data status จาก performance assessment; `Indicator.monthly` และ THIP 1,552 cells ไม่เปลี่ยน; exact approved rule per code; NULL/zero/future/unapproved แยก; unique person/episode aggregate ทำใน DB; target unverified= NULL. |
+| 4. Monitoring query/source view | Phase 3; registered read-only layer และ schema provisioning | สร้าง adapter/DDL/view/query สำหรับ monthly facts; ตั้งแต่ครอบคลุม 232 codes ทุก cell มีสถานะ ถึงแม้ value ยังไม่มี; YTD ทำ server-side ตาม accumulation | ทุก row unique code×FY×month×series/version; coverage/freshness/latency telemetry ไม่มี row/raw identifier; fiscal boundary and effective dates ตรง; source view deterministically generated; schema `reporting` preflight/provision ชัด. |
+| 5. Matrix UI และ export | Phase 3 contract, Phase 4 mocked source | ปีงบประมาณ selector, group/status filters, code/name search, 232 rows×12 columns ต.ค.–ก.ย., sticky KPI key, horizontal scroll, keyboard navigation, detail drill-through, separate series toggle, CSV. สถานะผ่านเป้า/เฝ้าระวัง/ต้องดำเนินการ/ไม่มีเป้าหมาย; watch policy ระบุว่าเป็นเกณฑ์ระบบ | Desktop/mobile browser tests ผ่าน; FY request เก่าห้ามแสดง/ส่งออกผิดปี; cell เปิด numerator/denominator/target/YTD/method/data window/rule; months future ไม่ autofill zero; export มี series/time/unit/target/rule/reason และ CSV injection safe. |
+| 6. ตรวจรับโรงพยาบาล | Phases 1–5; signed aggregates และ data owner | เทียบผล summary กับรายงานทางการย้อนหลังแบบ anonymized/aggregate; ตรวจ freshness, missingness, latency, target version และ per-family rule approvals | เจ้าของ data/clinical/quality sign off; threshold/error tolerance ถูกกำหนดก่อนเทียบ; no unapproved family in live mode; reconciliation ปิดประเด็นได้และมี audit trail/version. |
+| 7. เปิดใช้ตาม family และติดตาม | Phase 6 ต่อ family | เปิดเฉพาะ approved codes; คง THIP reporting และ monitoring เป็นคนละ series; ปิด family หาก freshness/coverage/query latency เกิน threshold | Alerts อ้าง code/rule version และ reason โดยไม่มี PHI/token; verify rollback ปิด family กลับ unavailable; dashboard แสดง source period/freshness/coverage ตรงตาม query. |
+| 8. Polish / operational hardening | Phase 5 stable; วัด baseline | dependency upgrade, generated artifacts drift gate, route loading and performance budget | CI run ทุก audit/build/test/visual/browser check; update เอกสารตรง implementation; baseline/perf budgets วัดซ้ำได้. |
 
-Dependency: ไม่มี
+Owners ระบุเป็นบทบาท (KPI owner, quality/clinical reviewer, HOSxP data owner, BMS/platform owner, frontend/QA) จนโรงพยาบาลกำหนดผู้รับผิดชอบจริง. ไม่ใส่วันเสร็จแบบเดา; dependency คือข้อมูลและการอนุมัติของผู้ดูแล.
 
-### Phase 1 — สร้าง BMS/source-view pipeline และ staging
+## กติกาผล monthly monitoring
 
-ระยะโดยประมาณ: 2–4 วัน
+### Period และ cohort
 
-| งาน | ผลลัพธ์ที่ต้องส่งมอบ | เกณฑ์ผ่าน |
-|---|---|---|
-| Provision normalized view | view หรือ endpoint ตาม contract ที่ VITE_BMS_KPI_SOURCE_VIEW อ้างถึง | query ได้โดยไม่เปิด raw patient row |
-| ทำ staging export | JSON/CSV aggregate สำหรับอย่างน้อย 1 FY | thip_source_audit.py ผ่านโดยไม่มี error |
-| ทำ refresh metadata | refreshed_at, source system, rule version และ batch/run id | ตรวจย้อนหลังได้ว่าแต่ละข้อมูลมาจากรอบใด |
-| ทำ auth/session smoke | login, refresh, expiry, unauthorized, reconnect | ระบบไม่ค้างที่ stale session และไม่ log token |
-| ตั้ง observability | query latency, row count, failure reason, audit result | log เป็น aggregate/technical metadata เท่านั้น |
+- Fiscal year ต.ค.–ก.ย.; `periodStart` คือวันแรกของเดือนและ `periodEnd` เป็น exclusive end. เดือนอนาคตเป็น `future`.
+- ระบุ event date ที่ใช้ (admit, discharge, visit, transaction, snapshot หรือ service time) แยกราย rule. Admit/discharge ข้ามเดือนต้องลงงวดตามนิยามที่อนุมัติ; observation window ต้องอ่านข้อมูลครบถึง `dataThrough`.
+- One-to-many joins ต้องลดเหลือ episode/cohort ที่ถูกต้องก่อน aggregate. การนับ distinct คน/episode สะสมต้องคำนวณในฐานข้อมูลและห้ามส่ง identifiers มาหน้าเว็บ.
+- Monthly facts ของ KPI ราย quarter/semiannual/annual เป็น measure ที่ออกแบบใหม่พร้อม version/approval; ห้ามนำค่ารอบ THIP เดิมไปหารหรือทำซ้ำเป็น monthly.
 
-Dependency: Phase 0 — contract, environment และ access
+### Accumulation และสูตร
 
-### Phase 2 — รับรอง foundation 16 ตัวแรก
+ต้องเลือกอย่างชัดเจนต่อ code และ series:
 
-ระยะโดยประมาณ: 3–5 วัน
-
-16 รหัสที่เริ่มก่อน:
-
-DH0101, DH0101.1, DH0101.2, DN0101, DR0101, CE0101, CI0101, DH0102, DG0102, DG0202, DR0403, DR0102, DN0107, DH0112, DN0109, DN0302
-
-งานหลัก:
-
-1. ตรวจ SQL กับ HOSxP version และ schema จริง
-2. ตรวจความหมาย episode, admission/discharge, diagnosis position, procedure, death และ denominator
-3. เปลี่ยน hardcoded local code/FY/date ให้เป็น registered parameters หรือ mapping table ที่ควบคุมได้
-4. ทดสอบ aggregate ด้วยช่วงเวลาอย่างน้อย 3 เดือนที่มีข้อมูล และ 1 ช่วงที่ denominator เป็นศูนย์
-5. เปรียบเทียบกับรายงานเดิมของโรงพยาบาลและให้ clinical/quality owner sign-off
-6. publish เป็น ready เฉพาะตัวที่มีหลักฐานครบ
-
-เกณฑ์ผ่าน: 16 ตัวผ่าน source audit, query test, domain review และ BMS-to-UI smoke โดยไม่มี frontend benchmark fallback
-
-Dependency: Phase 1
-
-### Phase 3 — IPD และ clinical outcome families
-
-ระยะโดยประมาณ: 1–2 สัปดาห์
-
-ลำดับแนะนำ:
-
-1. ACS/AMI และโรคหลอดเลือดหัวใจ
-2. stroke / fast track / thrombolysis
-3. pneumonia, sepsis และ infection outcome
-4. surgery, anesthesia และ perioperative outcome
-5. pressure ulcer, fall, medication-related harm และ patient safety
-6. upper GI bleeding, head injury และ readmission
-
-ผลลัพธ์ต่อ family:
-
-- approved inclusion/exclusion และ episode key
-- code set/diagnosis/procedure crosswalk ของโรงพยาบาล
-- registered query หรือ reporting view
-- fixture aggregate ที่ลบข้อมูลระบุตัวบุคคลแล้ว
-- rule test, denominator-zero test, cadence test และ owner sign-off
-
-Dependency: Phase 2 และ local clinical mapping
-
-### Phase 4 — OPD, NCD และ chronic care
-
-ระยะโดยประมาณ: 1–2 สัปดาห์
-
-ครอบคลุมอย่างน้อย:
-
-- ambulatory care sensitive conditions
-- diabetes และ hypertension
-- CKD และ complication
-- HIV/TB ตามนิยามและระบบติดตามของโรงพยาบาล
-- asthma/COPD
-- tobacco และ risk-factor indicators
-
-ประเด็นที่ต้องล็อกก่อนเขียน query:
-
-- นิยาม visit เทียบกับ unique patient/episode
-- การรวมข้อมูลจาก OPD, chronic registry, laboratory และ pharmacy
-- การนับผู้ป่วยที่มีหลาย visit ในรอบเดียว
-- code set version และการรองรับ ICD-10/local code
-- การใช้ข้อมูล longitudinal โดยไม่ส่งออก patient-level row
-
-Dependency: Phase 0 mapping และ Phase 1 source view
-
-### Phase 5 — Maternal, child และ specialty services
-
-ระยะโดยประมาณ: 1–2 สัปดาห์
-
-ครอบคลุม family ที่เกี่ยวกับ ANC, labor/delivery, postpartum, newborn, child immunization/growth และ specialty service ตามรายการใน catalogue
-
-ต้องกำหนดเพิ่ม:
-
-- event date ที่ใช้จริง เช่น delivery date, admission date, discharge date หรือ service date
-- การเชื่อม mother–newborn โดยใช้ surrogate/aggregate key เท่านั้น
-- denominator กรณี referral, transfer, stillbirth และ out-of-area case
-- รอบรายงานที่ไม่ใช่รายเดือน และการสรุปปีงบประมาณ
-
-Dependency: local workflow review กับผู้รับผิดชอบหน่วยงาน
-
-### Phase 6 — Operations, safety, administration และ system performance
-
-ระยะโดยประมาณ: 1–2 สัปดาห์
-
-ครอบคลุม family ที่เหลือ เช่น ED, mental health, infection control, medication, blood bank, CSSD, customer experience, HR, finance และ governance
-
-แนวทาง:
-
-- แยก KPI ที่มาจาก clinical fact ออกจาก KPI ที่ต้องรับข้อมูลจากระบบงาน/แบบสำรวจ
-- ทำ source ownership ต่อ field ไม่ให้ query พยายามอนุมานข้อมูลที่ไม่มีใน HOSxP
-- ระบุ manual/import source ที่ยอมรับได้ผ่าน BMS contract หากไม่มี table ใน HOSxP
-- ใช้สถานะ not-applicable, not-available หรือ pending-local-source อย่างมีเหตุผล แทนการใส่ศูนย์ปลอม
-
-Dependency: source owner ของแต่ละหน่วยงาน และการตัดสินใจเรื่อง non-HOSxP source
-
-### Phase 7 — Production acceptance และ deploy
-
-ระยะโดยประมาณ: 2–3 วัน
-
-| Gate | รายการตรวจ |
+| Strategy | กฎ |
 |---|---|
-| Data gate | 232 codes, 1,552 cells, completeness, duplicate, formula, metadata, percentile และ refresh ผ่าน |
-| Security gate | ไม่พบ secret/PHI/raw row ใน repo, payload, log และ artifact; SQL เป็น read-only |
-| Runtime gate | auth/session expiry/reconnect, timeout, unauthorized, BMS unavailable และ empty/zero state ผ่าน |
-| Product gate | catalogue, dashboard, detail, trend, target/benchmark และ cadence แสดงตรงกับ source row |
-| Operational gate | มี runbook, owner, alert, rollback, backup/export aggregate และช่องทางรับ incident |
-| Sign-off gate | IT, quality/clinical, product และผู้อนุมัติข้อมูลลงนาม release note |
+| sum/count | รวม count ได้เมื่อ events disjoint และ denominator เป็น additive ตาม cohort ที่อนุมัติ |
+| weighted ratio | คำนวณจาก `Σ numerator / Σ denominator` × multiplier; ห้ามเฉลี่ยค่าเปอร์เซ็นต์รายเดือน |
+| fixed denominator | เก็บ denominator/effective period และห้าม sum ซ้ำทุกเดือน |
+| snapshot | อ่านยอด ณ cutoff ที่อนุมัติ เช่น employee/headcount หรือ inventory month-end |
+| distinct cohort | distinct episode/person ฝั่ง SQL; dashboard รับเฉพาะ aggregate |
+| custom | แนบ derivation, date logic, zero/NULL behavior, target semantics และ owner approval |
 
-เกณฑ์ deploy: ทุก gate ผ่านและไม่มี P0/P1 ค้างอยู่
+SH0101 official annual turnover ยังคงสูตรตาม PDF โดยใช้ค่าเฉลี่ย headcount ต้น/ปลายปี. สูตรติดตามรายเดือนต้องกำหนดแยกและตรวจรับต่างหาก; ห้ามแบ่ง annual result ด้วย 12 โดยปริยาย. หากไม่มี denominator/source snapshot ที่เชื่อถือได้ให้ status `missing-source` หรือ `rule-unapproved`.
 
-## 5. Workflow ต่อ KPI หนึ่งตัว
+### เป้าหมาย หน่วย และสถานะ
 
-ใช้ workflow เดียวกันทั้ง 232 ตัวเพื่อไม่ให้แต่ละทีมตีความต่างกัน:
+- เก็บ target โรงพยาบาล, dictionary benchmark, source, unit และ effective interval แยก fields; `kpi_moph` ที่ crosswalk ไม่ยืนยันต้องคืน NULL. Benchmark ระดับ dictionary ไม่ได้แปลว่าเป็น hospital target.
+- Unit รองรับ percent, rate, ratio, count และหน่วยเวลา/stock/per-person ที่ได้รับอนุมัติ. เกณฑ์แบบ range มี lower/upper/inclusivity/direction ชัด.
+- สถานะข้อมูล: `measured`, `zero-cohort`, `missing-source`, `rule-unapproved`, `future`. สถานะประเมิน: `on-track`, `watch`, `action`, `no-target`, `not-assessable`.
+- `watch` default เป็น system policy และต้องแสดง label เช่น 8%/minimum 0.02; ไม่เรียกว่าเกณฑ์ THIP.
+- Missing ไม่กลายเป็นศูนย์; zero cohort เป็นข้อมูลที่ query รันสำเร็จแต่ไม่มี cohortและ value อาจคำนวณไม่ได้; zero denominator มี data state แยกจาก missing source.
 
-1. เลือกรหัสจาก src/data/thipCatalogue.ts และอ่านนิยาม/สูตรจาก docs/THIP-KPI-HOSXP-QUERY-GUIDE.md
-2. บันทึก evidence: หน้าใน PDF, sheet/cell ใน workbook, local report หรือเอกสารโรงพยาบาล
-3. สร้างหรือปรับ rule ใน src/data/thipKpiRules.ts โดยระบุ family, cadence, period field, episode key, inclusion, exclusion, code set และ rule version
-4. ทำ local mapping: ตาราง/ฟิลด์, diagnosis/procedure/lab/drug code, status code และ source owner
-5. เขียน SQL ใน src/services/queryRegistry.ts หรือสร้าง reporting view ใน BMS; ห้ามให้ frontend ส่ง SQL อิสระ
-6. ตรวจ one-to-many และ distinct grain ให้ชัดก่อน aggregate เพื่อป้องกัน numerator/denominator พอง
-7. สร้าง normalized row ตาม contract พร้อม numerator, denominator, value, target, percentile, period, refreshed_at และ rule_version
-8. ทดสอบอย่างน้อย: มีข้อมูล, ไม่มีข้อมูล, denominator = 0, target missing, duplicate, period boundary และ date/timezone boundary
-9. เปรียบเทียบ aggregate กับรายงานเดิมของโรงพยาบาลอย่างน้อย 3 ช่วง และบันทึกผลต่างที่อธิบายได้
-10. ให้ domain owner sign-off แล้วเปลี่ยนสถานะจาก needs-local-mapping เป็น ready
-11. รัน source audit, automated tests, build และ visual smoke
-12. เพิ่ม release note หาก rule หรือ code set เปลี่ยนจาก version เดิม
+## UI, export, security และ operability
 
-## 6. งานพัฒนาใน repository
+ตารางหลักมี 232 rows × 12 fiscal months. Filter/search คงค่าที่แชร์ URL ได้; cell เปิด accessible details/drawer และ keyboard focus ไปช่องถัดไป. Mobile ใช้ horizontal scroll และตรึงคอลัมน์ code/name. สีไม่ใช่สัญญาณเดียว; label/icon ชัด. การเปลี่ยน FY ยกเลิก query เก่าหรือ mark snapshot period; ห้าม export mixed-year.
 
-### งานที่ควรทำใน codebase
+CSV แยกไฟล์หรือมี `series_kind` ชัดเจน; เพิ่ม period start/end, data-through, value, numerator/denominator, unit, target, target source/effective dates, assessment/data state, method, cumulative result, reason และ rule version. ป้องกัน spreadsheet formula injection โดยรักษาตัวเลขที่ typed ไว้. ห้าม export raw rows หรือ client session metadata.
 
-| Priority | งาน | ไฟล์/พื้นที่ | ผลลัพธ์ |
-|---|---|---|---|
-| P0 | ขยาย rule metadata | src/data/thipKpiRules.ts | ทุก KPI มี episode, period field, inclusion/exclusion, code set, owner, status และ version |
-| P0 | ทำ query registry ต่อ family | src/services/queryRegistry.ts | SQL มีชื่อ, parameter, source tables, read-only assertion และ test |
-| P0 | คง normalized source contract | src/services/bmsData.ts, src/types/thip.ts | frontend ไม่ต้องรู้ HOSxP schema และไม่ใช้ fallback benchmark |
-| P0 | ทำ fixture aggregate | src/services/*.test.ts และ test-fixtures/ ที่ไม่มี PHI | ทดสอบ rule ด้วยข้อมูลจำลองระดับ aggregate |
-| P0 | เพิ่ม audit ใน CI | scripts/thip_source_audit.py และ workflow | artifact ที่ไม่ผ่าน contract ถูกปฏิเสธก่อน deploy |
-| P1 | ทำ rule evidence registry | docs/ หรือ BMS metadata endpoint | ตรวจย้อนกลับได้ว่าค่าแต่ละ KPI มาจาก rule/evidence ใด |
-| P1 | เพิ่ม source freshness/error panel | Dashboard/BMS status | ผู้ใช้เห็น stale, unavailable และ partial data ชัดเจน |
-| P1 | เพิ่ม export aggregate | BMS endpoint/UI | export ได้เฉพาะ aggregate ตามสิทธิ์และ audit log |
-| P2 | เพิ่ม query performance telemetry | BMS/observability | ติดตาม latency, timeout, row count และ failure rate ต่อ query key |
+Read-only DB role, server-side registered query, aggregate limit, timeout ครอบ body, credential-free log, least-privilege container, sanitized error/telemetry, CSP/referrer checks และ deterministic source view เป็น release controls. Client-side SQL regex ไม่ใช่ security boundary.
 
-### โครงสร้าง rule ที่ควรครบก่อน publish
+## Test matrix ก่อนเปิด KPI family
 
-    {
-      code: "DH0101",
-      family: "ipd-outcome",
-      status: "ready",
-      cadence: "monthly",
-      periodField: "discharge_date",
-      episodeGrain: "one-row-per-admission",
-      inclusion: ["..."],
-      exclusion: ["..."],
-      codeSetVersion: "hospital-approved-version",
-      ruleVersion: "2026.1",
-      owner: "clinical-quality",
-      evidence: ["THIP KPI.pdf:p.xx", "HOSxP Structure.xlsx:sheet/cell"],
-      queryKey: "thip.ipd.dh0101"
-    }
+| ด้าน | ตัวอย่าง acceptance |
+|---|---|
+| FY/date | FY 2026 = ต.ค. 2025–ก.ย. 2026; event windows ข้ามเดือน/ปี; timezone/midnight boundary |
+| Join/cohort | 1:M detail fan-out; duplicates; person/episode ข้ามเดือน; numerator/denominator distinct rule |
+| Query slicing | Full period เท่ากับ bisection สำหรับ numerator/denominator/value; partial quarter ห้ามกลายเป็น 0 หรือหาย |
+| Missing/zero | zero cohort, zero denominator, SQL NULL, external source missing, unapproved rule, future month |
+| Accumulation | sum/count vs weighted ratio; fixed denominator; snapshots; distinct server aggregate; monthly กับ YTD ที่ต่างกัน |
+| Target | target เปลี่ยนในปี, NULL, 0, high/low-is-better, target interval, range, system watch policy |
+| Series isolation | เติม/แก้ monthly-monitoring ต้องไม่เปลี่ยน THIP `Indicator.monthly`, target/formula หรือ 1,552 completeness |
+| Browser/export | 232×12, filters, search, keyboard, drill-through, no-data/session failure/loading, old responses, CSV metadata/escaping, desktop/mobile |
+| Ops | read-only privilege, source freshness/coverage/query latency, audit trail/version, clean generated output, dependencies, CI/build/test |
 
-ชื่อ field ข้างต้นเป็นโครงสร้างเป้าหมาย ต้องตรวจให้ตรงกับ type และ contract จริงก่อน implement; ห้ามเติมค่า placeholder แล้วประกาศเป็น ready
+## Workflow อนุมัติ KPI ทีละตัว
 
-## 7. งานที่โรงพยาบาลต้องส่งมอบ
+1. ตรวจนิยาม/เลขหน้าและ rule source; บันทึก PDF page และเวอร์ชัน.
+2. เจ้าของ HOSxP ยืนยัน local table/column/code-set, join cardinality, event/period date และ snapshot grain.
+3. ระบุ numerator/denominator, inclusion/exclusion, unit, target provenance, missing/zero/suppression และ formula.
+4. ออก version/effective dates แยก THIP report กับ monitoring series; บันทึก accumulation rule.
+5. รันทดสอบ synthetic adversarial แล้วเทียบผล aggregate ย้อนหลังกับรายงานโรงพยาบาล; เจ้าของงาน sign off.
+6. เปลี่ยน family approval manifest แล้ว deploy; monitor coverage/freshness/latency; rollback โดยเปลี่ยนกลับ unavailable หากผิด.
 
-เพื่อให้ทีมพัฒนาทำต่อได้โดยไม่เดา ขอข้อมูลเป็น metadata/aggregate เท่าที่จำเป็น ไม่ต้องส่ง credentials หรือ raw patient data:
+สถานะ `SQL registered`, `schema names match`, `definition mapped`, `aggregate reconciled` และ `approved for publication` ต้องมี field แยกกัน; ห้ามอนุมานขั้นท้ายจากขั้นต้น.
 
-1. HOSxP version, database engine/version, schema diff จาก workbook และ timezone
-2. รายชื่อ table/view ที่อนุญาตให้อ่าน และชื่อ field ที่เปลี่ยนจาก standard
-3. ICD-10, procedure, drug, lab, clinic, ward, department และ local code crosswalk พร้อม version/effective date
-4. นิยาม episode และ date boundary ของแต่ละ family
-5. target/benchmark ที่อนุมัติแล้ว พร้อม effective period และ direction (higher, lower, neutral)
-6. aggregate validation sample ต่อ KPI: period, numerator, denominator, value, target และผู้ยืนยัน
-7. รายการ KPI ที่โรงพยาบาลไม่เก็บข้อมูล, ไม่เกี่ยวข้อง หรือมาจากระบบอื่น
-8. BMS endpoint/source view schema, authentication flow, refresh schedule, timeout และ support contact
-9. ตัวอย่าง error/empty/zero-denominator ที่คาดหวัง
+## งาน audit ที่ค้างกับ runtime
 
-ห้ามส่งเข้ามาใน repository: username/password, token, session cookie, patient name, HN, AN, CID, address, phone, raw visit row หรือไฟล์ export ที่ระบุตัวบุคคลได้
+ส่วนนี้เป็นสถานะเมื่อ audit วันที่ 2026-09-30; การแก้รุ่นแรกและหลักฐานวันที่ 2026-10-01 บันทึกด้านล่าง. การเปิด family จริงยังต้องทำโดย hospital owner พร้อม evidence และการอนุมัติแยก.
 
-## 8. วิธีตรวจรับแต่ละรอบ
+## รุ่นแรกที่พัฒนาแล้ว — 2026-10-01
 
-ก่อน merge หรือ deploy ทุก batch ให้รัน:
+ส่งมอบ matrix 232×12 พร้อม development preview, search/filter/URL history, accessible drill-through และ CSV โดยรักษา official THIP 232 codes / 1,552 cells. ข้อมูลจริงทุก rule ยัง `unapproved`; deployment และการเชื่อมต่อโรงพยาบาลอยู่นอกงานรอบนี้. ดู [release evidence](THIP-MONITORING-RELEASE-2026-10-01.md), [monitoring contract](THIP-MONITORING-CONTRACT.md), [UI handoff](THIP-MONITORING-UI.md) และ [machine rule registry](../reporting/thip_monitoring_rules.json).
 
-    pnpm test
-    pnpm run build
-    python scripts/thip_source_audit.py --input <aggregate-export.json> --fiscal-year 2026
-    python scripts/visual_smoke.py
-
-สำหรับ production image ให้ส่ง source view เป็น build argument และตั้งค่า runtime ให้ตรงกับ BMS จริง:
-
-    docker build --build-arg VITE_BMS_KPI_SOURCE_VIEW=thip_kpi_monthly -t thip-kpi-bms .
-
-รายละเอียด contract, endpoint, session และ failure behavior ให้ยึด:
-
-- docs/THIP-DATA-CONTRACT.md
-- docs/THIP-SOURCE-NOTES.md
-- docs/THIP-KPI-HOSXP-QUERY-GUIDE.md
-- README.md
-
-ผลตรวจรับขั้นต่ำของ source export:
-
-- รหัสต้องอยู่ใน catalogue 232 ตัว
-- cadence และ period ต้องตรง manifest
-- ครบ 1,552 cells ต่อ FY หรือมีสถานะ missing ที่ได้รับอนุมัติและตรวจสอบได้
-- ห้าม duplicate key
-- value ต้องสอดคล้องกับ numerator/denominator และ multiplier ของ KPI
-- percentile ต้องอยู่ระหว่าง 0–100
-- metadata เช่น definition, formula, unit, direction, source tables และ status ต้องตรงกับ rule version
-- refreshed_at ต้องใหม่ตาม SLA ของรอบรายงาน
-
-## 9. Release gate และ rollback
-
-### P0 — ห้าม deploy
-
-- query เขียนข้อมูลหรือเปิด raw patient row
-- มี secret/PHI ใน repository, payload หรือ log
-- ใช้ demo/mock data หรือ frontend fallback เป็นข้อมูล production
-- numerator/denominator ผิดจนเปลี่ยนความหมาย KPI
-- source view มี duplicate, unknown code หรือ cadence ผิดจำนวนมาก
-- session/auth ทำให้ข้อมูลของผู้ใช้อื่นรั่วไหล
-
-### P1 — deploy ได้เมื่อแก้และมีหลักฐาน
-
-- KPI family สำคัญยังไม่มี owner sign-off
-- target/percentile/refresh metadata ขาด
-- query ช้าเกิน SLA หรือ timeout โดยไม่มี graceful error
-- visual/detail/trend แสดง period หรือ target ไม่ตรง source row
-
-### P2 — ทำหลังเปิดใช้ได้โดยต้องติด backlog
-
-- ปรับ copy/UX ที่ไม่กระทบความถูกต้อง
-- เพิ่ม performance telemetry หรือ export format
-- เพิ่มคำอธิบาย/ลิงก์ evidence ใน detail view
-
-Rollback ต้องทำโดยสลับไปยัง source-view/rule version ล่าสุดที่ผ่าน gate แล้ว ไม่ใช้การแก้ข้อมูลใน HOSxP และไม่ลบ audit artifact
-
-## 10. ความเสี่ยงและวิธีลดความเสี่ยง
-
-| ความเสี่ยง | ผลกระทบ | วิธีลดความเสี่ยง |
+| ระยะ | Dependency | ผลที่พัฒนาและ acceptance |
 |---|---|---|
-| schema ของโรงพยาบาลต่างจาก workbook | query ใช้ไม่ได้หรือได้ค่าผิด | ทำ schema diff และ mapping sign-off ก่อนเขียน family query |
-| local code เปลี่ยนตามเวลา | trend ขาดช่วงหรือค่ากระโดด | version code set และ effective date; เก็บ rule version กับ row |
-| one-to-many จาก diagnosis/procedure/visit | numerator/denominator พอง | กำหนด episode grain และ aggregate หลัง deduplicate |
-| fiscal year/date boundary ต่างกัน | period ผิดและ audit ไม่ครบ | กำหนด timezone/FY boundary ใน BMS contract และมี boundary test |
-| target อยู่คนละแหล่งกับ fact | แสดง benchmark ผิด | target ต้องอยู่ใน source row/approved registry และห้าม fallback จาก frontend |
-| KPI ใน PDF แต่ไม่มี source ใน HOSxP | พยายามอนุมานข้อมูลจนผิด | ใช้สถานะ pending-local-source และระบุ owner/source อื่น |
-| SQL เดิมมี hardcoded code/FY | ใช้ซ้ำแล้วผิดปีหรือผิดหน่วยงาน | parameterize และเก็บเป็น evidence ไม่เปิด production จนผ่าน review |
-| BMS ล่ม/ข้อมูลค้าง | ผู้ใช้เข้าใจว่าไม่มีผู้ป่วย | แยก unavailable, stale, no-data, zero และแสดง freshness |
+| A correctness/security | Audit/remediation เดิม | Logs ไม่เก็บ query/Referer; external facts ไม่ถูกทิ้ง; publication/target approval แยกจาก registered SQL; available coverage 0 เมื่อไม่มี facts; reasons ครบ; FY ล้าง snapshot และ cancel; response-body deadline; CSV formula text escape. Unit/mock browser และ local Nginx credential canary ผ่าน |
+| B period/aggregation | A | Full observation window + partition by code เท่านั้น; single-code timeout unavailable; duplicate merged cells rejected; quarterly targets ไม่ carry เป้าเปลี่ยน/annual; SPC centerline ไม่เตือน run. Unit และ synthetic PG full/partial-window counterexample ผ่าน |
+| C monitoring contract | A–B | Types/rules/validator/provider/query แยกจาก THIP; ISO/Bangkok; 8 units; state/assessment/version/targets/YTD; registry 232 รหัส พร้อมเหตุผลตามเส้นทาง 101/71/55/5; generated DDL/rules/evidence drift check และ 1,552-cell compatibility ผ่าน |
+| D development preview | C | Provider interface เดียวกัน; fixtures ตัวแทน 7 รหัส, remaining rows unapproved; synthetic label หน้า/CSV; production rejects flag และ bundle ไม่รวม fixture rows |
+| E matrix/drill-through | C–D | 232×12 semantic table, year/search/group/data/assessment URL state; any-month row filters; sticky identity/mobile scroll; arrows/Enter/dialog Escape/focusrestore; FY/export stale guards. Desktop/mobile/tablet mocked browser ผ่าน |
+| F export/release checks | A–E | Export 12 เดือนทุก filtered row รวม NULL/reasons/series/units/target/version; filename year/preview; tests/build/source audit/fixtures/generated check/visual smoke และ mock browser ผ่าน; เอกสารตรง implementation |
 
-## 11. แผน 5 วันทำงานถัดไป
+## ระยะถัดไป: certification และเปิดทีละ family
 
-รายการนี้เป็นชุดงานที่เริ่มได้ทันทีโดยยังไม่ต้องรอทำครบ 216 ตัว:
-
-| วัน | งาน | ผลลัพธ์ที่ต้องมี |
+| งาน | Dependency | Acceptance ก่อนเปิดข้อมูลจริง |
 |---|---|---|
-| Day 1 | นัด review contract กับ IT/BMS และ quality owner | ตกลง source-view schema, auth, FY, timezone, refresh และ owner matrix |
-| Day 2 | เตรียม staging source view สำหรับ 16 foundation | endpoint/view ที่คืน aggregate row ตาม contract และไม่มี PHI |
-| Day 3 | ตรวจ 16 foundation กับ aggregate sample 3 เดือน | discrepancy log, test fixture และรายการที่ต้องแก้ rule |
-| Day 4 | ปิด sign-off foundation และทำ BMS runtime smoke | 16 รหัสเป็น ready เท่าที่หลักฐานครบ; session/error path ผ่าน |
-| Day 5 | เริ่ม family ถัดไปด้วย 10–20 รหัสที่มี source ชัด | mapping sheet, evidence, query key และ acceptance test ต่อรหัส |
+| รับรอง cohort/joins/event dates | A–C และ evidence matrix | เจ้าของโรงพยาบาลยืนยัน grain, cardinality, local codes, inclusion/exclusion, admit/discharge/observation window; fixtures adversarial และ aggregate ย้อนหลังตรงรายงานทางการ |
+| สูตรเพิ่มเติม 71 รหัส | นิยามและ owner ของแต่ละ code | Monthly formula/denominator/accumulation/unit/version/effectivity แยกจาก official THIP; SH0101 ไม่ใช้ annual/12; signed evidence พร้อม |
+| External 55 + population 5 | Source owner/ทะเบียนภายนอก | Aggregate-only source มี completeness/freshness/date/source provenance; ไม่มี patient identifiers; missing stays NULL |
+| Hospital targets | Formula/units ที่รับรอง | Confirm mapping/source/effective interval; แยก dictionary benchmark; เป้าเปลี่ยนระหว่างเดือน/0/range/units ผ่าน checks |
+| Reporting provisioning | DBA approval + contract C | ตรวจ offline DDL/refresh, SELECT-only role และ server-side query registration; frontend ไม่รัน mutation; source JSON types ตรง strict contract |
+| Publication rollout/withdrawal | งานรับรองและ target ข้างต้น | เพิ่ม approval evidence/version/date ทีละ family; compare official aggregates; coverage/freshness/latency monitoring; ถอน approval แล้วผลกลับ unavailable ได้ |
+| Performance/dependency backlog | หลัง correctness + baseline evidence | ประเมิน bundle warning และ test-tool advisory ที่ audit เดิมระบุ; ปรับโดยไม่ลด registered boundary หรือเปลี่ยนสูตร; dependency review/build/browser ผ่าน |
 
-ถ้าต้องเลือกงานเดียวเพื่อเริ่มวันนี้ ให้เริ่มที่ **ขอ source-view contract + aggregate validation sample ของ 16 foundation จาก BMS/โรงพยาบาล** เพราะเป็น dependency ของทั้ง runtime verification และการขยาย rule ไปยัง 216 ตัวที่เหลือ
-
-## 12. Definition of done ต่อ batch
-
-batch หนึ่งจะปิดได้เมื่อ:
-
-- [ ] KPI code และ cadence อยู่ใน manifest
-- [ ] rule มี evidence, owner, status และ version
-- [ ] local mapping ผ่านการตรวจ schema/code set
-- [ ] query/view เป็น read-only และผ่าน registered layer
-- [ ] normalized rows ผ่าน audit script
-- [ ] มี test สำหรับ data, no-data, zero denominator, duplicate และ period boundary
-- [ ] aggregate ตรงกับตัวอย่างที่เจ้าของข้อมูลรับรอง
-- [ ] frontend detail/trend/target แสดงตรงกับ source row
-- [ ] ไม่มี PHI/secret/raw row ใน artifact
-- [ ] มี release note และ rollback version
-
-เอกสารนี้จึงเป็นแผนพัฒนาต่อ ไม่ใช่คำรับรองว่าข้อมูลทั้ง 232 ตัวพร้อมใช้งานแล้ว สถานะ production-ready ต้องเกิดจากหลักฐานและ sign-off ตาม gate ข้างต้นเท่านั้น
-
+ไม่มีการเปิด GitHub Issues, deploy หรือรัน source/DDL กับ HOSxP จริงในรุ่นนี้. งานค้างเดิมและ SQL family edits ที่ผู้ใช้มีอยู่ถูกเก็บไว้.

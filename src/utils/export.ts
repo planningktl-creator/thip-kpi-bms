@@ -1,10 +1,11 @@
 import type { FiscalYear, Indicator } from '@/types/thip';
 import { toBuddhistYear } from '@/utils/fiscal';
 
-function escapeCsv(value: string | number | null): string {
+export function escapeCsv(value: string | number | null): string {
   if (value === null) return '';
-  const text = String(value);
-  return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+  const raw = String(value);
+  const text = typeof value === 'string' && /^[\s]*[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
+  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 
 export function exportIndicatorCsv(indicator: Indicator): void {
@@ -38,6 +39,7 @@ export function exportIndicatorCsv(indicator: Indicator): void {
  * real result so a no-data code is not written as a zero.
  */
 export function exportAggregateCsv(indicators: Indicator[], fiscalYear: FiscalYear): void {
+  if (indicators.some((indicator) => indicator.fiscalYear !== fiscalYear)) throw new Error('Export snapshot does not match the selected fiscal year');
   const header = ['indicator_code', 'indicator_group', 'fiscal_year_be', 'fiscal_month', 'period_start', 'numerator', 'denominator', 'value', 'target', 'percentile', 'status', 'rule_reference'];
   const rows = indicators
     .filter((indicator) => indicator.dataSource === 'bms')

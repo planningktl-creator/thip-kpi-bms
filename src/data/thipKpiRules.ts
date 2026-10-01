@@ -19,6 +19,9 @@ export type ThipKpiRuleStatus =
  * to `ready`. `getRuleReadiness()` reports what is still missing.
  */
 export type ThipKpiRuleEvidence = {
+  /** Hospital release approval is separate from SQL registration/readiness. */
+  publicationApproval?: { version: string; from: string; until: string; evidence: string };
+  hospitalTargetApproval?: { source: string; from: string; until: string; unit: IndicatorUnit };
   /** Episode/observation grain, e.g. `one-row-per-admission`. */
   episodeGrain?: string;
   /** Source date column that periodizes the result, e.g. `discharge_date`. */

@@ -3,6 +3,10 @@ import { Menu, RefreshCw, WifiOff } from 'lucide-react';
 import { Sidebar, type View } from '@/components/Sidebar';
 import { DashboardPage } from '@/components/DashboardPage';
 import { DetailView } from '@/components/DetailView';
+import { MonitoringPage } from '@/components/MonitoringPage';
+import { monitoringPreviewEnabled } from '@/monitoring/provider';
+import { publishApprovedThip } from '@/services/publication';
+import { stripLaunchCredentialsFromUrl } from '@/services/bmsSession';
 import { CatalogPage } from '@/components/CatalogPage';
 import { groupMeta } from '@/data/thipMeta';
 import { createNoDataIndicator, thipCatalogue, thipCatalogueByCode } from '@/data/thipCatalogue';
@@ -31,7 +35,7 @@ const emptyCoverage: BmsCoverage = {
 function getInitialRoute(): { view: View; code: string | null } {
   const params = new URLSearchParams(window.location.search);
   const code = params.get('indicator');
-  const view = params.get('view') === 'catalog' ? 'catalog' : code ? 'detail' : 'dashboard';
+  const view = params.get('view') === 'catalog' ? 'catalog' : code ? 'detail' : params.get('view') === 'dashboard' ? 'dashboard' : 'monitoring';
   return { view, code };
 }
 
@@ -39,10 +43,10 @@ export default function App() {
   const [initialRoute] = useState(getInitialRoute);
   const [view, setView] = useState<View>(initialRoute.view);
   const [selectedCode, setSelectedCode] = useState<string | null>(initialRoute.code);
-  const [activeGroup, setActiveGroup] = useState<IndicatorGroup | 'all'>('all');
-  const [search, setSearch] = useState('');
+  const [activeGroup, setActiveGroup] = useState<IndicatorGroup | 'all'>(() => { const group = new URLSearchParams(window.location.search).get('group'); return group && group in groupMeta ? group as IndicatorGroup : 'all'; });
+  const [search, setSearch] = useState(() => new URLSearchParams(window.location.search).get('q') ?? '');
   const [monthIndex, setMonthIndex] = useState(11);
-  const [fiscalYear, setFiscalYear] = useState(getCurrentFiscalYear);
+  const [fiscalYear, setFiscalYear] = useState(() => { const year = Number(new URLSearchParams(window.location.search).get('fy')); return Number.isInteger(year) && year >= 2000 && year <= 2100 ? year : getCurrentFiscalYear(); });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [connection, setConnection] = useState<BmsConnection>({ status: 'idle', message: 'ยังไม่ได้เปิดจาก BMS launcher จึงยังไม่มีข้อมูลจริง' });
   const [connectionAttempt, setConnectionAttempt] = useState(0);
@@ -60,6 +64,7 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false;
+    if (monitoringPreviewEnabled) { stripLaunchCredentialsFromUrl(); return; }
     void connectBmsSession().then((result) => {
       if (cancelled) return;
       setConnection(result.connection);
@@ -81,11 +86,14 @@ export default function App() {
   }, [defaultIndicators, runtime]);
 
   useEffect(() => {
-    if (!runtime) return;
+    if (!runtime || view === 'monitoring' || view === 'catalog') return;
     let cancelled = false;
+    const controller = new AbortController();
+    setIndicators(defaultIndicators); setCoverage(emptyCoverage); setRefreshedAt(null);
     setDataSource('loading');
     setDataMessage(null);
-    void loadBmsIndicators(runtime, fiscalYear).then((result) => {
+    void loadBmsIndicators(runtime, fiscalYear, { signal: controller.signal }).then((draft) => {
+      const result = publishApprovedThip(draft);
       if (cancelled) return;
       if (!result.rowCount) {
         setIndicators(defaultIndicators);
@@ -101,10 +109,10 @@ export default function App() {
       const fullyMeasured = result.coverage.complete
         && result.coverage.unavailableCellCount === 0
         && result.coverage.liveIndicatorCount === result.coverage.expectedIndicatorCount;
-      setDataSource(fullyMeasured ? 'live' : 'partial');
+      setDataSource(result.coverage.availableCellCount === 0 ? 'unavailable' : fullyMeasured ? 'live' : 'partial');
       setDataMessage(result.sourceView
-        ? `อ่านข้อมูลจริง ${result.coverage.liveIndicatorCount}/${result.coverage.expectedIndicatorCount} ตัวชี้วัด · ${result.coverage.coveredCellCount}/${result.coverage.expectedCellCount} งวดรายงานจาก source view ${result.sourceView} แล้ว`
-        : `อ่านข้อมูลจริง ${result.coverage.liveIndicatorCount}/${result.coverage.expectedIndicatorCount} ตัวชี้วัด · ${result.coverage.coveredCellCount}/${result.coverage.expectedCellCount} งวดรายงานจาก HOSxP แล้ว`);
+        ? `รับ aggregate ${result.coverage.liveIndicatorCount}/${result.coverage.expectedIndicatorCount} รหัส · เผยแพร่ได้ ${result.coverage.measuredIndicatorCount} รหัส · ${result.coverage.coveredCellCount}/${result.coverage.expectedCellCount} งวดรายงานจาก source view ${result.sourceView} แล้ว`
+        : `รับ aggregate ${result.coverage.liveIndicatorCount}/${result.coverage.expectedIndicatorCount} รหัส · เผยแพร่ได้ ${result.coverage.measuredIndicatorCount} รหัส · ${result.coverage.coveredCellCount}/${result.coverage.expectedCellCount} งวดรายงานจาก HOSxP แล้ว`);
     }).catch((error: unknown) => {
       if (cancelled) return;
       setIndicators(defaultIndicators);
@@ -113,8 +121,8 @@ export default function App() {
       setCoverage(emptyCoverage);
       setDataMessage(getBmsConnectionErrorMessage(error));
     });
-    return () => { cancelled = true; };
-  }, [runtime, fiscalYear]);
+    return () => { cancelled = true; controller.abort(); };
+  }, [runtime, fiscalYear, view]);
 
   const filteredIndicators = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -135,7 +143,7 @@ export default function App() {
       ? 'Live data บางส่วน'
       : dataSource === 'loading'
         ? 'กำลังอ่านข้อมูล'
-        : 'No data source';
+        : connection.status === 'connected' && coverage.coveredCellCount > 0 ? 'ผลยังไม่รับรอง' : 'No data source';
 
   function retryBms() {
     setConnection({ status: 'connecting', message: 'กำลังเชื่อมต่อ BMS ใหม่...' });
@@ -155,7 +163,7 @@ export default function App() {
       params.set('view', 'detail');
       params.set('indicator', code);
     } else {
-      params.delete('view');
+      if (nextView === 'monitoring') params.delete('view'); else params.set('view', nextView);
       params.delete('indicator');
     }
     // pushState keeps the browser Back button working between views; the
@@ -169,10 +177,27 @@ export default function App() {
       const route = getInitialRoute();
       setView(route.view);
       setSelectedCode(route.code);
+      const params = new URLSearchParams(window.location.search);
+      const group = params.get('group'); setActiveGroup(group && group in groupMeta ? group as IndicatorGroup : 'all');
+      setSearch(params.get('q') ?? '');
+      const year = Number(params.get('fy')); changeYear(Number.isInteger(year) && year >= 2000 && year <= 2100 ? year : getCurrentFiscalYear(), false);
     }
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
+
+  function persistFilter(key: string, value: string) {
+    const params = new URLSearchParams(window.location.search);
+    if (!value || value === 'all') params.delete(key); else params.set(key, value);
+    window.history.pushState({}, '', `${window.location.pathname}${params.size ? `?${params}` : ''}`);
+  }
+  function changeGroup(group: IndicatorGroup | 'all') { setActiveGroup(group); persistFilter('group', group); }
+  function changeSearch(value: string) { setSearch(value); persistFilter('q', value); }
+  function changeYear(year: number, persist = true) {
+    setFiscalYear(year); setIndicators(thipCatalogue.map((entry) => createNoDataIndicator(entry, year)));
+    setCoverage(emptyCoverage); setRefreshedAt(null); setDataSource(runtime ? 'loading' : 'unavailable');
+    if (persist) persistFilter('fy', String(year));
+  }
 
   function openIndicator(code: string) {
     navigate('detail', code);
@@ -185,7 +210,7 @@ export default function App() {
         view={view}
         activeGroup={activeGroup}
         onNavigate={(nextView) => navigate(nextView, nextView === 'dashboard' ? null : selectedCode)}
-        onGroupChange={setActiveGroup}
+        onGroupChange={changeGroup}
         connection={connection}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -199,16 +224,18 @@ export default function App() {
         </div>
 
         {connection.status === 'connected' && (
-          <div className={`connection-banner ${dataSource === 'unavailable' ? 'connection-banner-warning' : 'connection-banner-success'}`} role="status" aria-live="polite"><RefreshCw size={15} /><span>{dataMessage ?? connection.message}</span><strong>{dataLabel}</strong><button className="connection-banner-action" type="button" onClick={retryBms}>{dataSource === 'unavailable' ? 'ลองอีกครั้ง' : 'รีเฟรชข้อมูล'}</button></div>
+          <div className={`connection-banner ${view !== 'monitoring' && dataSource === 'unavailable' ? 'connection-banner-warning' : 'connection-banner-success'}`} role="status" aria-live="polite"><RefreshCw size={15} /><span>{view === 'monitoring' ? connection.message : dataMessage ?? connection.message}</span><strong>{view === 'monitoring' ? 'BMS connected' : dataLabel}</strong><button className="connection-banner-action" type="button" onClick={retryBms}>{view === 'monitoring' ? 'รีเฟรช session' : dataSource === 'unavailable' ? 'ลองอีกครั้ง' : 'รีเฟรชข้อมูล'}</button></div>
         )}
-        {connection.status === 'idle' && (
+        {connection.status === 'idle' && !monitoringPreviewEnabled && (
           <div className="connection-banner connection-banner-warning" role="status" aria-live="polite"><WifiOff size={15} /><span>{connection.message}</span><strong>รอ BMS live session</strong><button className="connection-banner-action" type="button" onClick={retryBms}>ลองเชื่อมต่ออีกครั้ง</button></div>
         )}
         {(connection.status === 'error' || connection.status === 'unsupported') && (
           <div className="connection-banner connection-banner-error" role="alert"><WifiOff size={15} /><span>{connection.message}</span><strong>ยังไม่มีข้อมูลจริง</strong><button className="connection-banner-action" type="button" onClick={retryBms}>ลองเชื่อมต่ออีกครั้ง</button></div>
         )}
 
-        {view === 'detail' && selectedIndicator ? (
+        {view === 'monitoring' ? (
+          <MonitoringPage fiscalYear={fiscalYear} onFiscalYearChange={changeYear} group={activeGroup} onGroupChange={changeGroup} search={search} onSearchChange={changeSearch} runtime={runtime} onOverview={() => navigate('dashboard', null)} />
+        ) : view === 'detail' && selectedIndicator ? (
           <DetailView indicator={selectedIndicator} onBack={() => navigate('dashboard', null)} />
         ) : view === 'catalog' ? (
           <CatalogPage
@@ -216,8 +243,8 @@ export default function App() {
             wiredCodes={new Set(indicators.filter((indicator) => indicator.dataSource !== 'no-data').map((indicator) => indicator.code))}
             activeGroup={activeGroup}
             search={search}
-            onSearchChange={setSearch}
-            onGroupChange={setActiveGroup}
+            onSearchChange={changeSearch}
+            onGroupChange={changeGroup}
             onOpen={openIndicator}
           />
         ) : (
@@ -225,13 +252,13 @@ export default function App() {
             indicators={filteredIndicators}
             allIndicators={indicators}
             activeGroup={activeGroup}
-            onGroupChange={(group) => { setActiveGroup(group); setSearch(''); }}
+            onGroupChange={(group) => { changeGroup(group); changeSearch(''); }}
             search={search}
-            onSearchChange={setSearch}
+            onSearchChange={changeSearch}
             monthIndex={monthIndex}
             onMonthChange={setMonthIndex}
             fiscalYear={fiscalYear}
-            onFiscalYearChange={setFiscalYear}
+            onFiscalYearChange={changeYear}
             onOpenIndicator={openIndicator}
             onOpenCatalog={() => navigate('catalog', null)}
             connection={connection}

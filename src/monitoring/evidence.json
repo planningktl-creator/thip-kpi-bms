@@ -1,0 +1,1878 @@
+[
+  {
+    "code": "AA0101",
+    "path": "requires-external-population-aggregate",
+    "pdfUnit": "ต่อแสนประชากร",
+    "printedPages": [
+      286
+    ]
+  },
+  {
+    "code": "AA0102",
+    "path": "requires-external-population-aggregate",
+    "pdfUnit": "ต่อแสนประชากร",
+    "printedPages": [
+      287
+    ]
+  },
+  {
+    "code": "AA0103",
+    "path": "requires-external-population-aggregate",
+    "pdfUnit": "ต่อแสนประชากร",
+    "printedPages": [
+      288
+    ]
+  },
+  {
+    "code": "AA0104",
+    "path": "requires-external-population-aggregate",
+    "pdfUnit": "ต่อแสนประชากร",
+    "printedPages": [
+      289
+    ]
+  },
+  {
+    "code": "AA0105",
+    "path": "requires-external-population-aggregate",
+    "pdfUnit": "ต่อแสนประชากร",
+    "printedPages": [
+      290
+    ]
+  },
+  {
+    "code": "CA0101",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ต่อ 10,000 ราย",
+    "printedPages": [
+      180
+    ]
+  },
+  {
+    "code": "CA0102",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      181
+    ]
+  },
+  {
+    "code": "CA0103",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      182
+    ]
+  },
+  {
+    "code": "CA0104",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      183
+    ]
+  },
+  {
+    "code": "CA0105",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      184
+    ]
+  },
+  {
+    "code": "CE0101",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      194
+    ]
+  },
+  {
+    "code": "CE0102",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "นาที",
+    "printedPages": [
+      195,
+      196
+    ]
+  },
+  {
+    "code": "CE0103",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      197
+    ]
+  },
+  {
+    "code": "CE0104",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      198
+    ]
+  },
+  {
+    "code": "CG0101",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ครั้งต่อ 1,000 วันนอน",
+    "printedPages": [
+      188,
+      189
+    ]
+  },
+  {
+    "code": "CG0102",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ครั้งต่อ 1,000 วันนอน",
+    "printedPages": [
+      190
+    ]
+  },
+  {
+    "code": "CG0103",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      191,
+      192
+    ]
+  },
+  {
+    "code": "CG0104",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      193
+    ]
+  },
+  {
+    "code": "CI0101",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      199
+    ]
+  },
+  {
+    "code": "CM0101",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ต่อการเกิดมีชีพแสนคน",
+    "printedPages": [
+      161
+    ]
+  },
+  {
+    "code": "CM0104",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      162
+    ]
+  },
+  {
+    "code": "CM0105",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "วัน",
+    "printedPages": [
+      163
+    ]
+  },
+  {
+    "code": "CM0107",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      164
+    ]
+  },
+  {
+    "code": "CM0109",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      165
+    ]
+  },
+  {
+    "code": "CM0110",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      166
+    ]
+  },
+  {
+    "code": "CM0116",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      167
+    ]
+  },
+  {
+    "code": "CM0117",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      168
+    ]
+  },
+  {
+    "code": "CM0118",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      169
+    ]
+  },
+  {
+    "code": "CM0119",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      170
+    ]
+  },
+  {
+    "code": "CM0201",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ต่อ 1,000 การเกิดทั้งหมด",
+    "printedPages": [
+      171
+    ]
+  },
+  {
+    "code": "CM0202",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ต่อ 1,000 ทารกคลอด",
+    "printedPages": [
+      172
+    ]
+  },
+  {
+    "code": "CM0203",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ต่อ 1,000 ทารกเกิดมีชีพ",
+    "printedPages": [
+      173
+    ]
+  },
+  {
+    "code": "CM0204",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ต่อ 1,000 ทารกเกิดมีชีพ",
+    "printedPages": [
+      174
+    ]
+  },
+  {
+    "code": "CM0205",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ต่อ 1,000 ทารกเกิดมีชีพ",
+    "printedPages": [
+      175
+    ]
+  },
+  {
+    "code": "CM0206",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      176
+    ]
+  },
+  {
+    "code": "CM0207",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      177
+    ]
+  },
+  {
+    "code": "CM0208",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      178
+    ]
+  },
+  {
+    "code": "CM0209",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      179
+    ]
+  },
+  {
+    "code": "CO0101",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      185
+    ]
+  },
+  {
+    "code": "CO0105",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      186
+    ]
+  },
+  {
+    "code": "CO0107",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      187
+    ]
+  },
+  {
+    "code": "CP0101",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      200
+    ]
+  },
+  {
+    "code": "CP0201",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      201
+    ]
+  },
+  {
+    "code": "DC0103",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      92
+    ]
+  },
+  {
+    "code": "DC0107",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      93
+    ]
+  },
+  {
+    "code": "DC0108",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      94
+    ]
+  },
+  {
+    "code": "DC0108.1",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      95
+    ]
+  },
+  {
+    "code": "DC0108.2",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      96
+    ]
+  },
+  {
+    "code": "DC0201",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      97,
+      98
+    ]
+  },
+  {
+    "code": "DC0201.1",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      99
+    ]
+  },
+  {
+    "code": "DC0201.2",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      100
+    ]
+  },
+  {
+    "code": "DC0301",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      101
+    ]
+  },
+  {
+    "code": "DC0302",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      102
+    ]
+  },
+  {
+    "code": "DC0306",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      103
+    ]
+  },
+  {
+    "code": "DC0307",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      104
+    ]
+  },
+  {
+    "code": "DC0308",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      105
+    ]
+  },
+  {
+    "code": "DC0309",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      106
+    ]
+  },
+  {
+    "code": "DC0401",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      107
+    ]
+  },
+  {
+    "code": "DC0402",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      108
+    ]
+  },
+  {
+    "code": "DC0403",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      109
+    ]
+  },
+  {
+    "code": "DC0501",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      110,
+      111
+    ]
+  },
+  {
+    "code": "DC0502",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      112,
+      113
+    ]
+  },
+  {
+    "code": "DE0101",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "จำนวนวัน",
+    "printedPages": [
+      130
+    ]
+  },
+  {
+    "code": "DE0103",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      131
+    ]
+  },
+  {
+    "code": "DE0501",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      132
+    ]
+  },
+  {
+    "code": "DE0801",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      133
+    ]
+  },
+  {
+    "code": "DE1201",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      134
+    ]
+  },
+  {
+    "code": "DE1202",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      135
+    ]
+  },
+  {
+    "code": "DE1301",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      136
+    ]
+  },
+  {
+    "code": "DE1302",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      137
+    ]
+  },
+  {
+    "code": "DE1303",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      138
+    ]
+  },
+  {
+    "code": "DE1304",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      139
+    ]
+  },
+  {
+    "code": "DE1305",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      140
+    ]
+  },
+  {
+    "code": "DE1306",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      141
+    ]
+  },
+  {
+    "code": "DE1401",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      142
+    ]
+  },
+  {
+    "code": "DE1402",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      143,
+      144
+    ]
+  },
+  {
+    "code": "DE1403",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      145,
+      146
+    ]
+  },
+  {
+    "code": "DE1404",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      147,
+      148
+    ]
+  },
+  {
+    "code": "DE1405",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      149
+    ]
+  },
+  {
+    "code": "DE1601",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      150
+    ]
+  },
+  {
+    "code": "DG0101",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      120
+    ]
+  },
+  {
+    "code": "DG0102",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "วัน",
+    "printedPages": [
+      121
+    ]
+  },
+  {
+    "code": "DG0201",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      122
+    ]
+  },
+  {
+    "code": "DG0202",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      123
+    ]
+  },
+  {
+    "code": "DH0101",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": null,
+    "printedPages": [
+      39
+    ]
+  },
+  {
+    "code": "DH0101.1",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": null,
+    "printedPages": [
+      40
+    ]
+  },
+  {
+    "code": "DH0101.2",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": null,
+    "printedPages": [
+      41
+    ]
+  },
+  {
+    "code": "DH0102",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      42
+    ]
+  },
+  {
+    "code": "DH0103",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      43
+    ]
+  },
+  {
+    "code": "DH0104",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      44,
+      45
+    ]
+  },
+  {
+    "code": "DH0105",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      46
+    ]
+  },
+  {
+    "code": "DH0106",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      47
+    ]
+  },
+  {
+    "code": "DH0107",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      48
+    ]
+  },
+  {
+    "code": "DH0108",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "นาที",
+    "printedPages": [
+      49
+    ]
+  },
+  {
+    "code": "DH0109",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "นาที",
+    "printedPages": [
+      50
+    ]
+  },
+  {
+    "code": "DH0110",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      51,
+      52
+    ]
+  },
+  {
+    "code": "DH0111",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      53
+    ]
+  },
+  {
+    "code": "DH0112",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "วัน",
+    "printedPages": [
+      54
+    ]
+  },
+  {
+    "code": "DH0113",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      55,
+      56
+    ]
+  },
+  {
+    "code": "DH0201",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      57
+    ]
+  },
+  {
+    "code": "DH0202",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      58
+    ]
+  },
+  {
+    "code": "DH0203",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      59
+    ]
+  },
+  {
+    "code": "DH0204",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      60
+    ]
+  },
+  {
+    "code": "DH0301",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      61,
+      62
+    ]
+  },
+  {
+    "code": "DH0302",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      63
+    ]
+  },
+  {
+    "code": "DH0401",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      64,
+      65
+    ]
+  },
+  {
+    "code": "DH0402",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      66
+    ]
+  },
+  {
+    "code": "DM0101",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      151
+    ]
+  },
+  {
+    "code": "DM0102",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      152
+    ]
+  },
+  {
+    "code": "DM0103",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      153
+    ]
+  },
+  {
+    "code": "DM0201",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      154
+    ]
+  },
+  {
+    "code": "DM0202",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      155
+    ]
+  },
+  {
+    "code": "DM0203",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      156
+    ]
+  },
+  {
+    "code": "DM0301",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      157
+    ]
+  },
+  {
+    "code": "DM0302",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      158
+    ]
+  },
+  {
+    "code": "DM0401",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      159
+    ]
+  },
+  {
+    "code": "DM0402",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      160
+    ]
+  },
+  {
+    "code": "DN0101",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      67
+    ]
+  },
+  {
+    "code": "DN0102",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      68
+    ]
+  },
+  {
+    "code": "DN0103",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      69
+    ]
+  },
+  {
+    "code": "DN0104",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      70
+    ]
+  },
+  {
+    "code": "DN0105",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      71
+    ]
+  },
+  {
+    "code": "DN0106",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      72
+    ]
+  },
+  {
+    "code": "DN0107",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      73
+    ]
+  },
+  {
+    "code": "DN0109",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "วัน",
+    "printedPages": [
+      74
+    ]
+  },
+  {
+    "code": "DN0110",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      75
+    ]
+  },
+  {
+    "code": "DN0301",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      76
+    ]
+  },
+  {
+    "code": "DN0302",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      77
+    ]
+  },
+  {
+    "code": "DN0303",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      78
+    ]
+  },
+  {
+    "code": "DO0202",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      114
+    ]
+  },
+  {
+    "code": "DO0204",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      115
+    ]
+  },
+  {
+    "code": "DO0205",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      116
+    ]
+  },
+  {
+    "code": "DO0302",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      117
+    ]
+  },
+  {
+    "code": "DO0303",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      118
+    ]
+  },
+  {
+    "code": "DO0304",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      119
+    ]
+  },
+  {
+    "code": "DP0101",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      124,
+      125
+    ]
+  },
+  {
+    "code": "DR0101",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      79
+    ]
+  },
+  {
+    "code": "DR0102",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      80
+    ]
+  },
+  {
+    "code": "DR0103",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      81
+    ]
+  },
+  {
+    "code": "DR0201",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      82
+    ]
+  },
+  {
+    "code": "DR0202",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      83
+    ]
+  },
+  {
+    "code": "DR0203",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      84
+    ]
+  },
+  {
+    "code": "DR0204",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      85
+    ]
+  },
+  {
+    "code": "DR0205",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      86
+    ]
+  },
+  {
+    "code": "DR0301",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      87
+    ]
+  },
+  {
+    "code": "DR0302",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      88
+    ]
+  },
+  {
+    "code": "DR0401",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      89
+    ]
+  },
+  {
+    "code": "DR0403",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      90
+    ]
+  },
+  {
+    "code": "DR0404",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      91
+    ]
+  },
+  {
+    "code": "DS0101",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      126
+    ]
+  },
+  {
+    "code": "DS0201",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      127
+    ]
+  },
+  {
+    "code": "DS0301",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      128
+    ]
+  },
+  {
+    "code": "DS0401",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      129
+    ]
+  },
+  {
+    "code": "HC0101",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "อัตรา (ครั้ง : คน)",
+    "printedPages": [
+      270
+    ]
+  },
+  {
+    "code": "HC0102",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      271
+    ]
+  },
+  {
+    "code": "HE0101",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      264
+    ]
+  },
+  {
+    "code": "HE0102",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      265
+    ]
+  },
+  {
+    "code": "HE0103",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      266
+    ]
+  },
+  {
+    "code": "HE0104",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      267
+    ]
+  },
+  {
+    "code": "HE0105",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      268
+    ]
+  },
+  {
+    "code": "HE0106",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      269
+    ]
+  },
+  {
+    "code": "HH0101.1",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      272
+    ]
+  },
+  {
+    "code": "HH0101.2",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      273
+    ]
+  },
+  {
+    "code": "HH0102",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      274
+    ]
+  },
+  {
+    "code": "HH0103.1",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      275
+    ]
+  },
+  {
+    "code": "HH0103.2",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      276
+    ]
+  },
+  {
+    "code": "HH0103.3",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      277
+    ]
+  },
+  {
+    "code": "HH0103.4",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      278
+    ]
+  },
+  {
+    "code": "HH0103.5",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      279
+    ]
+  },
+  {
+    "code": "HH0103.6",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      280
+    ]
+  },
+  {
+    "code": "HH0104.1",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      281
+    ]
+  },
+  {
+    "code": "HH0104.2",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      282
+    ]
+  },
+  {
+    "code": "HH0104.3",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      283
+    ]
+  },
+  {
+    "code": "HH0104.4",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      284
+    ]
+  },
+  {
+    "code": "HH0104.5",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      285
+    ]
+  },
+  {
+    "code": "SC0101",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      250
+    ]
+  },
+  {
+    "code": "SC0102",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      251
+    ]
+  },
+  {
+    "code": "SC0103",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      252
+    ]
+  },
+  {
+    "code": "SC0104",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      253
+    ]
+  },
+  {
+    "code": "SC0105",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      254
+    ]
+  },
+  {
+    "code": "SC0106",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      255
+    ]
+  },
+  {
+    "code": "SF0101",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "เท่า",
+    "printedPages": [
+      244
+    ]
+  },
+  {
+    "code": "SF0102",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "เท่า",
+    "printedPages": [
+      245
+    ]
+  },
+  {
+    "code": "SF0103",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "เท่า",
+    "printedPages": [
+      246
+    ]
+  },
+  {
+    "code": "SF0104",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "วัน",
+    "printedPages": [
+      247
+    ]
+  },
+  {
+    "code": "SF0105",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      248
+    ]
+  },
+  {
+    "code": "SF0106",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      249
+    ]
+  },
+  {
+    "code": "SG0104",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "เท่า",
+    "printedPages": [
+      256
+    ]
+  },
+  {
+    "code": "SH0101",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      212
+    ]
+  },
+  {
+    "code": "SH0102",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      213
+    ]
+  },
+  {
+    "code": "SH0103",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      214
+    ]
+  },
+  {
+    "code": "SH0104",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      215
+    ]
+  },
+  {
+    "code": "SH0105",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      216
+    ]
+  },
+  {
+    "code": "SH0106",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      217
+    ]
+  },
+  {
+    "code": "SH0107",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      218
+    ]
+  },
+  {
+    "code": "SH0201",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      219
+    ]
+  },
+  {
+    "code": "SH0202",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      220
+    ]
+  },
+  {
+    "code": "SH0203",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      221
+    ]
+  },
+  {
+    "code": "SH0204",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ชั่วโมง",
+    "printedPages": [
+      222
+    ]
+  },
+  {
+    "code": "SH0205",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ชั่วโมง",
+    "printedPages": [
+      223
+    ]
+  },
+  {
+    "code": "SH0206",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      224
+    ]
+  },
+  {
+    "code": "SH0207",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      225
+    ]
+  },
+  {
+    "code": "SH0208",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      226
+    ]
+  },
+  {
+    "code": "SH0209",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      227
+    ]
+  },
+  {
+    "code": "SH0210",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      228
+    ]
+  },
+  {
+    "code": "SH0211",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      229
+    ]
+  },
+  {
+    "code": "SH0212",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      230
+    ]
+  },
+  {
+    "code": "SH0213",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      231
+    ]
+  },
+  {
+    "code": "SH0214",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      232
+    ]
+  },
+  {
+    "code": "SH0215",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ชั่วโมง",
+    "printedPages": [
+      233
+    ]
+  },
+  {
+    "code": "SH0216",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ชั่วโมง",
+    "printedPages": [
+      234
+    ]
+  },
+  {
+    "code": "SH0301",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ครั้งต่อล้านชั่วโมงการทำงาน",
+    "printedPages": [
+      235
+    ]
+  },
+  {
+    "code": "SH0302",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "จำนวนวันที่หยุดงานหรือสูญเสียเนื่องจากการบาดเจ็บต่อหนึ่งล้านชั่วโมงการทำงาน",
+    "printedPages": [
+      236,
+      237
+    ]
+  },
+  {
+    "code": "SH0303",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "จำนวนวันที่หยุดงานหรือสูญเสียเนื่องจากการบาดเจ็บต่อหนึ่งล้านชั่วโมงการทำงาน",
+    "printedPages": [
+      238,
+      239
+    ]
+  },
+  {
+    "code": "SH0306",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ครั้งต่อหนึ่งล้านชั่วโมงการทำงาน",
+    "printedPages": [
+      240,
+      241
+    ]
+  },
+  {
+    "code": "SH0307",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ครั้งต่อหนึ่งล้านชั่วโมงการทำงาน",
+    "printedPages": [
+      242,
+      243
+    ]
+  },
+  {
+    "code": "SI0101",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ต่อ 1,000 วันนอนผู้ป่วยในที่ใช้เครื่องช่วยหายใจ",
+    "printedPages": [
+      202
+    ]
+  },
+  {
+    "code": "SI0102",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ต่อ 1,000 วันนอนผู้ป่วยในที่ใช้เครื่องช่วยหายใจ",
+    "printedPages": [
+      203
+    ]
+  },
+  {
+    "code": "SI0103",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ต่อ 1,000 วันนอนผู้ป่วยในที่ใช้เครื่องช่วยหายใจ",
+    "printedPages": [
+      204
+    ]
+  },
+  {
+    "code": "SI0201",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ต่อ 1,000วันที่คาสายสวนหลอดเลือดส่วนกลาง",
+    "printedPages": [
+      205
+    ]
+  },
+  {
+    "code": "SI0202",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ต่อ 1,000 วันที่คาสายสวนหลอดเลือดส่วนกลาง",
+    "printedPages": [
+      206
+    ]
+  },
+  {
+    "code": "SI0203",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ต่อ 1,000 วันที่คาสายสวนหลอดเลือดส่วนกลาง",
+    "printedPages": [
+      207
+    ]
+  },
+  {
+    "code": "SI0301",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ต่อ 1,000 วันที่คาสายสวนปัสสาวะ",
+    "printedPages": [
+      208
+    ]
+  },
+  {
+    "code": "SI0302",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ต่อ 1,000 วันที่คาสายสวนปัสสาวะ",
+    "printedPages": [
+      209
+    ]
+  },
+  {
+    "code": "SI0303",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ต่อ 1,000 วันที่คาสายสวนปัสสาวะ",
+    "printedPages": [
+      210
+    ]
+  },
+  {
+    "code": "SL0101",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "อัตราส่วน",
+    "printedPages": [
+      211
+    ]
+  },
+  {
+    "code": "SM0102",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      260
+    ]
+  },
+  {
+    "code": "SM0103",
+    "path": "requires-approved-monthly-monitoring-rule",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      261
+    ]
+  },
+  {
+    "code": "SM0201",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "เดือน",
+    "printedPages": [
+      262,
+      263
+    ]
+  },
+  {
+    "code": "SS0101",
+    "path": "requires-external-aggregate",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      257
+    ]
+  },
+  {
+    "code": "SS0102",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      258
+    ]
+  },
+  {
+    "code": "SS0103",
+    "path": "candidate-native-monthly-period",
+    "pdfUnit": "ร้อยละ",
+    "printedPages": [
+      259
+    ]
+  }
+]

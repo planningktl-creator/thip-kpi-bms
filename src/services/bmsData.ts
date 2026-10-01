@@ -756,10 +756,8 @@ export function buildIndicatorFromRows(
   const targetFromRows = sourceProvidesTarget
     ? rows.map((row) => asNumber(getValue(row, 'target'))).find((value) => value !== null) ?? null
     : null;
-  // The parsed dictionary benchmark is a fallback ONLY when the source supplies
-  // no target column at all. An explicit NULL target from a normalized source
-  // row is a real decision and is never overwritten by the dictionary.
-  const dictionaryTarget = sourceProvidesTarget ? null : parseBenchmark(dictionary?.target ?? null).value;
+  // Missing hospital targets remain unknown; dictionary text is not a target source.
+  const dictionaryTarget = null; // Dictionary benchmark is descriptive, not a hospital target.
   const effectiveTarget = targetFromRows ?? dictionaryTarget;
   const rowsByMonth = new Map<number, RawKpiRow>();
 
@@ -822,7 +820,9 @@ export function buildIndicatorFromRows(
   const next: Indicator = {
     ...base,
     code,
+    ruleVersion: asString(getValue(firstRow ?? {}, 'rule_version')) ?? undefined,
     dataSource: hasMeasuredRow ? 'bms' : 'no-data',
+    pendingReason: asString(getValue(firstRow ?? {}, 'pending_reason')) ?? (!hasMeasuredRow ? 'missing-source: ไม่มี aggregate ในงวดที่เลือก' : base.pendingReason),
     fiscalYear,
     group: ['D', 'C', 'S', 'H', 'A'].includes(group) ? group : base.group,
     category: rowText('category', base.category),
@@ -1048,16 +1048,7 @@ function isRefusalByBudget(error: unknown): boolean {
     && (error.status === 404 || error.status === 408 || error.status === 504);
 }
 
-/**
- * Turns a refused request into the next, smaller requests to try.
- *
- * Splitting by code first and by date window second is loss-free for every cadence:
- * a fact branch buckets to its cadence anchor, so a monthly, quarterly or semiannual
- * code measured over a shorter window produces exactly the cells it would produce over
- * the whole fiscal year. An annual code covers the year in one bucket, so it can never
- * be windowed — it is left as no-data rather than reporting half a year as the annual
- * result. An empty array means the request cannot be shrunk any further.
- */
+/** Budget retries only partition independent codes, never date windows. */
 function shrinkRefusedRequest(request: FoundationRequest): FoundationRequest[] {
   const byCode = splitFoundationChunk(request.query);
   if (byCode.length === 2) return byCode.map((query) => ({ ...request, key: query.key, query }));
@@ -1089,7 +1080,15 @@ async function runFoundationRequest(
     if (options?.signal?.aborted) throw asDataError(error);
     if (!isRefusalByBudget(error)) throw asDataError(error);
     telemetry.push({ key: request.key, outcome: 'timeout', latencyMs: Date.now() - startedAt });
-    return { rows: [], followUp: shrinkRefusedRequest(request) };
+    const followUp = shrinkRefusedRequest(request);
+    if (followUp.length) return { rows: [], followUp };
+    const codes = [...new Set([...request.query.sql.matchAll(/'([A-Z]{2}\d{4}(?:\.\d)?)' AS indicator_code/g)].map((match) => match[1]))];
+    const fiscalYear = Number(request.end.slice(0, 4));
+    const periods = getFiscalMonthPeriods(fiscalYear);
+    return { followUp: [], rows: codes.flatMap((code) => getExpectedFiscalMonths(code).map((month) => ({
+      indicator_code: code, fiscal_year: fiscalYear, fiscal_month: month, period_start: periods[month - 1].periodStart,
+      numerator: null, denominator: null, value: null, pending_reason: 'query-budget-exceeded: full observation window retained',
+    }))) };
   }
 }
 
@@ -1162,8 +1161,8 @@ export async function loadBmsIndicators(
     // 177 UNION-ed branches) was measured to exceed the BMS API's ~10 s request
     // ceiling on a live site and returned nothing, so the contract is fanned out
     // into bounded requests over the full fiscal-year window. A request the endpoint
-    // refuses is retried by shrinking the code set and then, for every cadence except
-    // annual, by halving the date window — both are loss-free for their cadence.
+    // refuses is retried by shrinking the code set only. Full observation windows
+    // remain intact; an exhausted code is explicitly unavailable.
     const periods = getFiscalMonthPeriods(fiscalYear);
     const seenCell = new Set<string>();
     const chunkTelemetry: { key: string; outcome: QueryTelemetryOutcome; latencyMs: number }[] = [];
@@ -1182,6 +1181,7 @@ export async function loadBmsIndicators(
       const code = asString(getValue(row, 'indicator_code'));
       const month = rowPeriod(row, periods, fiscalYear);
       const cellKey = `${code}:${month}`;
+      if (seenCell.has(cellKey)) throw new BmsRequestError('data', 'response', `Duplicate foundation cell ${cellKey}`);
       if (!seenCell.has(cellKey)) {
         seenCell.add(cellKey);
         merged.push(row);
