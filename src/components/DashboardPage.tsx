@@ -49,6 +49,7 @@ type Props = {
   dataSource: DataSourceState;
   refreshedAt: RefreshedAt | null;
   coverage: BmsCoverage;
+  globalYearControl?: boolean;
 };
 
 /** Fiscal years offered in the selector, always anchored on the current fiscal year. */
@@ -75,6 +76,7 @@ export function DashboardPage({
   dataSource,
   refreshedAt,
   coverage,
+  globalYearControl = false,
 }: Props) {
   const fiscalMonths = getFiscalMonthPeriods(fiscalYear);
   const selectedMonth = fiscalMonths[monthIndex] ?? fiscalMonths[11]!;
@@ -113,7 +115,7 @@ export function DashboardPage({
           <p className="page-subtitle">อ่านสัญญาณคุณภาพจากตัวตั้งและตัวหารของตัวชี้วัด ก่อนลงรายละเอียดที่ต้องขยับ</p>
         </div>
         <div className="page-actions">
-          <label className="fiscal-year-control"><span>ปีงบประมาณ</span><select aria-label="เลือกปีงบประมาณ" value={fiscalYear} onChange={(event) => onFiscalYearChange(Number(event.target.value))}>{selectableFiscalYears(fiscalYear).map((year) => <option key={year} value={year}>{formatFiscalYear(year)}</option>)}</select><ChevronDown size={14} aria-hidden="true" /></label>
+          {!globalYearControl && <label className="fiscal-year-control"><span>ปีงบประมาณ</span><select aria-label="เลือกปีงบประมาณ" value={fiscalYear} onChange={(event) => onFiscalYearChange(Number(event.target.value))}>{selectableFiscalYears(fiscalYear).map((year) => <option key={year} value={year}>{formatFiscalYear(year)}</option>)}</select><ChevronDown size={14} aria-hidden="true" /></label>}
           <div className={`connection-chip connection-chip-${connection.status}`}><span className="connection-led" />{dataSource === 'live' ? 'BMS live data' : dataSource === 'partial' ? 'BMS live data บางส่วน' : dataSource === 'loading' ? 'กำลังอ่านข้อมูลจริง' : 'ยังไม่มีข้อมูลจริง'}</div>
           <button className="secondary-button" type="button" onClick={() => exportAggregateCsv(allIndicators, fiscalYear)} disabled={dataSource === 'loading' || allIndicators.some((indicator) => indicator.fiscalYear !== fiscalYear) || !allIndicators.some((indicator) => indicator.dataSource === 'bms')}><Download size={15} /> ส่งออก aggregate CSV</button>
           <span className="secondary-button dashboard-refresh-note" role="status"><Clock3 size={16} /> {refreshedAt ? `อัปเดตล่าสุด ${formatRefreshTime(refreshedAt)}` : 'ยังไม่มีการอ่านข้อมูลจริง'} · {selectedMonth.label}</span>

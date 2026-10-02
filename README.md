@@ -132,3 +132,9 @@ It exits successfully only when the repository's 232-code/cadence manifest is co
 ## Cohort validation
 
 The Step validation page now includes manual **ยอดฐานและคุณภาพการเชื่อมข้อมูล** for patient registry, ovst services, ipt admission/discharge, person linkage, emp staff and opduser accounts. Only counts leave SQL; profile requests share the KPI lane and use a separate 24-hour aggregate cache namespace. All 232 KPI rows expose dictionary numerator/denominator and candidate counting evidence. These profiles remain unapproved and do not change THIP/monitoring coverage. See [contract and acceptance](docs/THIP-COHORT-PROFILES.md), [human mapping](docs/THIP-COHORT-MAPPING.md), and [machine mapping](src/data/thipCohortEvidence.json). Generate/check with `pnpm cohorts:build` / `pnpm cohorts:check`.
+
+## Shared SPA data (2 ตุลาคม 2569)
+
+Root-owned sequential queue/cache ใช้ร่วมทุกหน้า; default THIP review, monthly-monitoring แยกแท็บ. Navigation ไม่ query ซ้ำ; FY/session change ยกเลิกและล้าง snapshot. CSV review มีป้าย UNAPPROVED REVIEW; approved gates/cadence เดิมคงอยู่. ดู [shared contract](docs/THIP-SHARED-DATA.md) และ [benchmark](docs/THIP-SHARED-PERFORMANCE-2026-10-02.md).
+
+`python scripts/shared_kpi_browser_smoke.py` ใช้ mocked development servers 5173/5175 และ deny real HTTPS. Cache/step/profile/preview browser regressions เดิมยังอยู่.

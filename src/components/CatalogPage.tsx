@@ -31,15 +31,15 @@ export function CatalogPage({ entries, wiredCodes, activeGroup, search, onSearch
         <div>
           <div className="eyebrow"><span className="eyebrow-dot" /> THIP / INDICATOR LIBRARY</div>
           <h1>คลังตัวชี้วัด <span>THIP 2025</span></h1>
-          <p className="page-subtitle">รายการตัวชี้วัดทั้งหมดจาก dictionary พร้อมสถานะว่าแต่ละรายการมี data contract แล้วหรือยัง</p>
+          <p className="page-subtitle">รายการตัวชี้วัดทั้งหมดจาก dictionary พร้อมสถานะว่าแต่ละรายการมีค่าในโหมดที่เลือก แล้วหรือยัง</p>
         </div>
         <div className="page-actions"><div className="catalog-count-chip"><BookOpen size={15} /> {sourceDictionaryCount} indicators</div></div>
       </div>
 
       <section className="catalog-summary-grid">
         <div className="catalog-summary-card"><span className="catalog-summary-icon catalog-summary-aqua"><BookOpen size={17} /></span><div><strong>{sourceDictionaryCount}</strong><span>รายการใน dictionary</span></div></div>
-        <div className="catalog-summary-card"><span className="catalog-summary-icon catalog-summary-green"><CheckCircle2 size={17} /></span><div><strong>{wiredCodes.size}</strong><span>มี data contract</span></div></div>
-        <div className="catalog-summary-card"><span className="catalog-summary-icon catalog-summary-amber"><ShieldAlert size={17} /></span><div><strong>{sourceDictionaryCount - wiredCodes.size}</strong><span>รอผูก source view</span></div></div>
+        <div className="catalog-summary-card"><span className="catalog-summary-icon catalog-summary-green"><CheckCircle2 size={17} /></span><div><strong>{wiredCodes.size}</strong><span>มีค่าในโหมดที่เลือก</span></div></div>
+        <div className="catalog-summary-card"><span className="catalog-summary-icon catalog-summary-amber"><ShieldAlert size={17} /></span><div><strong>{sourceDictionaryCount - wiredCodes.size}</strong><span>ยังไม่มีค่าในโหมดที่เลือก</span></div></div>
         <div className="catalog-group-strip" role="group" aria-label="กรองตามกลุ่ม THIP">{groupCounts.map(({ group, count }) => <button key={group} type="button" className={activeGroup === group ? 'is-selected' : ''} aria-pressed={activeGroup === group} aria-label={`${groupMeta[group].shortLabel} ${count} รายการ`} onClick={() => onGroupChange(activeGroup === group ? 'all' : group)}><span aria-hidden="true" style={{ backgroundColor: groupMeta[group].color }}>{group}</span><strong>{count}</strong></button>)}</div>
       </section>
 
@@ -49,7 +49,7 @@ export function CatalogPage({ entries, wiredCodes, activeGroup, search, onSearch
           <table className="catalog-table">
             <caption className="sr-only">คลังตัวชี้วัด THIP 2025 จำนวน {filtered.length} รายการที่กรองแล้ว</caption>
             <thead><tr><th scope="col">รหัส</th><th scope="col">ชื่อตัวชี้วัดจาก dictionary</th><th scope="col">กลุ่ม</th><th scope="col">สถานะข้อมูล</th><th scope="col" aria-label="เปิดรายละเอียด" /></tr></thead>
-            <tbody>{filtered.map((entry) => { const wired = wiredCodes.has(entry.code); return <tr key={entry.code} aria-label={`เปิดรายละเอียด ${entry.code} ${entry.titleTh || entry.title}`} tabIndex={0} onClick={() => onOpen(entry.code)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpen(entry.code); } }}><td><strong className="catalog-code">{entry.code}</strong></td><td><div className="catalog-title-cell"><strong className="catalog-title-th">{entry.titleTh}</strong><span className="catalog-title-en">{entry.title}</span></div></td><td><span className="catalog-group"><i aria-hidden="true" style={{ backgroundColor: groupMeta[entry.group].color }}>{entry.group}</i>{groupMeta[entry.group].shortLabel}</span></td><td><span className={`catalog-state ${wired ? 'catalog-state-wired' : 'catalog-state-pending'}`}><span aria-hidden="true" />{wired ? 'มี data contract' : 'รอผูก source view'}</span></td><td><span className="catalog-arrow" aria-hidden="true">↗</span></td></tr>; })}</tbody>
+            <tbody>{filtered.map((entry) => { const wired = wiredCodes.has(entry.code); return <tr key={entry.code} aria-label={`เปิดรายละเอียด ${entry.code} ${entry.titleTh || entry.title}`} tabIndex={0} onClick={() => onOpen(entry.code)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpen(entry.code); } }}><td><strong className="catalog-code">{entry.code}</strong></td><td><div className="catalog-title-cell"><strong className="catalog-title-th">{entry.titleTh}</strong><span className="catalog-title-en">{entry.title}</span></div></td><td><span className="catalog-group"><i aria-hidden="true" style={{ backgroundColor: groupMeta[entry.group].color }}>{entry.group}</i>{groupMeta[entry.group].shortLabel}</span></td><td><span className={`catalog-state ${wired ? 'catalog-state-wired' : 'catalog-state-pending'}`}><span aria-hidden="true" />{wired ? 'มีค่าในโหมดที่เลือก' : 'ยังไม่มีค่าในโหมดที่เลือก'}</span></td><td><span className="catalog-arrow" aria-hidden="true">↗</span></td></tr>; })}</tbody>
           </table>
           {!filtered.length && <div className="table-empty"><BookOpen size={22} /><strong>ไม่พบรายการใน dictionary</strong><span>ลองเปลี่ยนคำค้นหาหรือกลุ่ม</span></div>}
         </div>

@@ -71,3 +71,7 @@ CSV ส่งทุก 12 เดือนของแถวที่ผ่าน
 ## ก่อนเปิดข้อมูลจริง
 
 เจ้าของ KPI family ต้องรับรอง cohort, event date/observation window, join cardinality, local code sets, denominator, accumulation, source/target effectivity และ rule version แล้วเทียบ aggregate กับรายงานทางการ. เพิ่ม evidence ใน registry จึงเปิด publication. ติดตาม coverage/freshness/query latency และถอน approval ได้. การตรวจด้วย schema/fixtures/mock BMS ในรุ่นนี้ไม่ใช่ clinical certification.
+
+## Shared SPA owner — 2 ตุลาคม 2569
+
+[THIP-SHARED-DATA.md](THIP-SHARED-DATA.md) กำหนด root-owned queue/cache, strict draft projection, review/approved selectors และ explicit monthly bridge. Route ไม่โหลดข้อมูลซ้ำ; publication/completeness/cadence เดิมคงอยู่. ใช้ mocked BMS เท่านั้นสำหรับรอบนี้.

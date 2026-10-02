@@ -19,11 +19,22 @@ try {
   const { planFoundationRequests } = await server.ssrLoadModule('/src/services/thipFoundationPlan.ts');
   const { hosxpRegisteredCodes } = await server.ssrLoadModule('/src/services/queryRegistry.ts');
   const { getDictionaryEntry } = await server.ssrLoadModule('/src/data/thipDictionary.ts');
+  const { getReportingCadence } = await server.ssrLoadModule('/src/data/thipReporting.ts');
+  const { getFormulaScale } = await server.ssrLoadModule('/src/data/thipRuleLogic.ts');
   const rules = [...thipKpiRulesByCode.values()].map(({ cohortDefinition, ...rule }) => rule);
   const ordered = ['DH0101', 'DH0112', ...hosxpRegisteredCodes.filter((code) => !['DH0101', 'DH0112'].includes(code)).sort()];
   const signatures = ordered.map((code) => ({ code, sqlHash: hash(planFoundationRequests({ fiscalYear: 2026, chunkSize: 1, codes: [code] })[0].query.sql), ruleHash: hash(thipKpiRulesByCode.get(code)) }));
   if (rules.length !== 232 || monitoringRules.length !== 232 || signatures.length !== 177) throw new Error('Runtime coverage changed');
-  output('src/data/thipRuntimeMetadata.json', { catalogue: thipCatalogue, rules, monitoringRules, signatures });
+  const bridges = monitoringRules.filter(rule => rule.capability === 'candidate-native-monthly-period'
+    && getReportingCadence(rule.code) === 'monthly' && signatures.some(item => item.code === rule.code)
+    && getFormulaScale(thipKpiRulesByCode.get(rule.code).formulaScale) === rule.scale).map(rule => ({
+      code: rule.code, version: 'reporting-monthly-bridge/1', unit: rule.unit, scale: rule.scale,
+      sourceRuleHash: signatures.find(item => item.code === rule.code).ruleHash,
+      cohortHash: hash(thipKpiRulesByCode.get(rule.code).cohortDefinition),
+      evidence: `Same monthly reporting fact, cohort, event date and observation window; review only. THIP KPI.pdf:p.${thipKpiRulesByCode.get(rule.code).pdfPage}`,
+    }));
+  const reportingDefinitions = [...thipKpiRulesByCode.values()].map(rule => ({ code: rule.code, formula: rule.cohortDefinition?.formula ?? rule.formulaScale, method: rule.cohortDefinition?.observationWindow ?? 'Source-supplied reporting period only', ruleHash: hash(rule) }));
+  output('src/data/thipRuntimeMetadata.json', { catalogue: thipCatalogue, rules, monitoringRules, signatures, bridges, reportingDefinitions });
   const families = [...new Set(thipCatalogue.map((entry) => entry.code.slice(0, 2)))].sort();
   mkdirSync('src/data/evidence', { recursive: true });
   for (const family of families) {

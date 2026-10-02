@@ -20,9 +20,9 @@ Implementations คือ IndexedDB และ memory; resilient wrapper เป�
 
 `StepResult` เพิ่ม origin `cache|query`, cachedAt, expiresAt. `StepSnapshot.succeeded` คือผลสำเร็จรวมทั้งสองทาง; `cacheHits` และ `querySucceeded` แยกจำนวนใช้ cache กับ query รอบนี้. ไม่มีการเปลี่ยน BMS HTTP payload หรือ approval/completeness ของ official series
 
-Progress snapshot และ aggregate ที่ส่งออกเป็น readonly/frozen; รายการที่ไม่เปลี่ยนใช้ reference เดิม. เวลา query แยกจากเวลารอ shared lane/ช่วงเว้นคิว. SQL ของแต่ละ code สร้างเมื่อถึงคำขอจริงเท่านั้น; cache hit ไม่สร้างหรือเรียก SQL. ผลที่ยังไม่รับรองยังอยู่ในหน้าสอบทานเท่านั้น
+Progress snapshot และ aggregate ที่ส่งออกเป็น readonly/frozen; รายการที่ไม่เปลี่ยนใช้ reference เดิม. เวลา query แยกจากเวลารอ shared lane/ช่วงเว้นคิว. SQL ของแต่ละ code สร้างเมื่อถึงคำขอจริงเท่านั้น; cache hit ไม่สร้างหรือเรียก SQL. ผลที่ยังไม่รับรองใช้ได้ทุกหน้าในโหมดสอบทาน; approved gates คงเดิม
 
-เปลี่ยนปี/session หรือออกจากหน้ายกเลิก request, initialization และ cache write ของ context เก่า; IndexedDB write transaction ผูกกับ AbortSignal. ผลเก่าที่มาช้าไม่กลับมา hydrate หรือเขียน cache. Cache ของปี/context อื่นยังเก็บไว้จนหมดอายุ
+เปลี่ยนปี/session ยกเลิก request, initialization และ cache write ของ context เก่า; IndexedDB write transaction ผูกกับ AbortSignal. ผลเก่าที่มาช้าไม่กลับมา hydrate หรือเขียน cache. Cache ของปี/context อื่นยังเก็บไว้จนหมดอายุ
 
 ## Controls
 
@@ -44,3 +44,7 @@ The same aggregate repository also hosts `cohort-profile` results with FY/month/
 ## Performance regression — 2026-10-02
 
 Production benchmark คืน cache 177 รหัสครบโดยไม่เรียก native SQL บน desktop/mobile จำลองห้ารอบ. Browser regression ทดสอบ IndexedDB v2 จริง, refresh/ปิดเปิด browser, force reload, session/FY isolation, expiry, storage denial และ clear-all. ผลและข้อจำกัดของการวัดอยู่ใน [performance report](THIP-PERFORMANCE-2026-10-02.md)
+
+## Shared owner extension — 2 ตุลาคม 2569
+
+ดู [Shared KPI data](THIP-SHARED-DATA.md). Navigation ใช้ snapshot/cache เดียวและไม่ยกเลิกคิว. Native v2 keys/envelopes ยังรองรับ; reporting-source/monitoring-source v3 envelopes เก็บ strict sanitized projections แยก namespace. Query/rule/code/FY fingerprints และ TTL คงเดิม. ไม่มีการเพิ่ม credentials, raw responses หรือ approved status ให้ cached drafts.

@@ -154,6 +154,57 @@
 .monitoring-empty { padding: 36px 20px; text-align: center; color: var(--ink-soft); }
 .monitoring-dialog { width: min(760px, calc(100vw - 24px)); max-height: 85vh; padding: 24px; color: var(--ink); border: 0; border-radius: 14px; box-shadow: 0 24px 80px rgba(10, 32, 53, .3); }
 .monitoring-dialog::backdrop { background: rgba(10, 32, 53, .55); }
+.kpi-load-bar { margin-bottom: 24px; padding: 16px 20px; background: #fff; border: 1px solid var(--line); border-top: 3px solid #087b78; border-radius: 10px; }
+.kpi-context, .kpi-progress-line { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.kpi-context label { font-size: 12px; font-weight: 600; }
+.kpi-context select { margin-left: 8px; padding: 6px 10px; background: #fff; border: 1px solid #bccdd6; border-radius: 6px; color: var(--ink); }
+.kpi-segment { display: inline-flex; padding: 3px; border: 1px solid #bccdd6; border-radius: 8px; background: #f3f7f8; gap: 3px; }
+.kpi-segment button { min-height: 36px; padding: 6px 14px; border-radius: 5px; color: #355667; font-size: 12px; }
+.kpi-segment button[aria-pressed="true"] { background: #0f5f65; color: #fff; }
+.kpi-mode-label { font-size: 12px; color: #246452; }
+.kpi-mode-label.review { color: #855109; }
+.kpi-progress-line { margin-top: 14px; font-size: 12px; }
+.kpi-progress-line small { color: var(--ink-soft); }
+.kpi-load-bar progress { width: 100%; height: 6px; accent-color: #087b78; }
+.kpi-load-bar .step-controls { margin-top: 10px; }
+.kpi-load-bar .secondary-button { min-height: 36px; font-size: 11px; }
+.kpi-cache-menu summary, .kpi-session-panel summary { cursor: pointer; font-size: 12px; padding: 8px 0; color: #355667; }
+.kpi-cache-menu[open] { display: flex; flex-wrap: wrap; gap: 8px; }
+.kpi-session-panel { margin-bottom: 12px; }
+.kpi-session-panel p { font-size: 12px; margin: 0 0 10px; color: var(--ink-soft); }
+.monitoring-search > input, .kpi-overview-search input { min-height: 42px; padding: 8px 11px; border: 1px solid #bccdd6; background: #fff; border-radius: 8px; }
+.section-eyebrow { letter-spacing: .08em; font-size: 10px !important; color: #087b78 !important; margin-bottom: 8px !important; }
+.kpi-series { align-self: flex-start; }
+.monitoring-identity > small { display: block; font-size: 9px; color: var(--ink-soft); margin-top: 4px; }
+.monitoring-cell.state-not-applicable { background: #f5f7f8; color: #78838a; }
+.monitoring-cell.state-failed, .monitoring-cell.state-expired { background: #fff3ed; color: #88421f; }
+.kpi-cell-details small { display: block; color: var(--ink-soft); }
+.kpi-cell-details details { margin: 20px 0; font-size: 13px; line-height: 1.8; }
+.kpi-overview-counts { display: flex; gap: 40px; padding: 20px 0; border-block: 1px solid var(--line); }
+.kpi-overview-counts strong { display: block; font: 600 28px 'Space Grotesk', sans-serif; color: #0f5f65; }
+.kpi-overview-counts small { font-size: 14px; color: var(--ink-soft); }
+.kpi-overview-counts span, .kpi-overview-search { font-size: 12px; }
+.kpi-overview-search { display: flex; flex-direction: column; gap: 6px; max-width: 420px; }
+.kpi-overview-list { border-top: 1px solid var(--line); }
+.kpi-overview-row { display: grid; grid-template-columns: 95px 1fr 180px; width: 100%; gap: 8px 20px; padding: 16px 10px; border-bottom: 1px solid var(--line); text-align: left; font-size: 12px; color: #244556; }
+.kpi-overview-row:hover { background: #edf7f7; }
+.kpi-overview-row strong { color: #087b78; }
+.kpi-overview-row small { grid-column: 2 / -1; color: var(--ink-soft); }
+.kpi-detail-periods { width: 100%; border-collapse: collapse; font-size: 12px; }
+.kpi-detail-periods th, .kpi-detail-periods td { padding: 10px; border-bottom: 1px solid var(--line); text-align: left; }
+.kpi-trend { margin: 0; padding: 16px 0; }
+.kpi-trend svg { max-width: 900px; width: 100%; max-height: 250px; color: #244556; }
+.kpi-trend figcaption, .kpi-empty-trend { font-size: 12px; color: var(--ink-soft); }
+@media (max-width: 680px) {
+  .kpi-load-bar { padding: 14px 12px; }
+  .kpi-load-bar .secondary-button, .kpi-segment button { min-height: 44px; }
+  .kpi-mode-label { width: 100%; }
+  .kpi-overview-counts { gap: 16px; }
+  .kpi-overview-counts > div { flex: 1; }
+  .kpi-overview-row { grid-template-columns: 78px 1fr; gap: 8px; }
+  .kpi-overview-row > span:last-of-type { grid-column: 2; }
+  .kpi-context { justify-content: flex-start; }
+}
 .monitoring-dialog-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .monitoring-dialog h2 { margin: 0; font-size: 21px; }
 .monitoring-dialog p { line-height: 1.6; color: var(--ink-soft); font-size: 13px; }

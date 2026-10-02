@@ -34,7 +34,7 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { label: 'ติดตามรายเดือน', hint: 'Monthly monitoring', icon: BarChart3, view: 'monitoring' },
+  { label: 'ตารางตัวชี้วัด', hint: 'THIP / Monthly monitoring', icon: BarChart3, view: 'monitoring' },
   { label: 'ตรวจข้อมูลทีละ KPI', hint: 'สอบทานก่อนรับรอง', icon: ClipboardCheck, view: 'validation' },
   { label: 'ภาพรวมคุณภาพ', hint: 'Quality overview', icon: LayoutDashboard, view: 'dashboard' },
   { label: 'คลังตัวชี้วัด', hint: 'Indicator library', icon: CalendarDays, view: 'catalog' },

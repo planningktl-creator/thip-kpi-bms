@@ -25,7 +25,7 @@ Candidate validator รับเจ็ดคอลัมน์ `indicator_code, 
 
 ## Publication และ build
 
-หน้านี้มีป้ายยังไม่รับรองและไม่มี CSV/export API. ไม่ส่ง candidate facts เข้า `publishApprovedThip()` หรือ production monitoring contract; approved coverage จากหน้านี้เป็น 0. Official THIP 232 codes/1,552 cadence cells และ monitoring 2,784 cells พร้อม gates เดิมยังอยู่. การจบคิวไม่ใช่ clinical sign-off
+หน้าตรวจสอบมีป้ายยังไม่รับรอง; CSV สอบทานอยู่ในตารางกลางและระบุ UNAPPROVED REVIEW. ไม่ส่ง candidate facts เข้า `publishApprovedThip()` หรือ production monitoring contract; approved coverage จากหน้านี้เป็น 0. Official THIP 232 codes/1,552 cadence cells และ monitoring 2,784 cells พร้อม gates เดิมยังอยู่. การจบคิวไม่ใช่ clinical sign-off
 
 Docker build ไม่ต้องตั้ง source view เพื่อสร้าง candidate page แล้ว; official runtime source/approval gates ยังคงอยู่. Compose ส่ง monitoring source/foundation/concurrency variables ด้วย แต่ candidate queue ไม่ใช้ concurrency override: คงหนึ่งคำขอเสมอ. Session/token ไม่อยู่ใน build variables/logs/storage
 
@@ -57,3 +57,7 @@ python scripts/thip_source_audit.py --input test-fixtures/thip-kpi-complete-2026
 - TypeScript/Vite build ผ่าน. Docker build ที่ไม่กำหนด source view และ `nginx -t` ใน local container ที่ปิด network ผ่าน; ไม่ได้ deploy.
 - Generated step manifest ผ่าน 177 native/55 external; reporting artifact ผ่าน 232 codes/1,552 THIP cells/2,784 monitoring cells. Synthetic source audit ผ่าน และ production fixture exclusion/preview-flag rejection ผ่าน.
 - ยังมี Vite warning เรื่องขนาด bundle เกิน 500 kB; ไม่ใช่ข้อยืนยัน latency ของ query จริง. ความถูกต้องทางคลินิก, schema โรงพยาบาล และความเร็วบน BMS จริงยังต้องตรวจรับแยก.
+
+## App-level queue — 2 ตุลาคม 2569
+
+เจ้าของคิวอยู่ที่ root KpiDataStore แล้ว; ทุกหน้าอ่านผล progressive เดียวกันและเปลี่ยนหน้าได้โดยไม่เริ่ม query ซ้ำ. ดู [THIP-SHARED-DATA](THIP-SHARED-DATA.md) สำหรับ source-view tasks, interleaved monitoring, cache projections, publication และ shared review UI. หน้านี้เป็นรายละเอียดแต่ละ query/cohort; controls อยู่แถบกลาง.

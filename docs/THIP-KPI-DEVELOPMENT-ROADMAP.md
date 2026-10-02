@@ -1,3 +1,19 @@
+# Shared SPA release — 2 ตุลาคม 2569
+
+[Shared owner contract](THIP-SHARED-DATA.md) โหลดครั้งเดียวใช้ร่วม matrix/overview/charts/detail/catalogue/validation. Default THIP review; monthly monitoring แยก series และ 101 explicit review bridges. Certified reporting charts/export เดิมคงอยู่หลัง publication gates.
+
+| งาน | Dependency | Acceptance |
+|---|---|---|
+| Root owner + cache/queue | Step/cache/performance release เดิม | เปลี่ยนหน้าระหว่าง request ได้; DH0101 ไม่ query ซ้ำ; FY/session abort และล้างทันที |
+| Strict source adapters + selectors | Root owner | Source view ราย code; ไม่มี silent fallback; 1,552 cadence cells/2,784 monitoring cells; unapproved ไม่เข้าผลรับรอง |
+| Shared UI + review export | Selectors | Global controls; 232 rows DOM; BE dates; URL/history; semantic keyboard/mobile; CSV label/lineage และ NULL reasons |
+| Verification/performance | ทั้งหมดด้านบน | Unit/browser/generated/source/release checks และ production performance gates |
+| Hospital sign-off/activation | Release + owner evidence | Cohort/cardinality/event date/denominator/local codes/target/version และ aggregate reconciliation; real source latency แยกจาก browser benchmark |
+
+รอบนี้ใช้ fixtures/mock เท่านั้น ไม่เรียกฐานจริง ไม่เปิด Issues หรือ deploy โดยตรง. Native/external clinical readiness ยังไม่เปลี่ยน. รายงาน benchmark อยู่ [THIP-SHARED-PERFORMANCE-2026-10-02.md](THIP-SHARED-PERFORMANCE-2026-10-02.md).
+
+---
+
 # THIP KPI BMS — Roadmap หลัง project audit
 
 **ปรับปรุง:** 1 ตุลาคม 2569 · **Audit evidence:** 30 กันยายน 2569

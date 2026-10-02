@@ -8,3 +8,5 @@ export const runtimeCatalogueByCode = new Map(runtimeCatalogue.map((entry) => [e
 export const runtimeRulesByCode: ReadonlyMap<string, ThipKpiRule> = new Map((metadata.rules as ThipKpiRule[]).map((rule) => [rule.code, rule]));
 export const runtimeMonitoringRules = metadata.monitoringRules as readonly MonitoringRule[];
 export const runtimeSignatures = metadata.signatures;
+export const runtimeMonitoringBridges = metadata.bridges;
+export const runtimeReportingDefinitions = new Map(metadata.reportingDefinitions.map(item => [item.code,item]));

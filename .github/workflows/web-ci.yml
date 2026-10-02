@@ -65,3 +65,5 @@ jobs:
       - run: THIP_STEP_SMOKE_URL=http://127.0.0.1:5173 python scripts/cohort_browser_smoke.py
       - run: THIP_STEP_SMOKE_URL=http://127.0.0.1:5173 python scripts/step_browser_smoke.py
       - run: THIP_STEP_SMOKE_URL=http://127.0.0.1:5173 python scripts/step_cache_browser_smoke.py
+
+      - run: python scripts/shared_kpi_browser_smoke.py

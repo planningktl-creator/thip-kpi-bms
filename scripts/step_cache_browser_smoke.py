@@ -36,14 +36,14 @@ async def main():
         assert not any(word in json.dumps(stored) for word in ['SYNTHETIC_', 'bearerToken', 'marketplaceToken', 'step.mock.invalid', 'patient', 'hn', 'vn'])
         count = sum(c['code']=='DH0101' for c in calls)
         await page.reload(wait_until='networkidle')
-        await expect(page.locator('.step-page')).to_contain_text('รอเชื่อมต่อ')
+        await expect(page.locator('.kpi-session-panel')).to_contain_text('รอเชื่อมต่อ')
         await expect(page.locator('[data-code="DH0101"]')).not_to_contain_text('จาก cache')
         await page.get_by_label('BMS Session ID').fill('SYNTHETIC_CACHE_SESSION')
         await page.get_by_role('button', name='เชื่อมต่อ', exact=True).click()
         await expect(page.locator('[data-code="DH0101"]')).to_contain_text('จาก cache')
         await pause(page)
         assert sum(c['code']=='DH0101' for c in calls) == count
-        await expect(page.locator('.step-counts')).to_contain_text('ใช้จาก cache')
+        await expect(page.locator('.step-counts')).to_contain_text('จาก cache')
         await page.screenshot(path=str(OUT/'cache-desktop.png'))
         checks += ['validated aggregates persisted without credentials', '24-hour TTL', 'session required before cache display', 'refresh skips cached query']
         await ctx.close()
@@ -59,6 +59,7 @@ async def main():
         assert await page.evaluate('document.documentElement.scrollWidth <= innerWidth')
         await page.screenshot(path=str(OUT/'cache-mobile.png'))
         checks += ['browser close/reopen retains cache', 'mobile cache controls without overflow']
+        await page.locator('.kpi-cache-menu').evaluate('(element)=>element.open=true')
         await page.get_by_role('button', name='โหลดใหม่ทั้งคิว', exact=True).click()
         await expect(page.locator('[data-code="DH0101"]')).not_to_contain_text('จาก cache')
         await expect(page.locator('[data-code="DH0101"]')).to_contain_text('query สำเร็จ')
@@ -95,8 +96,9 @@ async def main():
         assert len(calls)>before
         await expect(page.locator('[data-code="DH0101"]')).not_to_contain_text('จาก cache')
         checks.append('expired disk entries refetched')
+        await page.locator('.kpi-cache-menu').evaluate('(element)=>element.open=true')
         await page.get_by_role('button', name='ล้าง cache ทั้งหมด', exact=True).click()
-        await expect(page.locator('.step-page')).to_contain_text('ล้าง cache แล้ว')
+        await expect(page.locator('.kpi-load-bar')).to_contain_text('ล้าง cache แล้ว')
         await expect(page.get_by_role('button', name='โหลดใหม่ทั้งคิว', exact=True)).to_be_enabled()
         assert await page.evaluate(READ)==[]
         before=len(calls); await asyncio.sleep(1.3); assert len(calls)==before
@@ -132,12 +134,14 @@ async def main():
         page.on('pageerror',lambda error:errors.append(str(error)))
         await page.goto(launch, wait_until='networkidle')
         await expect(page.locator('[data-code="DH0101"]')).to_contain_text('query สำเร็จ')
-        await expect(page.locator('.step-page')).to_contain_text('Cache ข้าม refresh ไม่พร้อม')
+        await expect(page.locator('.kpi-load-bar')).to_contain_text('Cache ข้าม refresh ไม่พร้อม')
         await pause(page)
         checks.append('storage denied falls back without stopping queue')
+        await page.locator('.kpi-cache-menu').evaluate('(element)=>element.open=true')
         await page.get_by_role('button', name='ล้าง cache ทั้งหมด', exact=True).click()
-        await expect(page.locator('.step-page')).to_contain_text('cache บนเครื่องยังล้างไม่ได้')
+        await expect(page.locator('.kpi-load-bar')).to_contain_text('cache บนเครื่องยังล้างไม่ได้')
         await expect(page.get_by_role('button', name='โหลดใหม่ทั้งคิว', exact=True)).to_be_enabled()
+        await page.locator('.kpi-cache-menu').evaluate('(element)=>element.open=true')
         await page.get_by_role('button', name='โหลดใหม่ทั้งคิว', exact=True).click()
         await expect(page.locator('[data-code="DH0101"]')).to_contain_text('query สำเร็จ')
         await pause(page)

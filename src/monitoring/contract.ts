@@ -32,7 +32,7 @@ export function unavailableCell(rule: MonitoringRule, fiscalYear: number, month:
     ruleVersion: rule.version, refreshedAt: null, synthetic: preview,
   };
 }
-export function validateMonitoringRow(input: unknown, fiscalYear: number, rules = monitoringRulesByCode, preview = false, now = new Date()): MonthlyMonitoringResult {
+export function validateMonitoringRow(input: unknown, fiscalYear: number, rules = monitoringRulesByCode, preview = false, now = new Date(), publication = true): MonthlyMonitoringResult {
   const raw = object(input); exact(raw, fields);
   const rule = rules.get(String(raw.code));
   if (!rule || raw.fiscalYear !== fiscalYear || !Number.isInteger(raw.fiscalMonth) || Number(raw.fiscalMonth) < 1 || Number(raw.fiscalMonth) > 12) throw new Error('Unknown monitoring code/year/month');
@@ -64,7 +64,7 @@ export function validateMonitoringRow(input: unknown, fiscalYear: number, rules 
   const approved = rule.approval === 'approved' && Boolean(rule.approvalEvidence) && rule.effectiveFrom !== null && rule.effectiveFrom <= row.periodStart && (rule.effectiveTo === null || rule.effectiveTo >= row.periodEnd);
   const syntheticApproval = preview && rule.approval === 'synthetic';
   if (row.periodStart.slice(0, 7) > bangkokDate(now).slice(0, 7)) return unavailableCell(rule, fiscalYear, row.fiscalMonth, now, preview);
-  if (!(approved || syntheticApproval)) return { ...unavailableCell(rule, fiscalYear, row.fiscalMonth, now, preview), dataStatus: 'rule-unapproved', reason: rule.approval === 'unapproved' ? rule.reason : 'rule-unapproved: approval evidence/effective period does not cover this month' };
+  if (publication && !(approved || syntheticApproval)) return { ...unavailableCell(rule, fiscalYear, row.fiscalMonth, now, preview), dataStatus: 'rule-unapproved', reason: rule.approval === 'unapproved' ? rule.reason : 'rule-unapproved: approval evidence/effective period does not cover this month' };
   return { ...row, assessment: assessMonitoring(row, rule) };
 }
 export function emptyMonitoring(fiscalYear: number, now = new Date(), preview = false, error: string | null = null, rules = monitoringRulesByCode): MonitoringLoadResult {

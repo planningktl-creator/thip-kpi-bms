@@ -60,7 +60,8 @@ async def main():
         await expect(page.locator('.cohort-panel')).to_contain_text('ยังไม่โหลด')
         await page.get_by_role('button',name='โหลด/ใช้ cache ยอดฐาน',exact=True).click(); await expect(page.locator('[data-profile="accounts"]')).to_contain_text('อ่านยอดฐานสำเร็จ',timeout=20000)
         assert any(c['code']=='profile:visits' and c['start']=='2025-11-01' for c in calls)
-        await page.get_by_role('button',name='ล้าง cache ทั้งหมด',exact=True).click(); await expect(page.locator('.step-page')).to_contain_text('ล้าง cache แล้ว')
+        await page.locator('.kpi-cache-menu').evaluate('(element)=>element.open=true')
+        await page.get_by_role('button',name='ล้าง cache ทั้งหมด',exact=True).click(); await expect(page.locator('.kpi-load-bar')).to_contain_text('ล้าง cache แล้ว')
         assert not await page.evaluate(ENTRIES); await expect(page.locator('.cohort-panel')).to_contain_text('ยังไม่โหลด')
         checks+=['refresh requires session before cache','month clears old results + isolated query','clear all removes both namespaces']
         await context.close()

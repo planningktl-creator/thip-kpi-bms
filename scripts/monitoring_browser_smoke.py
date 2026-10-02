@@ -118,65 +118,20 @@ def main():
         tablet.screenshot(path=str(OUT/'preview-tablet.png'),full_page=True)
         checks += ['tablet visible sidebar remains interactive at 800px']
         unavailable = browser.new_page()
-        unavailable.goto(f'{NORMAL}/?fy=2026',wait_until='networkidle')
-        expect(unavailable.locator('.monitoring-coverage')).to_contain_text('0/2784')
+        unavailable.goto(f'{NORMAL}/?fy=2026&series=monthly-monitoring&mode=approved',wait_until='networkidle')
         expect(unavailable.locator('.monitoring-matrix tbody tr:not([hidden]) .monitoring-cell')).to_have_count(2784)
-        unavailable.locator('.monitoring-matrix tbody tr:not([hidden]) .monitoring-cell').first.click()
+        unavailable.locator('.monitoring-cell').first.click()
         expect(unavailable.locator('dialog')).to_contain_text('population denominator')
         unavailable.keyboard.press('Escape')
         checks += ['no source preserves NULL and reasons']
-        # A credential-bearing launch uses mocked BMS only, including slow source reads.
-        live = browser.new_page(viewport={'width':1440,'height':1000})
-        live.on('pageerror',lambda error:errors.append(str(error)))
-        mock_bms_routes(live)
-        pending = {}
-        fixture = json.loads((ROOT/'test-fixtures/thip-kpi-complete-2026.json').read_text(encoding='utf-8'))
-        def source_sql(route):
-            headers = allow_cors_headers(route.request)
-            if route.request.method == 'OPTIONS': route.fulfill(status=204,headers=headers); return
-            body = json.loads(route.request.post_data or '{}'); sql=body.get('sql','')
-            if 'FROM reporting.thip_monthly_monitoring' in sql:
-                pending[body['params']['fiscal_year']['value']]=route; return
-            if 'FROM reporting.thip_kpi_monthly' in sql:
-                # Draft aggregates remain hidden by the independent publication gate.
-                route.fulfill(status=200,headers=headers,json={'data':fixture}); return
-            route.fallback()
-        live.route('https://bms.smoke.test/**',source_sql)
-        live.goto(f'{SOURCE}/?fy=2026&bms-session-id=synthetic-launch-canary&marketplace-token=synthetic-market-canary',wait_until='domcontentloaded')
-        live.wait_for_function("document.querySelector('.connection-banner-success') !== null")
-        expect(live.get_by_role('button',name='ส่งออก CSV',exact=True)).to_be_disabled()
-        live.get_by_label('เลือกปีงบประมาณ').select_option('2025')
-        expect(live.locator('.monitoring-coverage')).to_contain_text('กำลังอ่านข้อมูลปีที่เลือก')
-        expect(live.get_by_role('button',name='ส่งออก CSV',exact=True)).to_be_disabled()
-        live.wait_for_timeout(200)
-        assert 2025 in pending
-        pending[2025].fulfill(status=200,headers=allow_cors_headers(pending[2025].request),json={'data':[]})
-        expect(live.get_by_role('button',name='ส่งออก CSV',exact=True)).to_be_enabled()
-        try:
-            if 2026 in pending: pending[2026].fulfill(status=200,headers=allow_cors_headers(pending[2026].request),json={'data':[]})
-        except Exception:
-            pass  # Browser cancellation may have already closed the stale request.
-        expect(live.get_by_label('เลือกปีงบประมาณ')).to_have_value('2025')
-        expect(live.locator('.monitoring-coverage')).to_contain_text('2568')
-        with live.expect_download() as download_info:
-            live.get_by_role('button',name='ส่งออก CSV',exact=True).click()
-        assert download_info.value.suggested_filename == 'thip-monthly-monitoring-2568.csv'
-        assert 'synthetic-launch-canary' not in live.url and 'synthetic-market-canary' not in live.url
-        assert live.evaluate('localStorage.length + sessionStorage.length') == 0
-        checks += ['mocked BMS session', 'slow year switch + stale response guard', 'export year match', 'credentials stripped, no durable storage']
-        # Monitoring source errors keep the full grid and block export until a retry succeeds.
-        live.get_by_role('button',name='รีเฟรช',exact=True).click()
-        live.wait_for_timeout(150)
-        pending[2025].fulfill(status=503,headers=allow_cors_headers(pending[2025].request),json={})
-        expect(live.locator('.monitoring-error')).to_be_visible()
-        expect(live.locator('.monitoring-matrix tbody tr:not([hidden]) .monitoring-cell')).to_have_count(2784)
-        expect(live.get_by_role('button',name='ส่งออก CSV',exact=True)).to_be_disabled()
-        checks += ['source error retains grid and disables export']
+        # Slow/partial configured source and cross-route cache are exercised by
+        # shared_kpi_browser_smoke.py through the central queue.
         rejected = browser.new_page()
+        rejected.route('https://**', lambda route: route.abort())
         rejected.route('https://hosxp.net/phapi/PasteJSON**', lambda route: route.fulfill(status=401, json={}))
         rejected.goto(f'{SOURCE}/?fy=2026&bms-session-id=synthetic-expired-session', wait_until='networkidle')
         expect(rejected.locator('.connection-banner-error')).to_be_visible()
-        expect(rejected.locator('.monitoring-matrix tbody tr:not([hidden]) .monitoring-cell')).to_have_count(2784)
+        expect(rejected.locator('.monitoring-cell')).to_have_count(2784)
         assert 'synthetic-expired-session' not in rejected.url
         checks += ['expired session retains grid and strips launch capability']
         browser.close()

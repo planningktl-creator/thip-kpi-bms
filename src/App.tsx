@@ -1,273 +1,392 @@
-import { useEffect, useMemo, useRef, useState, Suspense } from 'react';
-import { Menu, RefreshCw, WifiOff } from 'lucide-react';
+import { useEffect, useRef, useState, Suspense } from 'react';
+import { Menu, WifiOff } from 'lucide-react';
 import { Sidebar, type View } from '@/components/Sidebar';
 import { monitoringPreviewEnabled } from '@/monitoring/provider';
-import { stripLaunchCredentialsFromUrl } from '@/services/bmsSession';
+import {
+  connectBmsSession,
+  stripLaunchCredentialsFromUrl,
+  type BmsRuntimeConfig,
+} from '@/services/bmsSession';
 import { groupMeta } from '@/data/thipMeta';
-import { runtimeCatalogue as thipCatalogue } from '@/data/thipRuntime';
+import { runtimeCatalogue } from '@/data/thipRuntime';
 import { lazyRoute } from '@/components/RouteBoundary';
-import { connectBmsSession, type BmsRuntimeConfig } from '@/services/bmsSession';
-import { getBmsConnectionErrorMessage } from '@/services/bmsErrors';
-import type { BmsConnection, FiscalYear, Indicator, IndicatorGroup, RefreshedAt } from '@/types/thip';
-import type { BmsCoverage } from '@/services/bmsData';
+import { KpiDataStore } from '@/services/kpiDataStore';
+import { KpiDataContext, useKpiData } from '@/components/KpiDataContext';
+import { KpiLoadBar } from '@/components/KpiLoadBar';
+import type { KpiMode, KpiSeries } from '@/services/kpiTypes';
+import type { BmsConnection, IndicatorGroup } from '@/types/thip';
 import { formatFiscalYear, getCurrentFiscalYear } from '@/utils/fiscal';
-
-const DashboardPage = lazyRoute(() => import('@/components/DashboardPage'), 'DashboardPage');
-const DetailView = lazyRoute(() => import('@/components/DetailView'), 'DetailView');
-const MonitoringPage = lazyRoute(() => import('@/components/MonitoringPage'), 'MonitoringPage');
-const StepValidationPage = lazyRoute(() => import('@/components/StepValidationPage'), 'StepValidationPage');
-const CatalogPage = lazyRoute(() => import('@/components/CatalogPage'), 'CatalogPage');
-
-type DataSourceState = 'loading' | 'live' | 'partial' | 'unavailable';
-
-const emptyCoverage: BmsCoverage = {
-  expectedIndicatorCount: 232,
-  liveIndicatorCount: 0,
-  measuredIndicatorCount: 0,
-  expectedCellCount: 1552,
-  coveredCellCount: 0,
-  availableCellCount: 0,
-  unavailableCellCount: 0,
-  unexpectedCellCount: 0,
-  complete: false,
-  liveCodes: [],
-};
-
-function getInitialRoute(): { view: View; code: string | null } {
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get('indicator');
-  const view = params.get('view') === 'validation' ? 'validation' : params.get('view') === 'catalog' ? 'catalog' : code ? 'detail' : params.get('view') === 'dashboard' ? 'dashboard' : 'monitoring';
-  return { view, code };
+const KpiMatrixPage = lazyRoute(
+  () => import('@/components/KpiMatrixPage'),
+  'KpiMatrixPage'
+);
+const MonitoringPage = lazyRoute(
+  () => import('@/components/MonitoringPage'),
+  'MonitoringPage'
+);
+const StepValidationPage = lazyRoute(
+  () => import('@/components/StepValidationPage'),
+  'StepValidationPage'
+);
+const CatalogPage = lazyRoute(
+  () => import('@/components/CatalogPage'),
+  'CatalogPage'
+);
+const SharedKpiOverview = lazyRoute(
+  () => import('@/components/SharedKpiViews'),
+  'SharedKpiOverview'
+);
+const ApprovedReportingPage = lazyRoute(
+  () => import('@/components/ApprovedReportingPage'),
+  'ApprovedReportingPage'
+);
+const SharedKpiDetail = lazyRoute(
+  () => import('@/components/SharedKpiViews'),
+  'SharedKpiDetail'
+);
+function initialRoute() {
+  const p = new URLSearchParams(location.search),
+    code = p.get('indicator');
+  const view: View =
+    p.get('view') === 'validation'
+      ? 'validation'
+      : p.get('view') === 'catalog'
+        ? 'catalog'
+        : code
+          ? 'detail'
+          : p.get('view') === 'dashboard'
+            ? 'dashboard'
+            : 'monitoring';
+  const y = Number(p.get('fy'));
+  const g = p.get('group');
+  return {
+    view,
+    code,
+    year:
+      Number.isInteger(y) && y >= 2000 && y <= 2100
+        ? y
+        : getCurrentFiscalYear(),
+    group: g && g in groupMeta ? (g as IndicatorGroup) : ('all' as const),
+    search: p.get('q') ?? '',
+    mode:
+      p.get('mode') === 'approved'
+        ? ('approved' as const)
+        : ('review' as const),
+    series:
+      p.get('series') === 'monthly-monitoring'
+        ? ('monthly-monitoring' as const)
+        : ('thip-report' as const),
+  };
 }
-
 export default function App() {
-  const [initialRoute] = useState(getInitialRoute);
-  const [view, setView] = useState<View>(initialRoute.view);
-  const [selectedCode, setSelectedCode] = useState<string | null>(initialRoute.code);
-  const [activeGroup, setActiveGroup] = useState<IndicatorGroup | 'all'>(() => { const group = new URLSearchParams(window.location.search).get('group'); return group && group in groupMeta ? group as IndicatorGroup : 'all'; });
-  const [search, setSearch] = useState(() => new URLSearchParams(window.location.search).get('q') ?? '');
-  const [monthIndex, setMonthIndex] = useState(11);
-  const [fiscalYear, setFiscalYear] = useState(() => { const year = Number(new URLSearchParams(window.location.search).get('fy')); return Number.isInteger(year) && year >= 2000 && year <= 2100 ? year : getCurrentFiscalYear(); });
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [connection, setConnection] = useState<BmsConnection>({ status: 'idle', message: 'ยังไม่ได้เปิดจาก BMS launcher จึงยังไม่มีข้อมูลจริง' });
-  const [connectionAttempt, setConnectionAttempt] = useState(0);
-  const [sessionInput, setSessionInput] = useState('');
+  const [initial] = useState(initialRoute);
+  const [store] = useState(() => new KpiDataStore(initial.year));
+  return (
+    <KpiDataContext.Provider value={store}>
+      <Workspace initial={initial} />
+    </KpiDataContext.Provider>
+  );
+}
+function Workspace({ initial }: { initial: ReturnType<typeof initialRoute> }) {
+  const { store, snapshot } = useKpiData();
+  const [view, setView] = useState(initial.view),
+    [selectedCode, setCode] = useState(initial.code),
+    [year, setYear] = useState(initial.year),
+    [group, setGroup] = useState(initial.group),
+    [search, setSearch] = useState(initial.search),
+    [mode, setMode] = useState<KpiMode>(initial.mode),
+    [series, setSeries] = useState<KpiSeries>(initial.series);
+  const [sidebarOpen, setSidebarOpen] = useState(false),
+    [connection, setConnection] = useState<BmsConnection>({
+      status: 'idle',
+      message: 'เชื่อมต่อ BMS session เพื่ออ่าน aggregate',
+    }),
+    [attempt, setAttempt] = useState(0),
+    [sessionInput, setSessionInput] = useState(''),
+    [runtime, setRuntime] = useState<BmsRuntimeConfig | null>(null);
   const manualSession = useRef<string | undefined>(undefined);
-  const [runtime, setRuntime] = useState<BmsRuntimeConfig | null>(null);
-  const [indicators, setIndicators] = useState<Indicator[]>([]);
-  const [dataSource, setDataSource] = useState<DataSourceState>('unavailable');
-  const [dataMessage, setDataMessage] = useState<string | null>(null);
-  const [refreshedAt, setRefreshedAt] = useState<RefreshedAt | null>(null);
-  const [coverage, setCoverage] = useState<BmsCoverage>(emptyCoverage);
-
   useEffect(() => {
-    let cancelled = false;
-    const controller = new AbortController();
-    if (monitoringPreviewEnabled) { stripLaunchCredentialsFromUrl(); return; }
-    const requestedSession = manualSession.current; manualSession.current = undefined;
-    void connectBmsSession(requestedSession, controller.signal).then((result) => {
-      if (cancelled) return;
+    const abort = new AbortController();
+    if (monitoringPreviewEnabled) {
+      stripLaunchCredentialsFromUrl();
+      return;
+    }
+    const requested = manualSession.current;
+    manualSession.current = undefined;
+    void connectBmsSession(requested, abort.signal).then((result) => {
+      if (abort.signal.aborted) return;
       setConnection(result.connection);
-      const connectedRuntime = result.connection.status === 'connected' ? result.runtime ?? null : null;
-      setRuntime(connectedRuntime);
-      if (!connectedRuntime) {
-        setIndicators([]);
-        setDataSource('unavailable');
-        setRefreshedAt(null);
-        setCoverage(emptyCoverage);
-        setDataMessage(result.connection.message ?? 'ยังไม่มี BMS live session');
-      }
+      setRuntime(
+        result.connection.status === 'connected'
+          ? (result.runtime ?? null)
+          : null
+      );
     });
-    return () => { cancelled = true; controller.abort(); };
-  }, [connectionAttempt]);
-
+    return () => abort.abort();
+  }, [attempt]);
   useEffect(() => {
-    if (view === 'monitoring' || view === 'validation') return;
-    const controller = new AbortController();
-    setIndicators([]); setCoverage(emptyCoverage); setRefreshedAt(null);
-    setDataSource(runtime && view !== 'catalog' ? 'loading' : 'unavailable');
-    void import('@/services/reportingLoader').then(async ({ createNoDataIndicator, loadBmsIndicators, publishApprovedThip }) => {
-      if (controller.signal.aborted) return;
-      const defaults = thipCatalogue.map((entry) => createNoDataIndicator(entry, fiscalYear));
-      setIndicators(defaults);
-      if (!runtime || view === 'catalog') return;
-      setDataMessage(null);
-      try {
-        const result = publishApprovedThip(await loadBmsIndicators(runtime, fiscalYear, { signal: controller.signal }));
-        if (controller.signal.aborted) return;
-        if (!result.rowCount) { setDataSource('unavailable'); setDataMessage('BMS query สำเร็จ แต่ยังไม่พบผลลัพธ์ในช่วงปีงบประมาณที่เลือก'); return; }
-        setIndicators(result.indicators); setRefreshedAt(result.refreshedAt); setCoverage(result.coverage);
-        const complete = result.coverage.complete && result.coverage.unavailableCellCount === 0 && result.coverage.liveIndicatorCount === result.coverage.expectedIndicatorCount;
-        setDataSource(result.coverage.availableCellCount === 0 ? 'unavailable' : complete ? 'live' : 'partial');
-        setDataMessage(`รับ aggregate ${result.coverage.liveIndicatorCount}/${result.coverage.expectedIndicatorCount} รหัส · เผยแพร่ได้ ${result.coverage.measuredIndicatorCount} รหัส · ${result.coverage.coveredCellCount}/${result.coverage.expectedCellCount} งวดรายงาน${result.sourceView ? `จาก source view ${result.sourceView}` : 'จาก HOSxP'} แล้ว`);
-      } catch (error) {
-        if (controller.signal.aborted) return;
-        setIndicators(defaults); setDataSource('unavailable'); setDataMessage(getBmsConnectionErrorMessage(error));
-      }
-    }).catch(() => { if (!controller.signal.aborted) { setDataSource('unavailable'); setDataMessage('โหลดส่วนรายงานไม่สำเร็จ กรุณาเปิดหน้าอีกครั้ง'); } });
-    return () => controller.abort();
-  }, [runtime, fiscalYear, view]);
-
-  const filteredIndicators = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase();
-    return indicators.filter((indicator) => {
-      const matchesGroup = activeGroup === 'all' || indicator.group === activeGroup;
-      const matchesSearch = !normalizedSearch || [indicator.code, indicator.title, indicator.titleTh, indicator.category].some((text) => text.toLowerCase().includes(normalizedSearch));
-      return matchesGroup && matchesSearch;
-    });
-  }, [activeGroup, indicators, search]);
-
-  const selectedIndicator = selectedCode
-    ? indicators.find((indicator) => indicator.code === selectedCode) ?? null
-    : null;
-
-  const dataLabel = dataSource === 'live'
-    ? 'Live data'
-    : dataSource === 'partial'
-      ? 'Live data บางส่วน'
-      : dataSource === 'loading'
-        ? 'กำลังอ่านข้อมูล'
-        : connection.status === 'connected' && coverage.coveredCellCount > 0 ? 'ผลยังไม่รับรอง' : 'No data source';
-
-  function retryBms() {
-    setConnection({ status: 'connecting', message: 'กำลังเชื่อมต่อ BMS ใหม่...' });
-    setRuntime(null);
-    setIndicators([]);
-    setDataSource('loading');
-    setCoverage(emptyCoverage);
-    setDataMessage(null);
-    setConnectionAttempt((attempt) => attempt + 1);
-  }
-
-  function navigate(nextView: View, code: string | null = selectedCode) {
-    setView(nextView);
-    setSelectedCode(code);
-    const params = new URLSearchParams(window.location.search);
-    if (nextView === 'detail' && code) {
-      params.set('view', 'detail');
-      params.set('indicator', code);
-    } else {
-      if (nextView === 'monitoring') params.delete('view'); else params.set('view', nextView);
-      params.delete('indicator');
-    }
-    // pushState keeps the browser Back button working between views; the
-    // popstate listener below restores the matching view state.
-    window.history.pushState({}, '', `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
+    store.configure(monitoringPreviewEnabled ? null : runtime, year);
+  }, [store, runtime, year]);
   useEffect(() => {
-    function onPopState() {
-      const route = getInitialRoute();
-      setView(route.view);
-      setSelectedCode(route.code);
-      const params = new URLSearchParams(window.location.search);
-      const group = params.get('group'); setActiveGroup(group && group in groupMeta ? group as IndicatorGroup : 'all');
-      setSearch(params.get('q') ?? '');
-      const year = Number(params.get('fy')); changeYear(Number.isInteger(year) && year >= 2000 && year <= 2100 ? year : getCurrentFiscalYear(), false);
-    }
-    window.addEventListener('popstate', onPopState);
-    return () => window.removeEventListener('popstate', onPopState);
+    const visible = () => {
+      if (document.visibilityState === 'visible') store.invalidateExpired();
+    };
+    document.addEventListener('visibilitychange', visible);
+    return () => {
+      document.removeEventListener('visibilitychange', visible);
+      store.dispose();
+    };
+  }, [store]);
+  function persist(key: string, value: string) {
+    const p = new URLSearchParams(location.search);
+    !value || value === 'all' ? p.delete(key) : p.set(key, value);
+    history.pushState({}, '', `${location.pathname}${p.size ? `?${p}` : ''}`);
+  }
+  function changeYear(next: number, push = true) {
+    store.configure(runtime, next);
+    setYear(next);
+    if (push) persist('fy', String(next));
+  }
+  function changeGroup(next: IndicatorGroup | 'all') {
+    setGroup(next);
+    persist('group', next);
+  }
+  function changeSearch(next: string) {
+    setSearch(next);
+    persist('q', next);
+  }
+  function changeMode(next: KpiMode) {
+    setMode(next);
+    persist('mode', next);
+  }
+  function changeSeries(next: KpiSeries) {
+    setSeries(next);
+    persist('series', next);
+  }
+  function navigate(next: View, code: string | null = null) {
+    setView(next);
+    setCode(code);
+    const p = new URLSearchParams(location.search);
+    next === 'monitoring' ? p.delete('view') : p.set('view', next);
+    next === 'detail' && code
+      ? p.set('indicator', code)
+      : p.delete('indicator');
+    history.pushState({}, '', `${location.pathname}${p.size ? `?${p}` : ''}`);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+  useEffect(() => {
+    const pop = () => {
+      const r = initialRoute();
+      setView(r.view);
+      setCode(r.code);
+      setGroup(r.group);
+      setSearch(r.search);
+      setMode(r.mode);
+      setSeries(r.series);
+      store.configure(
+        store.snapshot().owner as BmsRuntimeConfig | null,
+        r.year
+      );
+      setYear(r.year);
+    };
+    window.addEventListener('popstate', pop);
+    return () => window.removeEventListener('popstate', pop);
   }, []);
-
-  function persistFilter(key: string, value: string) {
-    const params = new URLSearchParams(window.location.search);
-    if (!value || value === 'all') params.delete(key); else params.set(key, value);
-    window.history.pushState({}, '', `${window.location.pathname}${params.size ? `?${params}` : ''}`);
+  function reconnect() {
+    store.configure(null, year);
+    setRuntime(null);
+    setConnection({
+      status: 'connecting',
+      message: 'กำลังตรวจ session และ PostgreSQL…',
+    });
+    setAttempt((value) => value + 1);
   }
-  function changeGroup(group: IndicatorGroup | 'all') { setActiveGroup(group); persistFilter('group', group); }
-  function changeSearch(value: string) { setSearch(value); persistFilter('q', value); }
-  function changeYear(year: number, persist = true) {
-    setFiscalYear(year); setIndicators([]);
-    setCoverage(emptyCoverage); setRefreshedAt(null); setDataSource(runtime ? 'loading' : 'unavailable');
-    if (persist) persistFilter('fy', String(year));
-  }
-
-  function openIndicator(code: string) {
-    navigate('detail', code);
-  }
-
+  const wired = new Set(
+    store
+      .grid(series, mode)
+      .filter((row) => row.cells.some((cell) => cell.value !== null))
+      .map((row) => row.code)
+  );
   return (
     <div className="app-shell">
-      <a className="skip-link" href="#main-content">ข้ามไปยังเนื้อหาหลัก</a>
+      <a className="skip-link" href="#main-content">
+        ข้ามไปยังเนื้อหาหลัก
+      </a>
       <Sidebar
         view={view}
-        activeGroup={activeGroup}
-        onNavigate={(nextView) => navigate(nextView, nextView === 'dashboard' ? null : selectedCode)}
+        activeGroup={group}
+        onNavigate={(next) => navigate(next)}
         onGroupChange={changeGroup}
         connection={connection}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
-
-      <main id="main-content" className="app-main" tabIndex={-1} aria-label="เนื้อหา THIP KPI">
+      <main
+        id="main-content"
+        className="app-main"
+        tabIndex={-1}
+        aria-label="เนื้อหา THIP KPI"
+      >
         <div className="mobile-topbar">
-          <button className="icon-button mobile-menu-button" type="button" onClick={() => setSidebarOpen(true)} aria-label="เปิดเมนู"><Menu size={20} /></button>
-          <div className="mobile-brand"><span className="mobile-brand-dot" /> THIP <em>KPI</em></div>
-          <span className="mobile-status"><span className={`connection-led connection-led-${connection.status}`} /></span>
+          <button
+            className="icon-button mobile-menu-button"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="เปิดเมนู"
+          >
+            <Menu size={20} />
+          </button>
+          <div className="mobile-brand">
+            THIP <em>KPI</em>
+          </div>
+          <span
+            className={`connection-led connection-led-${connection.status}`}
+          />
         </div>
-
-        {view === 'validation' && !monitoringPreviewEnabled && <form className="step-session" onSubmit={(event) => { event.preventDefault(); if (!sessionInput.trim()) return; manualSession.current = sessionInput.trim(); setSessionInput(''); retryBms(); }}>
-          <label htmlFor="step-session-id">BMS Session ID</label><input id="step-session-id" type="password" autoComplete="off" value={sessionInput} onChange={(event) => setSessionInput(event.target.value)} placeholder="กรอก session เพื่อเชื่อมต่อหรือ reconnect" />
-          <button className="secondary-button" disabled={!sessionInput.trim() || connection.status === 'connecting'}>เชื่อมต่อ</button>
-          <span>เก็บใน memory เท่านั้น · Step 1 ตรวจ PostgreSQL ก่อนเริ่มคิว</span>
-        </form>}
-
-        {connection.status === 'connected' && (
-          <div className={`connection-banner ${!['monitoring', 'validation'].includes(view) && dataSource === 'unavailable' ? 'connection-banner-warning' : 'connection-banner-success'}`} role="status" aria-live="polite"><RefreshCw size={15} /><span>{['monitoring', 'validation'].includes(view) ? connection.message : dataMessage ?? connection.message}</span><strong>{['monitoring', 'validation'].includes(view) ? 'BMS connected' : dataLabel}</strong><button className="connection-banner-action" type="button" onClick={retryBms}>{['monitoring', 'validation'].includes(view) ? 'รีเฟรช session' : dataSource === 'unavailable' ? 'ลองอีกครั้ง' : 'รีเฟรชข้อมูล'}</button></div>
+        {!monitoringPreviewEnabled && (
+          <>
+            <details className="kpi-session-panel" open={!runtime}>
+              <summary>
+                BMS connection ·{' '}
+                {connection.status === 'connected'
+                  ? 'เชื่อมต่อแล้ว'
+                  : 'รอเชื่อมต่อ'}
+              </summary>
+              <form
+                className="step-session"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!sessionInput.trim()) return;
+                  manualSession.current = sessionInput.trim();
+                  setSessionInput('');
+                  reconnect();
+                }}
+              >
+                <label htmlFor="step-session-id">BMS Session ID</label>
+                <input
+                  id="step-session-id"
+                  type="password"
+                  autoComplete="off"
+                  value={sessionInput}
+                  onChange={(e) => setSessionInput(e.target.value)}
+                  placeholder="Session จาก BMS launcher"
+                />
+                <button
+                  className="secondary-button"
+                  disabled={
+                    !sessionInput.trim() || connection.status === 'connecting'
+                  }
+                >
+                  เชื่อมต่อ
+                </button>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={reconnect}
+                >
+                  รีเฟรช session
+                </button>
+              </form>
+              <p>{connection.message} · เก็บ credential ใน memory เท่านั้น</p>
+            </details>
+            {(connection.status === 'error' ||
+              connection.status === 'unsupported') && (
+              <p
+                className="connection-banner connection-banner-error"
+                role="alert"
+              >
+                <WifiOff size={16} />
+                {connection.message}
+              </p>
+            )}
+            <KpiLoadBar mode={mode} onMode={changeMode} onYear={changeYear} />
+          </>
         )}
-        {connection.status === 'idle' && !monitoringPreviewEnabled && (
-          <div className="connection-banner connection-banner-warning" role="status" aria-live="polite"><WifiOff size={15} /><span>{connection.message}</span><strong>รอ BMS live session</strong><button className="connection-banner-action" type="button" onClick={retryBms}>ลองเชื่อมต่ออีกครั้ง</button></div>
-        )}
-        {(connection.status === 'error' || connection.status === 'unsupported') && (
-          <div className="connection-banner connection-banner-error" role="alert"><WifiOff size={15} /><span>{connection.message}</span><strong>ยังไม่มีข้อมูลจริง</strong><button className="connection-banner-action" type="button" onClick={retryBms}>ลองเชื่อมต่ออีกครั้ง</button></div>
-        )}
-
         <Suspense fallback={<p role="status">กำลังโหลดหน้าจอ…</p>}>
-        {view === 'detail' && !selectedIndicator ? <p role="status">กำลังเตรียมรายละเอียด…</p> : view === 'validation' ? (
-          <StepValidationPage runtime={runtime} fiscalYear={fiscalYear} onFiscalYearChange={changeYear} group={activeGroup} search={search} onSearchChange={changeSearch} onGroupChange={changeGroup} onMonitoring={() => navigate('monitoring', null)} />
-        ) : view === 'monitoring' ? (
-          <MonitoringPage fiscalYear={fiscalYear} onFiscalYearChange={changeYear} group={activeGroup} onGroupChange={changeGroup} search={search} onSearchChange={changeSearch} runtime={runtime} onOverview={() => navigate('dashboard', null)} />
-        ) : view === 'detail' && selectedIndicator ? (
-          <DetailView indicator={selectedIndicator} onBack={() => navigate('dashboard', null)} />
-        ) : view === 'catalog' ? (
-          <CatalogPage
-            entries={thipCatalogue}
-            wiredCodes={new Set(indicators.filter((indicator) => indicator.dataSource !== 'no-data').map((indicator) => indicator.code))}
-            activeGroup={activeGroup}
-            search={search}
-            onSearchChange={changeSearch}
-            onGroupChange={changeGroup}
-            onOpen={openIndicator}
-          />
-        ) : (
-          <DashboardPage
-            indicators={filteredIndicators}
-            allIndicators={indicators}
-            activeGroup={activeGroup}
-            onGroupChange={(group) => { changeGroup(group); changeSearch(''); }}
-            search={search}
-            onSearchChange={changeSearch}
-            monthIndex={monthIndex}
-            onMonthChange={setMonthIndex}
-            fiscalYear={fiscalYear}
-            onFiscalYearChange={changeYear}
-            onOpenIndicator={openIndicator}
-            onOpenCatalog={() => navigate('catalog', null)}
-            connection={connection}
-            dataSource={dataSource}
-            refreshedAt={refreshedAt}
-            coverage={coverage}
-          />
-        )}
-
+          {mode === 'approved' &&
+          series === 'thip-report' &&
+          (view === 'dashboard' || view === 'detail') ? (
+            <ApprovedReportingPage
+              code={view === 'detail' ? selectedCode : null}
+              group={group}
+              search={search}
+              onGroup={changeGroup}
+              onSearch={changeSearch}
+              onYear={changeYear}
+              onOpen={(code) => navigate('detail', code)}
+              onCatalog={() => navigate('catalog')}
+              onBack={() => navigate('dashboard')}
+              connection={connection}
+            />
+          ) : view === 'validation' ? (
+            <StepValidationPage
+              runtime={runtime}
+              fiscalYear={year}
+              onFiscalYearChange={changeYear}
+              group={group}
+              search={search}
+              onSearchChange={changeSearch}
+              onGroupChange={changeGroup}
+              onMonitoring={() => navigate('monitoring')}
+            />
+          ) : view === 'catalog' ? (
+            <CatalogPage
+              entries={runtimeCatalogue}
+              wiredCodes={wired}
+              activeGroup={group}
+              search={search}
+              onSearchChange={changeSearch}
+              onGroupChange={changeGroup}
+              onOpen={(code) => navigate('detail', code)}
+            />
+          ) : view === 'detail' && selectedCode ? (
+            <SharedKpiDetail
+              code={selectedCode}
+              mode={mode}
+              series={series}
+              onBack={() => navigate('dashboard')}
+            />
+          ) : view === 'dashboard' ? (
+            <SharedKpiOverview
+              mode={mode}
+              series={series}
+              group={group}
+              search={search}
+              onSearchChange={changeSearch}
+              onOpen={(code) => navigate('detail', code)}
+            />
+          ) : monitoringPreviewEnabled ? (
+            <MonitoringPage
+              runtime={null}
+              fiscalYear={year}
+              onFiscalYearChange={changeYear}
+              group={group}
+              onGroupChange={changeGroup}
+              search={search}
+              onSearchChange={changeSearch}
+              onOverview={() => navigate('dashboard')}
+            />
+          ) : (
+            <KpiMatrixPage
+              fiscalYear={year}
+              mode={mode}
+              series={series}
+              onSeries={changeSeries}
+              group={group}
+              onGroupChange={changeGroup}
+              search={search}
+              onSearchChange={changeSearch}
+              onOpen={(code) => navigate('detail', code)}
+            />
+          )}
         </Suspense>
-        <footer className="app-footer"><span><span className="footer-pulse" /> THIP KPI · BMS Marketplace workbench</span><span>{formatFiscalYear(fiscalYear)} · Read-only data boundary</span></footer>
+        <footer className="app-footer">
+          <span>THIP KPI · BMS Marketplace</span>
+          <span>{formatFiscalYear(year)} · Read-only</span>
+        </footer>
       </main>
     </div>
   );
 }
-
-export function getGroupLabel(group: IndicatorGroup | 'all'): string {
+export function getGroupLabel(group: IndicatorGroup | 'all') {
   return group === 'all' ? 'ทุกกลุ่ม THIP' : groupMeta[group].shortLabel;
 }

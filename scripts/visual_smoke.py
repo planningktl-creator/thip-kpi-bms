@@ -85,7 +85,7 @@ def main() -> None:
         browser = playwright.chromium.launch(headless=True)
         desktop = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1)
         desktop.on("console", lambda message: console_errors.append(message.text) if message.type == "error" else None)
-        desktop.goto(f"{BASE_URL}/?view=dashboard&fy=2026", wait_until="networkidle")
+        desktop.goto(f"{BASE_URL}/?mode=approved&view=dashboard&fy=2026", wait_until="networkidle")
         desktop.screenshot(path=str(ARTIFACTS / "dashboard-desktop.png"), full_page=True)
         assert desktop.get_by_role("link", name="ข้ามไปยังเนื้อหาหลัก").count() == 1
         assert desktop.get_by_label("ค้นหารหัสหรือชื่อตัวชี้วัด").count() == 1
@@ -113,18 +113,18 @@ def main() -> None:
         assert desktop.locator("[data-testid='monthly-bar-chart']").count() == 1
 
         overview = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1)
-        overview.goto(f"{BASE_URL}/?view=dashboard&fy=2026", wait_until="networkidle")
+        overview.goto(f"{BASE_URL}/?mode=approved&view=dashboard&fy=2026", wait_until="networkidle")
         overview.get_by_role("button", name="ดูทั้งหมด").click()
         overview.wait_for_selector(".catalog-page")
 
         annual = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1)
-        annual.goto(f"{BASE_URL}/?fy=2026&view=detail&indicator=AA0101", wait_until="networkidle")
+        annual.goto(f"{BASE_URL}/?mode=approved&fy=2026&view=detail&indicator=AA0101", wait_until="networkidle")
         assert annual.get_by_text("ยังไม่มีข้อมูลจริง", exact=True).count() >= 1
         assert "100,000" in annual.locator(".definition-block strong").first.inner_text()
         assert annual.get_by_text("ผลงานล่าสุด · ต.ค. 2568", exact=True).count() == 1
 
         catalog = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1)
-        catalog.goto(f"{BASE_URL}/?fy=2026&view=catalog", wait_until="networkidle")
+        catalog.goto(f"{BASE_URL}/?mode=approved&fy=2026&view=catalog", wait_until="networkidle")
         catalog.screenshot(path=str(ARTIFACTS / "catalog-desktop.png"), full_page=True)
         assert catalog.locator(".catalog-page").count() == 1
         assert catalog.locator(".catalog-table tbody tr").count() == 232
@@ -139,38 +139,15 @@ def main() -> None:
         assert catalog.locator(".chart-empty-state").count() == 2
 
         mobile = browser.new_page(viewport={"width": 390, "height": 844}, device_scale_factor=1)
-        mobile.goto(f"{BASE_URL}/?view=dashboard&fy=2026", wait_until="networkidle")
+        mobile.goto(f"{BASE_URL}/?mode=approved&view=dashboard&fy=2026", wait_until="networkidle")
         mobile.screenshot(path=str(ARTIFACTS / "dashboard-mobile.png"), full_page=True)
         mobile.locator(".mobile-menu-button").click()
         assert mobile.locator(".app-sidebar.is-open").count() == 1
         mobile.locator(".sidebar-close").click()
         assert mobile.locator(".app-sidebar.is-open").count() == 0
 
-        live = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1)
-        live.on("console", lambda message: console_errors.append(message.text) if message.type == "error" else None)
-        mock_bms_routes(live)
-        live.goto(f"{BASE_URL}/?fy=2026&view=dashboard&bms-session-id=smoke-session", wait_until="networkidle")
-        live.get_by_text("ผลยังไม่รับรอง", exact=True).wait_for()
-        assert live.get_by_text("ผลยังไม่รับรอง", exact=True).count() == 1
-        assert live.get_by_text("รับ aggregate 13/232 รหัส · เผยแพร่ได้ 0 รหัส", exact=False).count() == 1
-        assert live.get_by_role("button", name="ลองอีกครั้ง", exact=True).count() == 1
-        assert live.get_by_text("ยังไม่กำหนดเป้าหมาย", exact=False).count() >= 1
-        assert live.locator(".indicator-table tbody tr").count() == 232
-        assert live.locator(".hero-aside-foot strong").inner_text() == "0%"
-        assert not live.get_by_role("button",name="ส่งออก aggregate CSV").is_enabled()
-        assert live.get_by_text("DH0101", exact=False).count() >= 1
-        assert live.get_by_text("CE0101", exact=False).count() >= 1
-        assert live.get_by_text("DH0102", exact=False).count() >= 1
-        assert live.get_by_text("DG0202", exact=False).count() >= 1
-        assert live.get_by_text("DR0403", exact=False).count() >= 1
-        assert live.get_by_text("DR0102", exact=False).count() >= 1
-        assert live.get_by_text("DN0107", exact=False).count() >= 1
-        assert live.get_by_text("DH0112", exact=False).count() >= 1
-        assert live.get_by_text("DN0109", exact=False).count() >= 1
-        assert live.get_by_text("DN0302", exact=False).count() >= 1
-        assert live.evaluate("window.localStorage.length") == 0
-        assert live.evaluate("window.sessionStorage.length") == 0
-
+        # Shared draft data, no duplicate requests and approval mode are tested
+        # in shared_kpi_browser_smoke.py. This file retains legacy approved charts.
         browser.close()
 
     if console_errors:

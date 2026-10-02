@@ -873,7 +873,7 @@ function responseRows(response: BmsSqlResponse): RawKpiRow[] {
   return Array.isArray(rows) ? rows.filter((row): row is RawKpiRow => Boolean(row && typeof row === 'object')) : [];
 }
 
-function assertNormalizedSourceViewRows(rows: RawKpiRow[], fiscalYear: FiscalYear): void {
+export function assertNormalizedSourceViewRows(rows: RawKpiRow[], fiscalYear: FiscalYear): void {
   const periods = getFiscalMonthPeriods(fiscalYear);
   rows.forEach((row, index) => {
     const code = asString(getValue(row, 'indicator_code'));

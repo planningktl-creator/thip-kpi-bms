@@ -120,7 +120,7 @@ async def main():
         await expect(page.locator('[data-code="DH0101"] details table')).not_to_contain_text('1 ต.ค. พ.ศ. 2568')
         assert await page.evaluate("!JSON.stringify({...localStorage,...sessionStorage}).includes('SYNTHETIC_')")
         await page.reload(wait_until='networkidle')
-        await expect(page.locator('.step-page')).to_contain_text('รอเชื่อมต่อ')
+        await expect(page.locator('.kpi-session-panel')).to_contain_text('รอเชื่อมต่อ')
         await page.get_by_label('BMS Session ID').fill('SYNTHETIC_MANUAL')
         await page.get_by_role('button', name='เชื่อมต่อ', exact=True).click()
         await expect(page.locator('[data-code="DH0101"]')).to_contain_text('query สำเร็จ')

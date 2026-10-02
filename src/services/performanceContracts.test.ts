@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseCtes, requiredCtes } from './thipCtePlan';
 import { ThipStepLoader, planThipSteps } from './thipStepLoader';
-import { runtimeRulesByCode, runtimeSignatures, runtimeMonitoringRules } from '@/data/thipRuntime';
+import { runtimeRulesByCode, runtimeSignatures, runtimeMonitoringRules, runtimeReportingDefinitions } from '@/data/thipRuntime';
 import { thipKpiRulesByCode } from '@/data/thipKpiRules';
 import { getRuleReadiness } from '@/data/thipRuleLogic';
 import { monitoringRules } from '@/monitoring/ruleSource';
@@ -23,6 +23,8 @@ describe('performance boundaries preserve data truth', () => {
       const { cohortDefinition, ...compact } = rule;
       expect(runtimeRulesByCode.get(code)).toEqual(compact);
       expect(getRuleReadiness(runtimeRulesByCode.get(code)!)).toEqual(getRuleReadiness(rule));
+      expect(runtimeReportingDefinitions.get(code)?.ruleHash).toBe(createHash('sha256').update(JSON.stringify(rule)).digest('hex'));
+      expect(runtimeReportingDefinitions.get(code)?.formula).toBe(rule.cohortDefinition?.formula ?? rule.formulaScale);
     }
     const digest = (value: string) => createHash('sha256').update(value).digest('hex');
     for (const plan of planThipSteps(2026)) {

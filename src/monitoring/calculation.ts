@@ -1,6 +1,6 @@
 import type { MonitoringAssessment, MonitoringCumulative, MonitoringRule, MonthlyMonitoringResult } from './types';
 
-export function assessMonitoring(row: MonthlyMonitoringResult, rule: MonitoringRule): MonitoringAssessment {
+export function assessMonitoring(row: Pick<MonthlyMonitoringResult, 'dataStatus' | 'value' | 'target' | 'unit' | 'periodStart' | 'periodEnd'>, rule: MonitoringRule): MonitoringAssessment {
   if (row.dataStatus !== 'measured' || row.value === null) return 'not-assessable';
   const target = row.target;
   if (!target || target.unit !== row.unit || !target.mappingConfirmed || !target.source.trim() || target.validFrom > row.periodStart || target.validTo < row.periodEnd) return 'no-target';

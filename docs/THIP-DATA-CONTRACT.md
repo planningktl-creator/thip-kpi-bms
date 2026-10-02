@@ -137,3 +137,7 @@ Session probing and transport/read-only checks live in `queryTransport.ts` witho
 Single-code foundation queries include only the registered CTE dependency closure recorded in `reporting/thip_step_queries.manifest.json`. They retain full fiscal-year parameters, facts, cadence grid, aggregates and NULL semantics. Synthetic PostgreSQL equivalence covers six representative branches; new query syntax/dependencies require review and generated checks. No date splitting or hospital index creation is introduced.
 
 In-memory performance diagnostics retain at most 256 numeric duration/outcome samples with internal keys. They contain no URL, SQL parameters, credentials or measured values and are not sent to an analytics endpoint. Cache schema v2 and readonly progress references are described in [candidate cache](THIP-CANDIDATE-CACHE.md). Benchmark limits, reproduction and external acceptance still required are documented in [performance report](THIP-PERFORMANCE-2026-10-02.md).
+
+## Shared SPA owner — 2 ตุลาคม 2569
+
+[THIP-SHARED-DATA.md](THIP-SHARED-DATA.md) กำหนด root-owned queue/cache, strict draft projection, review/approved selectors และ explicit monthly bridge. Route ไม่โหลดข้อมูลซ้ำ; publication/completeness/cadence เดิมคงอยู่. ใช้ mocked BMS เท่านั้นสำหรับรอบนี้.

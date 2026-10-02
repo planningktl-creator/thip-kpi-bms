@@ -9,7 +9,7 @@ export const STEP_CACHE_DB = 'thip-candidate-cache';
 export const STEP_CACHE_VERSION = 2;
 export const STEP_CACHE_TTL = 24 * 60 * 60 * 1000;
 type Fact = { indicator_code: string; fiscal_year: number; fiscal_month: number; period_start: string; numerator: number | null; denominator: number | null; value: number | null; fact_present?: boolean };
-export type CacheEntry = { key: string; scope: string; version: number; fiscalYear: number; code: string; fingerprint: string; ruleVersion: string; observedAt: string; expiresAt: number; facts: Fact[] };
+export type CacheEntry = { key: string; scope: string; version: number; fiscalYear: number; code: string; fingerprint: string; ruleVersion: string; observedAt: string; expiresAt: number; facts: Fact[]; projection?: unknown[] };
 export type CachedStep = { code: string; rows: CandidateAggregate[]; observedAt: string; expiresAt: number };
 export interface StepCachePort {
   read(signal: AbortSignal): Promise<CachedStep[]>;

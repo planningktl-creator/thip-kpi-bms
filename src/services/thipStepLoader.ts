@@ -38,6 +38,14 @@ function numeric(value: unknown): number | null {
   return number;
 }
 
+function freezeAggregate<T>(value: T): T {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    for (const child of Object.values(value)) freezeAggregate(child);
+    Object.freeze(value);
+  }
+  return value;
+}
+
 /** Validate seven-column aggregates without inventing approval, freshness or targets. */
 export function validateCandidateRows(inputs: unknown[], code: string, fiscalYear: number, now = new Date()): CandidateAggregate[] {
   const rule = thipKpiRulesByCode.get(code);
@@ -109,7 +117,7 @@ export class ThipStepLoader {
   private consecutiveFailures = 0;
   private hydrated = false;
 
-  constructor(private readonly fiscalYear: number, private readonly tasks: StepTask[], private readonly onProgress: (snapshot: StepSnapshot) => void, private readonly gapMs = 1000, skipped = externalRegisteredCodes, private readonly cache?: StepCachePort) {
+  constructor(private readonly fiscalYear: number, private readonly tasks: StepTask[], private readonly onProgress: (snapshot: StepSnapshot) => void, private readonly gapMs = 1000, skipped = externalRegisteredCodes, private readonly cache?: StepCachePort, private readonly validator = validateCandidateRows) {
     if (!Number.isInteger(fiscalYear) || fiscalYear < 2000 || fiscalYear > 2100 || new Set(tasks.map((task) => task.code)).size !== tasks.length) throw new Error('Invalid step plan');
     this.steps = [...tasks.map((task): StepResult => ({ code: task.code, status: 'pending', rows: [], reason: null, latencyMs: null, attempts: 0 })), ...skipped.map((code): StepResult => ({ code, status: 'skipped', rows: [], reason: 'รอ external aggregate source; ไม่เติมศูนย์', latencyMs: null, attempts: 0 }))];
   }
@@ -119,7 +127,7 @@ export class ThipStepLoader {
     const stamp = JSON.stringify([step.status, step.reason, step.latencyMs, step.attempts, step.origin, step.cachedAt, step.expiresAt]);
     const cached = this.views.get(step);
     if (cached?.stamp === stamp && cached.rows === step.rows) return cached.view;
-    const view = Object.freeze({ ...step, rows: Object.freeze(step.rows.map(row => Object.freeze({ ...row }))) });
+    const view = Object.freeze({ ...step, rows: Object.freeze(step.rows.map(row => freezeAggregate({ ...row }))) });
     this.views.set(step, { stamp, rows: step.rows, view });
     return view;
   }
@@ -204,7 +212,7 @@ export class ThipStepLoader {
       try {
         const inputs = await task.run(this.controller.signal);
         if (this.controller.signal.aborted) return;
-        step.rows = validateCandidateRows(inputs, step.code, this.fiscalYear);
+        step.rows = this.validator(inputs, step.code, this.fiscalYear);
         step.origin = 'query';
         step.status = 'success'; step.reason = step.rows.length ? null : 'query สำเร็จแต่ไม่พบแถว; ไม่เติมศูนย์';
         this.consecutiveFailures = 0;

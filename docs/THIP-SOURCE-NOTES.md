@@ -38,3 +38,7 @@ The sequential candidate validation page is documented in [THIP-STEP-LOADING.md]
 ## Cohort evidence update (2026-10-01)
 
 For this work the primary structural source is `HOSxP Structure with primary key.json` (6,109 tables, 56,891 columns). Obsidian's July table notes describe a different snapshot (6,617 tables, 81,554 columns). Neither inventory confirms live cardinality or clinical meaning. Use patient.hn for registry counts, ovst.vn/hn for services/people, ipt.an/hn for admissions/people, person.patient_hn for patient linkage, emp.emp_id/emp_cid for candidate HR and opduser.loginname/cid for accounts. `patient.hn` is not the declared PK; it must not be assumed unique in joins. Profile counts and all 232 candidate cohort definitions are detailed in [THIP-COHORT-PROFILES.md](THIP-COHORT-PROFILES.md) and [THIP-COHORT-MAPPING.md](THIP-COHORT-MAPPING.md). No HN/CID/VN/AN values are sent to UI/cache.
+
+## Shared SPA owner — 2 ตุลาคม 2569
+
+[THIP-SHARED-DATA.md](THIP-SHARED-DATA.md) กำหนด root-owned queue/cache, strict draft projection, review/approved selectors และ explicit monthly bridge. Route ไม่โหลดข้อมูลซ้ำ; publication/completeness/cadence เดิมคงอยู่. ใช้ mocked BMS เท่านั้นสำหรับรอบนี้.
