@@ -14,6 +14,7 @@ import type { Indicator } from '@/types/thip';
 
 export type KpiMode = 'review' | 'approved';
 export type KpiSeries = 'thip-report' | 'monthly-monitoring';
+export type KpiResultView = 'period' | 'cumulative';
 export type KpiAvailability =
   | 'pending'
   | 'loading'
@@ -47,6 +48,8 @@ export type KpiCellViewModel = Readonly<{
   assessment: MonitoringAssessment;
   target: MonitoringTarget | null;
   cumulative: MonitoringCumulative;
+  cumulativeBasis: 'source' | 'period-facts' | null;
+  cumulativeReason: string;
   discrepancy: boolean;
   reason: string;
   ruleVersion: string;

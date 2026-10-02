@@ -91,7 +91,7 @@ export function MonitoringPage({ fiscalYear, onFiscalYearChange, group, onGroupC
     <div className="monitoring-coverage" aria-live="polite">{loading || !snapshotMatches ? 'กำลังอ่านข้อมูลปีที่เลือก…' : `มีผลวัด ${current.measuredCells}/${current.totalCells} ช่อง · ${formatFiscalYear(fiscalYear)}`}{!loading && !current.preview && ' · สูตรจริงยังต้องได้รับการรับรองก่อนเผยแพร่'}{current.refreshedAt && ` · อัปเดต ${formatThaiDateTime(current.refreshedAt)}`}</div>
     {current.error && <p className="monitoring-error" role="alert">{current.error}</p>}
     <p className="monitoring-help" id="matrix-help">ใช้ลูกศรย้ายช่อง · Enter ดูรายละเอียด · Escape ปิดรายละเอียด · สีเฝ้าระวังเป็นเกณฑ์ของระบบ (8% ของเป้าหมาย หรือ 0.02); เกณฑ์ช่วงใช้ watch เมื่อ rule กำหนดเท่านั้น</p>
-    <div className="monitoring-scroll" role="region" aria-label="ตาราง KPI รายเดือน เลื่อนแนวนอนเพื่อดูเดือนถัดไป" tabIndex={0}>
+    <div className="monitoring-scroll" role="region" aria-label="ตาราง KPI รายเดือน">
       <MonitoringMatrix rowsByCode={rowsByCode} visibleCodes={visibleCodes} periods={periods} fiscalYear={fiscalYear} preview={current.preview} loading={loading || filtering} onOpen={open} />
       {!visibleRules.length && <div className="monitoring-empty"><strong>ไม่พบ KPI ที่ตรงกับตัวกรอง</strong><p>ลองเปลี่ยนคำค้น กลุ่ม หรือสถานะข้อมูล</p><button className="secondary-button" onClick={() => { onSearchChange(''); onGroupChange('all'); setDataFilter('all'); setAssessmentFilter('all'); const params = new URLSearchParams(window.location.search); params.delete('data'); params.delete('assessment'); window.history.pushState({}, '', `${window.location.pathname}?${params}`); }}>ล้างตัวกรอง</button></div>}
     </div>
@@ -140,21 +140,21 @@ const MonitoringMatrix = memo(function MonitoringMatrix({ rowsByCode, visibleCod
     index = Math.max(0, Math.min(visible.length - 1, index)); month = Math.max(1, Math.min(12, month));
     document.getElementById(`monitoring-${visible[index]}-${month}`)?.focus();
   }
-  return <table className="monitoring-matrix" aria-describedby="matrix-help" aria-busy={loading} onKeyDown={keyDown}
+  return <table className="monitoring-matrix" role="table" aria-describedby="matrix-help" aria-busy={loading} onKeyDown={keyDown}
     onFocus={(event) => { const cell = button(event.target); if (cell) setFocusCell(cell.dataset.monitoringKey!); }}
     onClick={(event) => { const cell = button(event.target); if (!cell) return; const [code, month] = cell.dataset.monitoringKey!.split(':'); const row = rowsByCode.get(code)?.find(row => row.fiscalMonth === Number(month)); if (row) onOpen(row, cell); }}>
     <caption className="sr-only">ตารางติดตาม KPI 232 รหัส × 12 เดือน {formatFiscalYear(fiscalYear)}{preview ? ' ข้อมูลสังเคราะห์' : ''}</caption>
-    <thead><tr><th scope="col" className="monitoring-identity">รหัส / ตัวชี้วัด</th>{periods.map(period => <th scope="col" key={period.fiscalMonth}><span>{period.monthLabel}</span><small>{toBuddhistYear(period.calendarYear)}</small></th>)}</tr></thead>
-    <tbody>{monitoringRules.map(rule => <MonitoringMatrixRow key={rule.code} code={rule.code} rows={rowsByCode.get(rule.code)!} periods={periods} hidden={!visibleCodes.has(rule.code)} activeMonth={active.startsWith(`${rule.code}:`) ? Number(active.split(':')[1]) : 0} />)}</tbody>
+    <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" className="monitoring-identity">รหัส / ตัวชี้วัด</th>{periods.map(period => <th scope="col" role="columnheader" key={period.fiscalMonth}><span>{period.monthLabel}</span><small>{toBuddhistYear(period.calendarYear)}</small></th>)}</tr></thead>
+    <tbody role="rowgroup">{monitoringRules.map(rule => <MonitoringMatrixRow key={rule.code} code={rule.code} rows={rowsByCode.get(rule.code)!} periods={periods} hidden={!visibleCodes.has(rule.code)} activeMonth={active.startsWith(`${rule.code}:`) ? Number(active.split(':')[1]) : 0} />)}</tbody>
   </table>;
 });
 type RowProps = { code: string; rows: MonthlyMonitoringResult[]; periods: Periods; hidden: boolean; activeMonth: number };
 const MonitoringMatrixRow = memo(function MonitoringMatrixRow({ code, rows, periods, hidden, activeMonth }: RowProps) {
   const rule = monitoringRulesByCode.get(code)!;
-  return <tr hidden={hidden} data-code={code}><th scope="row" className="monitoring-identity" title={rule.title}><strong>{code}</strong><span>{rule.title}</span></th>{rows.map(row => <MonitoringMatrixCell key={row.fiscalMonth} row={row} label={periods[row.fiscalMonth - 1].label} active={activeMonth === row.fiscalMonth} />)}</tr>;
+  return <tr hidden={hidden} data-code={code} role="row"><th scope="row" role="rowheader" className="monitoring-identity" title={rule.title}><strong>{code}</strong><span>{rule.title}</span></th>{rows.map(row => <MonitoringMatrixCell key={row.fiscalMonth} row={row} label={periods[row.fiscalMonth - 1].label} active={activeMonth === row.fiscalMonth} />)}</tr>;
 }, (a, b) => a.code === b.code && a.periods === b.periods && a.hidden === b.hidden && a.activeMonth === b.activeMonth && a.rows.length === b.rows.length && a.rows.every((row, index) => sameCell(row, b.rows[index])));
 function sameCell(a: MonthlyMonitoringResult, b: MonthlyMonitoringResult): boolean { return a.fiscalMonth === b.fiscalMonth && a.value === b.value && a.unit === b.unit && a.dataStatus === b.dataStatus && a.assessment === b.assessment; }
 const MonitoringMatrixCell = memo(function MonitoringMatrixCell({ row, label, active }: { row: MonthlyMonitoringResult; label: string; active: boolean }) {
   const value = formatValue(row);
-  return <td><button id={`monitoring-${row.code}-${row.fiscalMonth}`} data-monitoring-key={`${row.code}:${row.fiscalMonth}`} type="button" className={`monitoring-cell state-${row.dataStatus} assessment-${row.assessment}`} tabIndex={active ? 0 : -1} aria-label={`${row.code} ${label}: ${row.value === null ? monitoringDataLabels[row.dataStatus] : `${value} ${monitoringUnitLabels[row.unit]}, ${monitoringAssessmentLabels[row.assessment]}`}`}><strong>{value}</strong><small>{row.dataStatus === 'measured' ? monitoringAssessmentLabels[row.assessment] : shortDataLabels[row.dataStatus]}</small>{row.value !== null && <span>{monitoringUnitLabels[row.unit]}</span>}</button></td>;
+  return <td role="cell" data-month-label={label}><button id={`monitoring-${row.code}-${row.fiscalMonth}`} data-monitoring-key={`${row.code}:${row.fiscalMonth}`} type="button" className={`monitoring-cell state-${row.dataStatus} assessment-${row.assessment}`} tabIndex={active ? 0 : -1} aria-label={`${row.code} ${label}: ${row.value === null ? monitoringDataLabels[row.dataStatus] : `${value} ${monitoringUnitLabels[row.unit]}, ${monitoringAssessmentLabels[row.assessment]}`}`}><strong>{value}</strong><small>{row.dataStatus === 'measured' ? monitoringAssessmentLabels[row.assessment] : shortDataLabels[row.dataStatus]}</small>{row.value !== null && <span>{monitoringUnitLabels[row.unit]}</span>}</button></td>;
 }, (a, b) => a.label === b.label && a.active === b.active && sameCell(a.row, b.row));

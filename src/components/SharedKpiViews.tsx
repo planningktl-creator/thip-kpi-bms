@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useKpiData } from './KpiDataContext';
-import type { KpiMode, KpiSeries, KpiCellViewModel } from '@/services/kpiTypes';
+import type { KpiMode, KpiSeries } from '@/services/kpiTypes';
 import type { IndicatorGroup } from '@/types/thip';
 import { runtimeCatalogueByCode } from '@/data/thipRuntime';
 import { monitoringUnitLabels } from '@/monitoring/rules';
@@ -8,6 +8,8 @@ import { formatFiscalYear, formatThaiDate } from '@/utils/fiscal';
 import { KpiCellDetails } from './KpiCellDetails';
 import { kpiStatusLabels } from './KpiMatrixPage';
 import { downloadSharedKpiCsv } from '@/services/kpiExport';
+import { KpiResultViewControl, useKpiResultView } from './KpiResultView';
+import { SharedKpiChart } from './SharedKpiChart';
 const format = (value: number | null) =>
   value === null
     ? '—'
@@ -144,6 +146,8 @@ export function SharedKpiDetail({
   const { store, snapshot } = useKpiData();
   const row = store.grid(series, mode).find((row) => row.code === code);
   const [month, setMonth] = useState(1);
+  const [resultView, setResultView] = useKpiResultView();
+  const [chart, setChart] = useState<'trend' | 'control'>('trend');
   if (!row) return <p>ไม่พบรหัส {code}</p>;
   const cell = row.cells[month - 1];
   const entry = runtimeCatalogueByCode.get(code)!;
@@ -173,39 +177,49 @@ export function SharedKpiDetail({
           CSV {mode === 'review' ? 'สอบทาน' : 'รับรอง'}
         </button>
       </header>
-      <Trend cells={row.cells} />
-      <div className="step-detail-scroll">
-        <table className="kpi-detail-periods">
-          <caption>ค่าจาก source ตามงวด; * arithmetic ต่างจากค่าคำนวณ</caption>
-          <thead>
-            <tr>
-              <th>เริ่มงวด</th>
-              <th>ตัวตั้ง</th>
-              <th>ตัวหาร</th>
-              <th>ค่า</th>
-              <th>สถานะ</th>
+      <div className="kpi-detail-controls">
+        <KpiResultViewControl view={resultView} onChange={setResultView} />
+        <div className="kpi-segment" role="group" aria-label="รูปแบบกราฟ">
+          <button aria-pressed={chart === 'trend'} onClick={() => setChart('trend')}>แนวโน้ม</button>
+          <button aria-pressed={chart === 'control'} onClick={() => setChart('control')}>Control chart</button>
+        </div>
+      </div>
+      <SharedKpiChart cells={row.cells} resultView={resultView} control={chart === 'control'} />
+      <div className="kpi-detail-table">
+        <table className="kpi-detail-periods" role="table">
+          <caption>{resultView === 'cumulative' ? 'ผลสะสมตั้งแต่ ต.ค. ตามกฎของ KPI; ไม่ใช้เป้ารายงวดประเมินยอดสะสม' : 'ค่าจาก source ตามงวด; * arithmetic ต่างจากค่าคำนวณ'}</caption>
+          <thead role="rowgroup">
+            <tr role="row">
+              <th scope="col" role="columnheader">งวด</th>
+              <th scope="col" role="columnheader">ตัวตั้ง{resultView === 'cumulative' && 'สะสม'}</th>
+              <th scope="col" role="columnheader">ตัวหาร{resultView === 'cumulative' && 'สะสม'}</th>
+              <th scope="col" role="columnheader">ค่า{resultView === 'cumulative' && 'สะสม'}</th>
+              <th scope="col" role="columnheader">สถานะ</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody role="rowgroup">
             {row.cells.map((point) => (
-              <tr key={point.fiscalMonth}>
-                <th>
+              <tr key={point.fiscalMonth} role="row" data-month={point.fiscalMonth}>
+                <th scope="row" role="rowheader">
                   <button
                     className="secondary-button"
                     aria-pressed={point.fiscalMonth === month}
                     onClick={() => setMonth(point.fiscalMonth)}
                   >
-                    {formatThaiDate(point.periodStart)}
+                    {point.label}
                   </button>
                 </th>
-                <td>{format(point.numerator)}</td>
-                <td>{format(point.denominator)}</td>
-                <td>
-                  {format(point.value)}
-                  {point.discrepancy ? ' *' : ''}{' '}
-                  {point.value !== null && monitoringUnitLabels[point.unit]}
+                <td role="cell" data-label="ตัวตั้ง">{format(resultView === 'cumulative' ? point.cumulative.numerator : point.numerator)}</td>
+                <td role="cell" data-label="ตัวหาร">{format(resultView === 'cumulative' ? point.cumulative.denominator : point.denominator)}</td>
+                <td role="cell" data-label={resultView === 'cumulative' ? 'ค่าสะสม' : 'ค่า'}>
+                  {format(resultView === 'cumulative' ? point.cumulative.value : point.value)}
+                  {resultView === 'period' && point.discrepancy ? ' *' : ''}{' '}
+                  {(resultView === 'cumulative' ? point.cumulative.value : point.value) !== null && monitoringUnitLabels[point.unit]}
                 </td>
-                <td>{kpiStatusLabels[point.status]}</td>
+                <td role="cell" data-label="สถานะ" title={resultView === 'cumulative' ? point.cumulativeReason : point.reason}>
+                  {resultView === 'period' ? kpiStatusLabels[point.status] : point.cumulative.value === null
+                    ? point.cumulativeReason : point.cumulative.complete ? 'ครบช่วงที่แหล่งข้อมูลยืนยัน' : 'สะสมสอบทาน — ยังไม่ยืนยันความครบช่วง'}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -214,73 +228,5 @@ export function SharedKpiDetail({
       <h2>รายละเอียดงวด {cell.label}</h2>
       <KpiCellDetails cell={cell} />
     </div>
-  );
-}
-function Trend({ cells }: { cells: readonly KpiCellViewModel[] }) {
-  const values = cells.filter((cell) => cell.value !== null);
-  if (!values.length)
-    return <p className="kpi-empty-trend">ยังไม่มีค่าเพื่อวาดแนวโน้ม</p>;
-  const max = Math.max(...values.map((cell) => cell.value!), 1),
-    min = Math.min(...values.map((cell) => cell.value!), 0),
-    range = max - min || 1;
-  const x = (month: number) => 30 + (month - 1) * 54,
-    y = (value: number) => 170 - ((value - min) / range) * 135;
-  const clean = values.filter((cell) => !cell.discrepancy),
-    mean = clean.length
-      ? clean.reduce((sum, cell) => sum + cell.value!, 0) / clean.length
-      : null;
-  return (
-    <figure className="kpi-trend">
-      <svg
-        viewBox="0 0 660 205"
-        role="img"
-        aria-label="แนวโน้มค่าจาก source ตามงวด"
-      >
-        <path
-          d="M30 20V170H630"
-          fill="none"
-          stroke="currentColor"
-          opacity=".25"
-        />
-        {mean !== null && (
-          <line
-            x1="30"
-            x2="630"
-            y1={y(mean)}
-            y2={y(mean)}
-            stroke="currentColor"
-            strokeDasharray="5 5"
-            opacity=".4"
-          />
-        )}
-        {values.map((cell) => (
-          <g key={cell.fiscalMonth}>
-            <circle
-              cx={x(cell.fiscalMonth)}
-              cy={y(cell.value!)}
-              r="5"
-              fill={cell.discrepancy ? '#ae5528' : '#047b80'}
-            >
-              <title>
-                {cell.label}: {format(cell.value)}{' '}
-                {monitoringUnitLabels[cell.unit]}
-              </title>
-            </circle>
-            <text
-              x={x(cell.fiscalMonth)}
-              y="192"
-              textAnchor="middle"
-              fontSize="11"
-            >
-              {cell.label.split(' ')[0]}
-            </text>
-          </g>
-        ))}
-      </svg>
-      <figcaption>
-        ค่าจาก source · จุดสีส้มต้องสอบทาน arithmetic ·
-        เส้นค่าเฉลี่ยใช้เฉพาะจุดที่ arithmetic สอดคล้อง ไม่ใช่ผล SPC ที่รับรอง
-      </figcaption>
-    </figure>
   );
 }

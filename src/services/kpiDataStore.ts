@@ -25,11 +25,8 @@ import type {
 } from './kpiTypes';
 import type { Indicator } from '@/types/thip';
 import type { BmsRequestError } from './bmsErrors';
-import {
-  accumulateMonitoring,
-  assessMonitoring,
-} from '@/monitoring/calculation';
-import type { MonthlyMonitoringResult } from '@/monitoring/types';
+import { assessMonitoring } from '@/monitoring/calculation';
+import { withKpiCumulative } from './kpiCumulative';
 
 const emptyCumulative = Object.freeze({
   numerator: null,
@@ -525,6 +522,9 @@ export class KpiDataStore {
           cumulative: usable
             ? (monitoring?.cumulative ?? emptyCumulative)
             : emptyCumulative,
+          cumulativeBasis: usable && monitoring?.cumulative.value !== null && monitoring?.cumulative.value !== undefined ? 'source' : null,
+          cumulativeReason: usable && monitoring?.cumulative.value !== null && monitoring?.cumulative.value !== undefined
+            ? 'ผลสะสมจากแหล่งข้อมูลตามกฎที่ลงทะเบียน' : '',
           discrepancy: usable && (fact?.discrepancy ?? false),
           reason,
           ruleVersion: fact?.ruleVersion ?? rule.version,
@@ -559,32 +559,7 @@ export class KpiDataStore {
           expiresAt: chosen?.expiresAt ?? null,
         });
       });
-      // A monthly bridge inherits only an explicit accumulation rule; missing months stay incomplete.
-      const accumulated =
-        series === 'monthly-monitoring' && canBridge && !step
-          ? cells.map((cell, index) => {
-              if (
-                !['measured', 'zero-cohort'].includes(cell.status) ||
-                cells.slice(0, index + 1).some((point) => point.discrepancy)
-              )
-                return cell;
-              const inputs = cells.slice(0, index + 1).map(
-                (point) =>
-                  ({
-                    ...point,
-                    dataStatus: point.status,
-                    accumulation: rule.accumulation,
-                  }) as unknown as MonthlyMonitoringResult
-              );
-              return Object.freeze({
-                ...cell,
-                cumulative: {
-                  ...accumulateMonitoring(inputs, rule),
-                  complete: false,
-                },
-              });
-            })
-          : cells;
+      const accumulated = withKpiCumulative(cells, rule);
       const row = Object.freeze({
         code: entry.code,
         cells: Object.freeze(accumulated),

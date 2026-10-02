@@ -48,6 +48,20 @@ function make(factory: ConstructorParameters<typeof KpiDataStore>[2]) {
 }
 
 describe('one app data owner', () => {
+  it('projects the same cumulative facts to reporting and its explicit monthly bridge without extra queries', async () => {
+    const run = vi.fn(async () => [{ ...input(), numerator: 10, denominator: 100 }, { ...input('DH0101', 2, 50), numerator: 10, denominator: 20 }]);
+    const store = make(async (_runtime, year, _repo, _signal, update) => new ThipStepLoader(year, [{ code: 'DH0101', run }], update, 0, []));
+    store.configure(runtime, 2026);
+    await vi.advanceTimersByTimeAsync(0);
+    for (const series of ['thip-report', 'monthly-monitoring'] as const) {
+      const row = store.grid(series, 'review').find(row => row.code === 'DH0101')!;
+      expect(row.cells[1].cumulative.value).toBeCloseTo(16.6666667);
+      expect(row.cells[1].cumulative.complete).toBe(false);
+      expect(row.cells[2].cumulative.value).toBeNull();
+      expect(store.grid(series, 'approved').find(row => row.code === 'DH0101')!.cells[1].cumulative.value).toBeNull();
+    }
+    expect(run).toHaveBeenCalledTimes(1);
+  });
   it('does not bypass an expired session by clearing cache or changing year', async () => {
     const factory = vi.fn(
       async (_runtime, year, _repo, _signal, update) =>

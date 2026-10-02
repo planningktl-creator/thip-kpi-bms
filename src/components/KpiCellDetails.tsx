@@ -5,6 +5,7 @@ import { monitoringUnitLabels } from '@/monitoring/rules';
 import { formatThaiDate, formatThaiDateTime } from '@/utils/fiscal';
 import { loadThipEvidence } from '@/data/thipEvidenceLoader';
 import type { CohortDefinition } from '@/data/cohortTypes';
+import { accumulationLabels } from '@/services/kpiCumulative';
 const number = (value: number | null) =>
   value === null
     ? '—'
@@ -74,15 +75,18 @@ export function KpiCellDetails({ cell }: { cell: KpiCellViewModel }) {
           <dd>{rule.dictionaryBenchmark ?? '—'}</dd>
         </div>
         <div>
-          <dt>ผลสะสม</dt>
+          <dt>ผลสะสมตั้งแต่ ต.ค.</dt>
           <dd>
-            {number(cell.cumulative.value)} ·{' '}
+            {number(cell.cumulative.value)} {cell.cumulative.value !== null && monitoringUnitLabels[cell.unit]} ·{' '}
             {cell.cumulative.complete
               ? 'ครบช่วงที่ source ยืนยัน'
               : 'ยังไม่ยืนยันความครบช่วง'}{' '}
-            · {cell.accumulation}
+            · {accumulationLabels[cell.accumulation] ?? cell.accumulation}
+            <small>{cell.cumulativeReason}</small>
           </dd>
         </div>
+        <div><dt>ตัวตั้ง / ตัวหารสะสม</dt><dd>{number(cell.cumulative.numerator)} / {number(cell.cumulative.denominator)}</dd></div>
+        <div><dt>วันตัดยอดสะสม</dt><dd>{cell.cumulative.through ? formatThaiDate(cell.cumulative.through) : 'แหล่งข้อมูลยังไม่ยืนยันวันตัดยอด'}</dd></div>
         <div>
           <dt>เหตุผล / สถานะ</dt>
           <dd>{cell.reason}</dd>

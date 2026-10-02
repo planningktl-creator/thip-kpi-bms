@@ -16,6 +16,7 @@ import type {
   KpiGridRow,
   KpiCellViewModel,
   KpiAvailability,
+  KpiResultView,
 } from '@/services/kpiTypes';
 import type { IndicatorGroup } from '@/types/thip';
 import { runtimeCatalogue, runtimeCatalogueByCode } from '@/data/thipRuntime';
@@ -32,6 +33,7 @@ import {
 } from '@/utils/fiscal';
 import { downloadSharedKpiCsv } from '@/services/kpiExport';
 import { KpiCellDetails } from './KpiCellDetails';
+import { KpiResultViewControl, useKpiResultView } from './KpiResultView';
 export const kpiStatusLabels: Record<KpiAvailability, string> = {
   pending: 'รอโหลด',
   loading: 'กำลังโหลด',
@@ -77,6 +79,7 @@ export function KpiMatrixPage({
   onOpen,
 }: Props) {
   const { store, snapshot } = useKpiData();
+  const [resultView, setResultView] = useKpiResultView();
   const rows = store.grid(series, mode);
   const [dataFilter, setDataFilter] = useState(() => read('data'));
   const [assessmentFilter, setAssessmentFilter] = useState(() =>
@@ -207,6 +210,11 @@ export function KpiMatrixPage({
           : 'ใช้สูตร monitoring แยก หรือ bridge รายเดือนที่มีหลักฐานตรงกัน; ไม่แบ่งผลรายปีเป็นเดือน'}{' '}
         · Cache 24 ชั่วโมง · เฝ้าระวังเป็นเกณฑ์ของระบบ
       </p>
+      <KpiResultViewControl view={resultView} onChange={setResultView} />
+      {resultView === 'cumulative' && <p className="monitoring-help">
+        สะสมตั้งแต่ ต.ค. ถึงแต่ละงวดตามกฎของ KPI · อัตราใช้ผลรวมตัวตั้ง ÷ ผลรวมตัวหาร ไม่เฉลี่ยร้อยละ
+        · ข้อมูลขาดแสดงเหตุผล · snapshot ใช้ค่าล่าสุด · ตัวกรองสถานะ/ผลเทียบเป้าอ้างอิงรายงวด
+      </p>}
       <section className="monitoring-toolbar" aria-label="ค้นหาและกรอง">
         <label className="monitoring-search">
           ค้นหารหัสหรือชื่อ
@@ -273,13 +281,13 @@ export function KpiMatrixPage({
       <div
         className="monitoring-scroll"
         role="region"
-        aria-label="ตาราง KPI เลื่อนแนวนอนได้"
-        tabIndex={0}
+        aria-label="ตาราง KPI"
       >
         <Matrix
           rows={rows}
           visibleCodes={visibleCodes}
           fiscalYear={fiscalYear}
+          resultView={resultView}
           onCell={open}
         />
       </div>
@@ -330,10 +338,12 @@ const Matrix = memo(function Matrix({
   visibleCodes,
   fiscalYear,
   onCell,
+  resultView,
 }: {
   rows: readonly KpiGridRow[];
   visibleCodes: Set<string>;
   fiscalYear: number;
+  resultView: KpiResultView;
   onCell(cell: KpiCellViewModel, button: HTMLButtonElement): void;
 }) {
   const [focus, setFocus] = useState('');
@@ -367,6 +377,7 @@ const Matrix = memo(function Matrix({
   return (
     <table
       className="monitoring-matrix"
+      role="table"
       aria-busy="false"
       aria-describedby="matrix-help"
       onKeyDown={keyDown}
@@ -378,20 +389,20 @@ const Matrix = memo(function Matrix({
       }}
     >
       <caption className="sr-only">232 รหัส × 12 เดือน</caption>
-      <thead>
-        <tr>
-          <th className="monitoring-identity" scope="col">
+      <thead role="rowgroup">
+        <tr role="row">
+          <th className="monitoring-identity" scope="col" role="columnheader">
             รหัส / ตัวชี้วัด
           </th>
           {periods.map((period) => (
-            <th key={period.fiscalMonth} scope="col">
+            <th key={period.fiscalMonth} scope="col" role="columnheader">
               {period.monthLabel}
               <small>{toBuddhistYear(period.calendarYear)}</small>
             </th>
           ))}
         </tr>
       </thead>
-      <tbody>
+      <tbody role="rowgroup">
         {rows.map((row) => (
           <MatrixRow
             key={row.code}
@@ -403,6 +414,7 @@ const Matrix = memo(function Matrix({
                 : 0
             }
             onCell={onCell}
+            resultView={resultView}
           />
         ))}
       </tbody>
@@ -414,16 +426,18 @@ const MatrixRow = memo(function MatrixRow({
   hidden,
   active,
   onCell,
+  resultView,
 }: {
   row: KpiGridRow;
   hidden: boolean;
   active: number;
+  resultView: KpiResultView;
   onCell(cell: KpiCellViewModel, button: HTMLButtonElement): void;
 }) {
   const entry = runtimeCatalogueByCode.get(row.code)!;
   return (
-    <tr hidden={hidden} data-code={row.code}>
-      <th scope="row" className="monitoring-identity">
+    <tr hidden={hidden} data-code={row.code} role="row">
+      <th scope="row" className="monitoring-identity" role="rowheader">
         <strong>{row.code}</strong>
         <span>{entry.title}</span>
         <small>{reportingCadenceLabels[getReportingCadence(row.code)]}</small>
@@ -434,6 +448,7 @@ const MatrixRow = memo(function MatrixRow({
           cell={cell}
           active={active === cell.fiscalMonth}
           onCell={onCell}
+          resultView={resultView}
         />
       ))}
     </tr>
@@ -443,32 +458,40 @@ const Cell = memo(function Cell({
   cell,
   active,
   onCell,
+  resultView,
 }: {
   cell: KpiCellViewModel;
   active: boolean;
+  resultView: KpiResultView;
   onCell(cell: KpiCellViewModel, button: HTMLButtonElement): void;
 }) {
-  const value = cell.value === null ? '—' : formatter.format(cell.value);
+  const cumulative = resultView === 'cumulative';
+  const numeric = cumulative ? cell.cumulative.value : cell.value;
+  const value = numeric === null ? '—' : formatter.format(numeric);
+  const state = cumulative && numeric === null && ['measured', 'zero-cohort'].includes(cell.status) ? 'missing-source' : cell.status;
+  const label = cumulative ? numeric === null
+    ? ['measured', 'zero-cohort'].includes(cell.status) ? 'สะสมไม่ได้' : kpiStatusLabels[cell.status]
+    : cell.cumulative.complete ? 'สะสมจากแหล่งข้อมูล' : 'สะสมสอบทาน'
+    : cell.status === 'measured' ? assessments[cell.assessment] : kpiStatusLabels[cell.status];
   return (
-    <td>
+    <td role="cell" data-month-label={cell.label}>
       <button
         id={`monitoring-${cell.code}-${cell.fiscalMonth}`}
         data-monitoring-key={`${cell.code}:${cell.fiscalMonth}`}
-        className={`monitoring-cell state-${cell.status} assessment-${cell.assessment}`}
+        className={`monitoring-cell state-${state} assessment-${cumulative ? numeric === null ? 'not-assessable' : 'no-target' : cell.assessment}`}
         tabIndex={active ? 0 : -1}
         onClick={(e) => onCell(cell, e.currentTarget)}
-        aria-label={`${cell.code} ${cell.label}: ${cell.value === null ? kpiStatusLabels[cell.status] : `${value} ${monitoringUnitLabels[cell.unit]}`}`}
+        aria-label={`${cell.code} ${cumulative ? 'ผลสะสมตั้งแต่ ต.ค. ถึง ' : ''}${cell.label}: ${numeric === null ? cumulative ? cell.cumulativeReason : kpiStatusLabels[cell.status] : `${value} ${monitoringUnitLabels[cell.unit]}, ${label}`}`}
+        title={cumulative ? cell.cumulativeReason : cell.reason}
       >
         <strong>
           {value}
-          {cell.discrepancy ? ' *' : ''}
+          {!cumulative && cell.discrepancy ? ' *' : ''}
         </strong>
         <small>
-          {cell.status === 'measured'
-            ? assessments[cell.assessment]
-            : kpiStatusLabels[cell.status]}
+          {label}
         </small>
-        {cell.value !== null && <span>{monitoringUnitLabels[cell.unit]}</span>}
+        {numeric !== null && <span>{monitoringUnitLabels[cell.unit]}</span>}
       </button>
     </td>
   );

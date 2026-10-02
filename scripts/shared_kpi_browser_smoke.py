@@ -59,11 +59,12 @@ async def main():
       assert len(rows)==36 and all('UNAPPROVED REVIEW' in row['data_label'] for row in rows)
       assert artifact.suggested_filename=='thip-report-2569-unapproved-review.csv'
       await page.get_by_label('ค้นหารหัสหรือชื่อ KPI').fill('')
-      await page.evaluate('scrollTo(0,0)');await page.screenshot(path=str(OUT/f'{device}.png'),full_page=True)
+      await page.locator('.monitoring-matrix').scroll_into_view_if_needed();await page.screenshot(path=str(OUT/f'{device}.png'))
       assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+      scroll=page.locator('.monitoring-scroll')
+      assert await scroll.evaluate('(e)=>e.scrollWidth<=e.clientWidth && e.scrollHeight<=e.clientHeight')
       if device=='mobile':
-        scroll=page.locator('.monitoring-scroll');identity=page.locator('.monitoring-matrix tbody tr .monitoring-identity').first
-        before=(await identity.bounding_box())['x'];await scroll.evaluate('(e)=>e.scrollLeft=600');after=(await identity.bounding_box())['x'];assert abs(before-after)<1
+        assert await page.locator('.monitoring-matrix tbody tr').first.locator('td[data-month-label]').count()==12
       # Request in flight continues through navigation and the central controls stay active.
       await page.get_by_role('button',name='ต่อ',exact=True).click();await nav('ภาพรวมคุณภาพ')
       await page.wait_for_timeout(1400);assert len(calls)>count

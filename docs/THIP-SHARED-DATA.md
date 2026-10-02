@@ -26,10 +26,14 @@ Reporting definitions มี canonical cohort formula, observation window แล
 
 ## UI และ export
 
-Global bar แสดงโรงพยาบาล/FY/mode/queue/cache/error state และ controls; session entry/reconnect ใช้ได้ทุกหน้า. Navy/teal/fonts เดิมคงอยู่. Search deferred, semantic table 232 rows อยู่ใน DOM, hidden filters, memo row/cell, sticky identity และ keyboard arrows/Enter/Escape/focus restoration. FY/mode/series/search/group/data/assessment อยู่ใน URL รองรับ back/forward.
+Global bar แสดงโรงพยาบาล/FY/mode/queue/cache/error state และ controls; session entry/reconnect ใช้ได้ทุกหน้า. Navy/teal/fonts เดิมคงอยู่. Search deferred, semantic table 232 rows อยู่ใน DOM, hidden filters, memo row/cell, เดือนพอดีความกว้างหน้า/จัดเป็น grid บนจอแคบ และ keyboard arrows/Enter/Escape/focus restoration. FY/mode/series/search/group/data/assessment อยู่ใน URL รองรับ back/forward.
 
 CSV review ระบุ `UNAPPROVED REVIEW` และ filename `*-unapproved-review.csv`. ใช้ source facts ชุดเดียวกับ UI, รวม numerator/denominator/derived, reason/status, unit, version/lineage, target/source, accumulation และ read/source timestamps. THIP export เฉพาะ applicable cadence cells (ครบทุก KPI = 1,552 rows), monitoring ครบ 12 เดือน (2,784 rows). ISO เป็น machine columns คู่กับวันที่ พ.ศ.; escape formula injection. Export disabled ระหว่าง deferred filter/FY preparation. Official CSV ไม่รับ unapproved values.
 
 ## ตรวจรับ
 
 `pnpm test`, build, generated runtime/sourceview/step/cohort checks, release isolation, synthetic source audit และ performance gates. Mocked browsers: shared SPA desktop/mobile + configured sources/cache (`scripts/shared_kpi_browser_smoke.py`), legacy approved chart smoke, development preview, step/error/cache/profile regressions. External HTTPS ถูก deny ใน shared smoke ก่อนติดตั้ง mocked routes. ไม่มี hospital calls, patient rows, Issues หรือ DB writes. SQL clinical validation/activation ยังต้องให้โรงพยาบาลรับรอง.
+
+## ผลสะสมและ SPC
+
+[THIP-CUMULATIVE-SPC.md](THIP-CUMULATIVE-SPC.md) เพิ่มมุมมอง `result=cumulative` ใน matrix/detail, YTD จาก explicit accumulation และ Control chart จากค่ารายงวด. Native และ reporting monthly bridge คำนวณ YTD เพื่อสอบทานโดยไม่อ้าง source coverage; distinct/custom ต้องมี source YTD. CSV เก็บทั้งรายงวด/YTD พร้อม basis/reason/cutoff. Analysis ใช้ snapshot เดิม ไม่มี query ใหม่หรือการเปลี่ยน publication gate.

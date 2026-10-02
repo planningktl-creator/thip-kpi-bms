@@ -10,7 +10,7 @@ THIP KPI quality intelligence frontend for BMS Marketplace. The default view is 
 
 Candidate page ไม่ต้องมี source view และ Docker สร้างได้โดยไม่ตั้ง source variables. ผล THIP/monitoring ที่เผยแพร่ยังต้องผ่าน source/approval gates เดิม. Aggregate ที่โหลดสำเร็จเก็บใน IndexedDB 24 ชั่วโมง ข้าม refresh/ปิดเว็บได้หลังตรวจ session เดิม; ปี/session/query/rule คนละ version ไม่ใช้ cache ปนกัน และไม่เก็บ credentials. มีปุ่มโหลดใหม่ทั้งคิวและล้าง cache ทั้งหมด; ดู [candidate cache contract](docs/THIP-CANDIDATE-CACHE.md). `pnpm steps:build` / `pnpm steps:check` สร้างและตรวจ single-code query manifest จาก source.
 
-Search codes/names, filter group/data state/assessment, open a cell's facts and rule, and export all twelve months of the filtered KPI rows. Filters and fiscal year persist in the URL. Mobile month columns scroll horizontally with sticky KPI identity; arrows move between cells, Enter opens details, Escape closes and restores focus. Missing facts stay NULL with a reason. Reporting retains 232 codes / 1,552 cadence cells; monitoring adds 2,784 cells without changing `Indicator.monthly`.
+Search codes/names, filter group/data state/assessment, open a cell's facts and rule, and export all twelve months of the filtered KPI rows. Filters and fiscal year persist in the URL. Desktop months fit the page width; narrow screens reflow months into a labeled grid without inner scrolling; arrows move between cells, Enter opens details, Escape closes and restores focus. Missing facts stay NULL with a reason. Reporting retains 232 codes / 1,552 cadence cells; monitoring adds 2,784 cells without changing `Indicator.monthly`.
 
 Run the synthetic preview in PowerShell:
 
@@ -138,3 +138,9 @@ The Step validation page now includes manual **ยอดฐานและคุ
 Root-owned sequential queue/cache ใช้ร่วมทุกหน้า; default THIP review, monthly-monitoring แยกแท็บ. Navigation ไม่ query ซ้ำ; FY/session change ยกเลิกและล้าง snapshot. CSV review มีป้าย UNAPPROVED REVIEW; approved gates/cadence เดิมคงอยู่. ดู [shared contract](docs/THIP-SHARED-DATA.md) และ [benchmark](docs/THIP-SHARED-PERFORMANCE-2026-10-02.md).
 
 `python scripts/shared_kpi_browser_smoke.py` ใช้ mocked development servers 5173/5175 และ deny real HTTPS. Cache/step/profile/preview browser regressions เดิมยังอยู่.
+
+## ผลสะสมและ Control chart (2 ตุลาคม 2569)
+
+ตารางและหน้ารายละเอียดมีปุ่ม **รายเดือน / งวด** และ **สะสมตั้งแต่ ต.ค.**. ผลสะสมใช้กฎของ KPI: อัตรารวมตัวตั้ง/ตัวหาร, snapshot ใช้ค่าล่าสุด, distinct/custom รอ source YTD; งวดขาดไม่เป็นศูนย์. หน้ารายละเอียดมี **Control chart** จากค่ารายงวดพร้อม CL/UCL/LCL และสัญญาณผิดปกติ; ยอดสะสมใช้ดูแนวโน้มแยกกัน. ผลคำนวณจาก query ที่ยังไม่ยืนยัน coverage คงเป็นสอบทาน. ดู [สัญญาและวิธีตรวจรับ](docs/THIP-CUMULATIVE-SPC.md).
+
+`python scripts/kpi_analysis_browser_smoke.py` ตรวจ desktop/tablet/mobile ด้วย mocked aggregates เท่านั้น.

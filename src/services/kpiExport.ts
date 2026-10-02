@@ -40,6 +40,10 @@ export function sharedKpiCsv(
     'ytd_numerator',
     'ytd_denominator',
     'ytd_complete',
+    'ytd_basis',
+    'ytd_reason',
+    'ytd_through_iso',
+    'ytd_through_be',
     'accumulation',
     'formula',
     'method',
@@ -66,7 +70,7 @@ export function sharedKpiCsv(
           cell.fiscalYear !== fiscalYear ||
           cell.series !== series ||
           (mode === 'approved' &&
-            cell.value !== null &&
+            (cell.value !== null || cell.cumulative.value !== null) &&
             cell.approval !== 'approved')
         )
           throw new Error('KPI export context/approval mismatch');
@@ -100,6 +104,10 @@ export function sharedKpiCsv(
           cell.cumulative.numerator,
           cell.cumulative.denominator,
           cell.cumulative.complete,
+          cell.cumulativeBasis,
+          cell.cumulativeReason,
+          cell.cumulative.through,
+          cell.cumulative.through ? formatThaiDate(cell.cumulative.through) : null,
           cell.accumulation,
           cell.formula,
           cell.method,

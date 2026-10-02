@@ -97,18 +97,14 @@ def main():
         expect(mobile.get_by_role('button',name='เปิดเมนู')).to_be_focused()
         expect(mobile.locator('aside')).not_to_have_class('app-sidebar is-open')
         scroll = mobile.locator('.monitoring-scroll')
-        identity = mobile.locator('.monitoring-matrix tbody tr:not([hidden]) .monitoring-identity').last
-        before = identity.bounding_box()['x']
-        scroll.evaluate('(element)=>element.scrollLeft=600')
-        after = identity.bounding_box()['x']
-        assert abs(before-after)<1
-        scroll.evaluate('(element)=>element.scrollLeft=0')
+        assert scroll.evaluate('(element)=>element.scrollWidth<=element.clientWidth && element.scrollHeight<=element.clientHeight')
+        assert mobile.locator('.monitoring-matrix tbody tr:not([hidden])').first.locator('td[data-month-label]').count() == 12
         mobile.screenshot(path=str(OUT/'preview-measured-mobile.png'),full_page=True)
         mobile.locator('.monitoring-matrix tbody tr:not([hidden]) .monitoring-cell').first.click()
         expect(mobile.locator('dialog')).to_be_visible()
         mobile.screenshot(path=str(OUT/'preview-detail-mobile.png'),full_page=True)
         mobile.keyboard.press('Escape')
-        checks += ['mobile horizontal scroll + sticky identity', 'mobile drawer inert + Escape', 'mobile details']
+        checks += ['mobile months reflow without inner scrolling', 'mobile drawer inert + Escape', 'mobile details']
         tablet = browser.new_page(viewport={'width':800,'height':1000})
         tablet.goto(f'{PREVIEW}/?fy=2026',wait_until='networkidle')
         expect(tablet.locator('aside')).to_be_visible()
